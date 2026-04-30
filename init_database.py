@@ -68,7 +68,7 @@ def check_database_connection():
         try:
             # Test connection by executing a simple query
             from sqlalchemy import text
-            db.session.execute(text('SELECT 1'))
+            result = db.session.execute(text('SELECT 1'))
             print("✅ Database connection successful!")
             return True
         except Exception as e:
