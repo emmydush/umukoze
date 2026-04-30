@@ -1,0 +1,311 @@
+{% extends "base.html" %}
+
+{% block title %}Applications - Umukozi{% endblock %}
+
+{% block content %}
+<!-- Mobile Sidebar Toggle -->
+<button class="mobile-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar {% if employer.profile_picture %}has-profile-picture{% endif %}">
+                    {% if employer.profile_picture %}
+                        <img src="{{ url_for('static', filename='uploads/' + employer.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
+                    {% else %}
+                        {{ current_user.full_name[0].upper() }}
+                    {% endif %}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name }}</h4>
+                    <p>Employer Account</p>
+                </div>
+            </div>
+            {% if employer.is_verified %}
+                <div style="font-size: 0.75rem; opacity: 0.9;">✓ Verified Employer</div>
+            {% else %}
+                <div style="font-size: 0.75rem; opacity: 0.9;">⚠ Verification Pending</div>
+            {% endif %}
+        </div>
+        
+        <nav class="sidebar-menu">
+            <div class="sidebar-section">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-dashboard'></i></span>
+                    Overview
+                </a>
+                <a href="{{ url_for('employer_my_jobs') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-briefcase'></i></span>
+                    My Jobs
+                    <span class="sidebar-badge">
+                        {% set total_applications = 0 %}
+                        {% for job in employer.jobs %}
+                            {% set total_applications = total_applications + job.applications|length %}
+                        {% endfor %}
+                        {{ total_applications }}
+                    </span>
+                </a>
+                <a href="{{ url_for('employer_find_workers') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bx-search-alt'></i></span>
+                    Find Workers
+                </a>
+                <a href="{{ url_for('employer_applications') }}" class="sidebar-item active">
+                    <span class="sidebar-item-icon"><i class='bx bxs-file-doc'></i></span>
+                    Applications
+                    <span class="sidebar-badge">{{ applications|length }}</span>
+                </a>
+                <a href="{{ url_for('employer_activity') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bx-line-chart'></i></span>
+                    Activity
+                </a>
+                <a href="{{ url_for('employer_settings') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-cog'></i></span>
+                    Settings
+                </a>
+                <a href="{{ url_for('logout') }}" class="sidebar-item" style="color: var(--danger-color);">
+                    <span class="sidebar-item-icon"><i class='bx bx-log-out'></i></span>
+                    Logout
+                </a>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                <div>
+                    <h1 style="margin-bottom: 0.5rem;">Applications</h1>
+                    <p style="color: var(--text-secondary); margin: 0;">
+                        Review and manage applications for your job postings.
+                    </p>
+                </div>
+                <div>
+                    <a href="{{ url_for('employer_my_jobs') }}" class="btn btn-primary">
+                        <span style="margin-right: 0.5rem;">📋</span> View My Jobs
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Application Stats -->
+        <div class="grid grid-4" style="margin-bottom: 2rem;">
+            <div class="card text-center">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">{{ applications|length }}</div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Total Applications</p>
+            </div>
+            <div class="card text-center">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--warning-color);">{{ applications|selectattr('status', 'equalto', 'pending')|list|length }}</div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Pending Review</p>
+            </div>
+            <div class="card text-center">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--success-color);">{{ applications|selectattr('status', 'equalto', 'accepted')|list|length }}</div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Accepted</p>
+            </div>
+            <div class="card text-center">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--danger-color);">{{ applications|selectattr('status', 'equalto', 'rejected')|list|length }}</div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Rejected</p>
+            </div>
+        </div>
+
+        <!-- Applications List -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3>Application History</h3>
+                <div style="display: flex; gap: 0.5rem;">
+                    <select class="form-control" style="width: auto;">
+                        <option>All Status</option>
+                        <option>Pending</option>
+                        <option>Accepted</option>
+                        <option>Rejected</option>
+                        <option>Withdrawn</option>
+                    </select>
+                </div>
+            </div>
+            
+            {% if applications_with_contact_status %}
+                {% for app_data in applications_with_contact_status %}
+                {% set application = app_data.application %}
+                <div style="border: 1px solid var(--border-color); border-radius: var(--radius); padding: 1.5rem; margin-bottom: 1rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: start;">
+                        <div style="flex: 1;">
+                            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                <h4 style="margin: 0;">{{ application.job.title }}</h4>
+                                <span class="badge badge-{{ 'success' if application.status == 'accepted' else 'warning' if application.status == 'pending' else 'danger' if application.status == 'rejected' else 'secondary' }}">
+                                    {{ application.status|title }}
+                                </span>
+                            </div>
+                            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">
+                                Applied by: {{ application.worker.user.full_name }} • 
+                                {% if app_data.has_access %}
+                                {{ app_data.email }}
+                                {% else %}
+                                <span style="font-style: italic; opacity: 0.7;">Email hidden (Payment Required)</span>
+                                {% endif %}
+                            </p>
+                            <p style="margin-bottom: 1rem; font-size: 0.875rem;">
+                                {{ application.cover_letter or 'No cover letter provided.' }}
+                            </p>
+                            
+                            <div style="display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.875rem; color: var(--text-secondary);">
+                                <div><strong>Applied:</strong> {{ application.applied_at.strftime('%d %b %Y') }}</div>
+                                <div><strong>Worker Rating:</strong> 
+                                    {% set worker_reviews = application.worker.received_reviews %}
+                                    {% if worker_reviews %}
+                                        {{ "%.1f"|format(worker_reviews|sum(attribute='rating') / worker_reviews|length) }}/5 ({{ worker_reviews|length }})
+                                    {% else %}
+                                        No ratings
+                                    {% endif %}
+                                </div>
+                                <div><strong>Experience:</strong> 
+                                    {% if application.worker.experience_years %}
+                                        {{ application.worker.experience_years }} years
+                                    {% else %}
+                                        Not specified
+                                    {% endif %}
+                                </div>
+                                <div><strong>Location:</strong> {{ application.worker.district or 'Not specified' }}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--border-color); margin-top: 1rem;">
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button class="btn btn-outline btn-sm" onclick="viewWorkerProfile({{ application.worker.id }})">
+                                View Profile
+                            </button>
+                            {% if app_data.has_access %}
+                            <button onclick="openWhatsApp('{{ app_data.phone }}')" class="btn btn-sm" style="background-color: #25D366; color: white; display: flex; align-items: center; justify-content: center; gap: 0.25rem; border: none; cursor: pointer; padding: 0.35rem 0.75rem; border-radius: 0.375rem;">
+                                <i class='bx bxl-whatsapp' style="font-size: 1.1rem;"></i> WhatsApp
+                            </button>
+                            <button onclick="makeCall('{{ app_data.phone }}')" class="btn btn-primary btn-sm" style="display: flex; align-items: center; justify-content: center; gap: 0.25rem; border: none; cursor: pointer; padding: 0.35rem 0.75rem; border-radius: 0.375rem;">
+                                <i class='bx bxs-phone' style="font-size: 1.1rem;"></i> Call
+                            </button>
+                            {% else %}
+                            <button onclick="showPlatformPaymentModal({{ application.worker.id }}, '{{ application.worker.user.full_name|replace('\'', '\\\'') }}')" class="btn btn-sm" style="background-color: #6c757d; color: white; display: flex; align-items: center; justify-content: center; gap: 0.25rem; border: none; cursor: pointer; padding: 0.35rem 0.75rem; border-radius: 0.375rem;">
+                                <i class='bx bxl-whatsapp' style="font-size: 1.1rem;"></i> WhatsApp
+                            </button>
+                            <button onclick="showPlatformPaymentModal({{ application.worker.id }}, '{{ application.worker.user.full_name|replace('\'', '\\\'') }}')" class="btn btn-primary btn-sm" style="display: flex; align-items: center; justify-content: center; gap: 0.25rem; border: none; cursor: pointer; padding: 0.35rem 0.75rem; border-radius: 0.375rem; background-color: #6c757d;">
+                                <i class='bx bxs-phone' style="font-size: 1.1rem;"></i> Call
+                            </button>
+                            {% endif %}
+                            {% if application.status == 'pending' %}
+                            <button class="btn btn-success btn-sm" onclick="acceptApplication({{ application.id }})">
+                                Accept
+                            </button>
+                            <button class="btn btn-danger btn-sm" onclick="rejectApplication({{ application.id }})">
+                                Reject
+                            </button>
+                            {% endif %}
+                        </div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary);">
+                            Last updated: {{ application.updated_at.strftime('%d %b %Y') if application.updated_at else application.applied_at.strftime('%d %b %Y') }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📄</div>
+                    <h3>No Applications Yet</h3>
+                    <p>Workers haven't applied to your jobs yet. Make sure your job postings are active and attractive!</p>
+                    <a href="{{ url_for('employer_my_jobs') }}" class="btn btn-primary" style="margin-top: 1rem;">
+                        <span style="margin-right: 0.5rem;">📋</span> Manage My Jobs
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+function viewWorkerProfile(workerId) {
+    alert('Viewing worker profile for ID: ' + workerId);
+}
+
+function formatRwandanPhone(phone) {
+    if (!phone) return '';
+    let num = phone.replace(/[\s\-()+]/g, '');
+    if (num.startsWith('0')) {
+        num = '250' + num.substring(1);
+    } else if (!num.startsWith('250')) {
+        num = '250' + num;
+    }
+    return num;
+}
+
+function openWhatsApp(phone) {
+    if (typeof showPlatformPaymentModal === 'function') {
+        showPlatformPaymentModal();
+    } else {
+        alert("Please pay 10,000 FRW to 079 555 5112 to connect with this worker.");
+    }
+}
+
+function makeCall(phone) {
+    if (typeof showPlatformPaymentModal === 'function') {
+        showPlatformPaymentModal();
+    } else {
+        alert("Please pay 10,000 FRW to 079 555 5112 to connect with this worker.");
+    }
+}
+
+function acceptApplication(applicationId) {
+    if (confirm('Are you sure you want to accept this application?')) {
+        alert('Application accepted! Application ID: ' + applicationId);
+    }
+}
+
+function rejectApplication(applicationId) {
+    if (confirm('Are you sure you want to reject this application?')) {
+        alert('Application rejected! Application ID: ' + applicationId);
+    }
+}
+
+// Handle sidebar item clicks
+document.querySelectorAll('.sidebar-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+        if (this.getAttribute('href') === '#') {
+            e.preventDefault();
+            // Remove active class from all items
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            // Add active class to clicked item
+            this.classList.add('active');
+            // Close mobile sidebar
+            closeSidebar();
+        }
+    });
+});
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.querySelector('.mobile-sidebar-toggle');
+    
+    if (window.innerWidth <= 768 && 
+        !sidebar.contains(event.target) && 
+        !toggle.contains(event.target) &&
+        sidebar.classList.contains('active')) {
+        closeSidebar();
+    }
+});
+</script>
+{% endblock %}

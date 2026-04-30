@@ -1,0 +1,216 @@
+{% extends "base.html" %}
+
+{% block title %}Worker Dashboard - Umukozi{% endblock %}
+
+{% block content %}
+<section style="padding: 2rem 0;">
+    <div class="container">
+        <!-- Welcome Header -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; margin-right: 1rem;">
+                        {{ current_user.full_name[0].upper() }}
+                    </div>
+                    <div>
+                        <h2 style="margin-bottom: 0.25rem;">Welcome, {{ current_user.full_name }}!</h2>
+                        <p style="color: var(--text-secondary); margin: 0;">
+                            {% if worker.is_verified %}
+                                <span class="badge badge-success">✓ Verified Worker</span>
+                            {% else %}
+                                <span class="badge badge-warning">⚠ Verification Pending</span>
+                            {% endif %}
+                            <span class="badge badge-info" style="margin-left: 0.5rem;">{{ worker.availability_status|title }}</span>
+                        </p>
+                    </div>
+                </div>
+                <div>
+                    <a href="#" class="btn btn-primary btn-sm" onclick="editProfile()">Edit Profile</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-4" style="margin-bottom: 2rem;">
+            <div class="card text-center">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">{{ worker.total_jobs_completed }}</div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Jobs Completed</p>
+            </div>
+            <div class="card text-center">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--secondary-color);">{% if worker.average_rating %}{{ "%.1f"|format(worker.average_rating) }}{% else %}0.0{% endif %}</div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Average Rating</p>
+            </div>
+            <div class="card text-center">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--accent-color);">{{ worker.applications|length }}</div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Applications Sent</p>
+            </div>
+            <div class="card text-center">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--danger-color);">{{ worker.hourly_rate or 0 }} RWF</div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Hourly Rate</p>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-3">
+            <!-- Recent Applications -->
+            <div class="card" style="grid-column: span 2;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3>Recent Applications</h3>
+                    <a href="#" class="btn btn-outline btn-sm">View All</a>
+                </div>
+                
+                {% if worker.applications %}
+                    {% for application in worker.applications[:5] %}
+                    <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <h4 style="margin-bottom: 0.25rem;">{{ application.job.title }}</h4>
+                                <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">
+                                    {{ application.job.employer.user.full_name }} • {{ application.job.district }}
+                                </p>
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    <span class="badge badge-{{ 'success' if application.status == 'accepted' else 'warning' if application.status == 'pending' else 'danger' }}">
+                                        {{ application.status|title }}
+                                    </span>
+                                    <span style="font-size: 0.75rem; color: var(--text-secondary);">
+                                        Applied {{ application.applied_at.strftime('%d %b %Y') }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 600; color: var(--primary-color);">
+                                    {% if application.job.salary_amount %}
+                                        {{ application.job.salary_amount }} RWF/{{ application.job.salary_type }}
+                                    {% endif %}
+                                </div>
+                                <a href="#" class="btn btn-sm btn-outline" style="margin-top: 0.5rem;">View Details</a>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📋</div>
+                        <p>No applications yet. Start browsing jobs to apply!</p>
+                        <a href="#" class="btn btn-primary" style="margin-top: 1rem;">Browse Jobs</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Quick Actions & Profile Completion -->
+            <div>
+                <!-- Profile Completion -->
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <h3 style="margin-bottom: 1rem;">Profile Completion</h3>
+                    <div style="background: var(--border-color); border-radius: 9999px; height: 8px; margin-bottom: 0.5rem;">
+                        <div style="background: var(--secondary-color); border-radius: 9999px; height: 100%; width: 75%;"></div>
+                    </div>
+                    <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem;">75% Complete</p>
+                    <ul style="list-style: none; padding: 0;">
+                        <li style="padding: 0.25rem 0; font-size: 0.875rem;">
+                            <span style="color: var(--secondary-color); margin-right: 0.5rem;">✓</span> Basic Info
+                        </li>
+                        <li style="padding: 0.25rem 0; font-size: 0.875rem;">
+                            <span style="color: var(--secondary-color); margin-right: 0.5rem;">✓</span> Contact Details
+                        </li>
+                        <li style="padding: 0.25rem 0; font-size: 0.875rem;">
+                            <span style="color: var(--accent-color); margin-right: 0.5rem;">⚠</span> Skills & Services
+                        </li>
+                        <li style="padding: 0.25rem 0; font-size: 0.875rem;">
+                            <span style="color: var(--danger-color); margin-right: 0.5rem;">✗</span> Verification Documents
+                        </li>
+                    </ul>
+                    <a href="#" class="btn btn-primary btn-sm" style="width: 100%; margin-top: 1rem;">Complete Profile</a>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem;">Quick Actions</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <a href="#" class="btn btn-outline" style="text-align: left;">
+                            <span style="margin-right: 0.5rem;">🔍</span> Browse Jobs
+                        </a>
+                        <a href="#" class="btn btn-outline" style="text-align: left;">
+                            <span style="margin-right: 0.5rem;">📝</span> Update Availability
+                        </a>
+                        <a href="#" class="btn btn-outline" style="text-align: left;">
+                            <span style="margin-right: 0.5rem;">📊</span> View Statistics
+                        </a>
+                        <a href="#" class="btn btn-outline" style="text-align: left;">
+                            <span style="margin-right: 0.5rem;">💬</span> Messages
+                        </a>
+                        <a href="#" class="btn btn-outline" style="text-align: left;">
+                            <span style="margin-right: 0.5rem;">⭐</span> Reviews
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommended Jobs -->
+        <div class="card" style="margin-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3>Recommended Jobs for You</h3>
+                <a href="#" class="btn btn-outline btn-sm">See All Recommendations</a>
+            </div>
+            
+            <div class="grid grid-3">
+                <!-- Sample Job Cards -->
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <h4>House Helper Needed</h4>
+                        <span class="badge badge-success">New</span>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem;">
+                        Looking for an experienced house helper for a family in Kigali.
+                    </p>
+                    <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                        <div>📍 Kigali, Nyarugenge</div>
+                        <div>💰 50,000 RWF/month</div>
+                        <div>🕐 Full-time</div>
+                    </div>
+                    <a href="#" class="btn btn-primary btn-sm" style="width: 100%;">Apply Now</a>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <h4>Childcare Provider</h4>
+                        <span class="badge badge-info">Urgent</span>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem;">
+                        Need a caring nanny for 2 children aged 3 and 5 years.
+                    </p>
+                    <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                        <div>📍 Kigali, Kicukiro</div>
+                        <div>💰 60,000 RWF/month</div>
+                        <div>🕐 Live-in</div>
+                    </div>
+                    <a href="#" class="btn btn-primary btn-sm" style="width: 100%;">Apply Now</a>
+                </div>
+
+                <div class="card">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1rem;">
+                        <h4>Part-time Cleaner</h4>
+                        <span class="badge badge-warning">Part-time</span>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem;">
+                        Weekend cleaning service for a 3-bedroom house.
+                    </p>
+                    <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                        <div>📍 Kigali, Gasabo</div>
+                        <div>💰 2,000 RWF/day</div>
+                        <div>🕐 Weekends only</div>
+                    </div>
+                    <a href="#" class="btn btn-primary btn-sm" style="width: 100%;">Apply Now</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function editProfile() {
+    alert('Profile editing feature coming soon!');
+}
+</script>
+{% endblock %}

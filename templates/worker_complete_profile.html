@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}My Profile - Umukozi{% endblock %}
+
+{% block content %}
+<!-- Mobile Sidebar Toggle -->
+<button class="mobile-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar {% if worker.profile_picture %}has-profile-picture{% else %}sidebar-avatar-gradient{% endif %}">
+                    {% if worker.profile_picture %}
+                        <img src="{{ url_for('static', filename='uploads/' + worker.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
+                    {% else %}
+                        {{ current_user.full_name[0].upper() }}
+                    {% endif %}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name }}</h4>
+                    <p style="font-size: 0.75rem; opacity: 0.8;">Worker Account</p>
+                </div>
+            </div>
+            {% if worker.is_verified %}
+                <div class="badge badge-success" style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2);">
+                    ✓ Verified Worker
+                </div>
+            {% else %}
+                <div class="badge badge-warning" style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2);">
+                    ⏳ Verification Pending
+                </div>
+            {% endif %}
+        </div>
+        
+        <nav class="sidebar-menu">
+            <div class="sidebar-section">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-dashboard'></i></span>
+                    Overview
+                </a>
+                <a href="{{ url_for('worker_find_jobs') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bx-search-alt'></i></span>
+                    Find Jobs
+                </a>
+                <a href="{{ url_for('worker_applications') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-file-doc'></i></span>
+                    Applications
+                    <span class="sidebar-badge">{{ worker.applications|length }}</span>
+                </a>
+                <a href="#" onclick="showMessages()" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-message-dots'></i></span>
+                    Messages
+                    <span class="sidebar-badge">2</span>
+                </a>
+                <a href="{{ url_for('worker_activity') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bx-line-chart'></i></span>
+                    Activity
+                </a>
+                <a href="{{ url_for('worker_complete_profile') }}" class="sidebar-item active">
+                    <span class="sidebar-item-icon"><i class='bx bxs-user-circle'></i></span>
+                    My Profile
+                </a>
+                <a href="{{ url_for('worker_settings') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-cog'></i></span>
+                    Settings
+                </a>
+                <a href="javascript:void(0)" onclick="confirmLogout(event)" data-logout-url="{{ url_for('logout') }}" class="sidebar-item" style="color: var(--danger-color); margin-top: 2rem;">
+                    <span class="sidebar-item-icon"><i class='bx bx-log-out'></i></span>
+                    Logout
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header style="margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: flex-end; flex-wrap: wrap; gap: 1.5rem;">
+            <div>
+                <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em;">Professional Profile</h1>
+                <p style="color: var(--text-secondary);">Keep your profile updated to increase your chances of being hired.</p>
+            </div>
+            <div style="text-align: right;">
+                <div style="font-size: 0.875rem; font-weight: 700; color: var(--primary-color); margin-bottom: 0.5rem;">Profile Strength: {{ completion }}%</div>
+                <div style="width: 200px; height: 8px; background: #e2e8f0; border-radius: 4px; overflow: hidden;">
+                    <div style="width: calc({{ completion }} * 1%); height: 100%; background: linear-gradient(90deg, var(--primary-color), var(--secondary-color)); transition: width 0.5s ease;"></div>
+                </div>
+            </div>
+        </header>
+
+        <form method="POST" enctype="multipart/form-data" class="dashboard-grid" style="grid-template-columns: 1fr 340px; align-items: start; gap: 2.5rem;">
+            <!-- Main Form Section -->
+            <div style="display: flex; flex-direction: column; gap: 2rem;">
+                <!-- Profile Media -->
+                <section class="card" style="border-radius: 1.5rem; padding: 2.5rem;">
+                    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="background: rgba(37, 99, 235, 0.1); padding: 0.5rem; border-radius: 0.75rem; color: var(--primary-color);"><i class='bx bxs-camera'></i></span>
+                        Profile Media
+                    </h3>
+                    
+                    <div class="grid grid-2" style="gap: 2rem;">
+                        <div class="form-group" style="text-align: center;">
+                            <label class="form-label" style="display: block; margin-bottom: 1.5rem;">Profile Photo</label>
+                            <div class="image-upload-wrapper" style="position: relative; width: 140px; height: 140px; margin: 0 auto;">
+                                <div id="profilePreview" style="width: 100%; height: 100%; border-radius: 50%; border: 4px solid var(--white); box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; background: #f8fafc; display: flex; align-items: center; justify-content: center;">
+                                    {% if worker.profile_picture %}
+                                        <img src="{{ url_for('static', filename='uploads/' + worker.profile_picture) }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                        <span style="font-size: 3rem; opacity: 0.2;"><i class='bx bxs-user'></i></span>
+                                    {% endif %}
+                                </div>
+                                <label for="profile_picture" style="position: absolute; bottom: 0; right: 0; background: var(--primary-color); color: white; width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3); border: 3px solid var(--white);">
+                                    <i class='bx bxs-camera-plus'></i>
+                                </label>
+                                <input type="file" id="profile_picture" name="profile_picture" hidden accept="image/*" onchange="previewImage(this, 'profilePreview')">
+                            </div>
+                            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 1.5rem;">Professional headshot suggested</p>
+                        </div>
+
+                        <div class="form-group" style="text-align: center;">
+                            <label class="form-label" style="display: block; margin-bottom: 1.5rem;">Identity Document</label>
+                            <div class="image-upload-wrapper" style="position: relative; width: 180px; height: 120px; margin: 0 auto;">
+                                <div id="idPreview" style="width: 100%; height: 100%; border-radius: 1rem; border: 2px dashed #cbd5e1; background: #f8fafc; display: flex; align-items: center; justify-content: center; overflow: hidden;">
+                                    {% if worker.id_photo %}
+                                        <img src="{{ url_for('static', filename='uploads/' + worker.id_photo) }}" style="width: 100%; height: 100%; object-fit: cover;">
+                                    {% else %}
+                                        <div style="text-align: center; opacity: 0.4;">
+                                            <div style="font-size: 1.5rem;"><i class='bx bxs-id-card'></i></div>
+                                            <div style="font-size: 0.7rem; font-weight: 700; margin-top: 0.5rem;">Upload ID</div>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                <label for="id_photo" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); opacity: 0; transition: opacity 0.2s; cursor: pointer;" class="hover-upload">
+                                    <span class="btn btn-primary btn-sm">Change</span>
+                                </label>
+                                <input type="file" id="id_photo" name="id_photo" hidden accept="image/*" onchange="previewImage(this, 'idPreview')">
+                            </div>
+                            <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 1.5rem;">National ID Card (Front)</p>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Professional Details -->
+                <section class="card" style="border-radius: 1.5rem; padding: 2.5rem;">
+                    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="background: rgba(16, 185, 129, 0.1); padding: 0.5rem; border-radius: 0.75rem; color: var(--secondary-color);"><i class='bx bxs-briefcase'></i></span>
+                        Experience & Skills
+                    </h3>
+                    
+                    <div class="grid grid-2" style="gap: 1.5rem; margin-bottom: 2rem;">
+                        <div class="form-group">
+                            <label class="form-label">National ID Number</label>
+                            <input type="text" name="national_id_number" class="form-control" style="border-radius: 0.75rem;" value="{{ worker.national_id_number or '' }}" placeholder="1 19XX 8 XXXX XXX X XX" maxlength="16">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Years of Experience</label>
+                            <input type="number" name="experience_years" class="form-control" style="border-radius: 0.75rem;" value="{{ worker.experience_years or '' }}" placeholder="e.g. 5">
+                        </div>
+                    </div>
+
+                    <div class="form-group" style="margin-bottom: 2rem;">
+                        <label class="form-label">Key Skills</label>
+                        <textarea name="skills" class="form-control" style="border-radius: 1rem; min-height: 80px;" placeholder="Cleaning, Cooking, Childcare, Laundry, Gardening...">{{ worker.skills or '' }}</textarea>
+                        <small style="color: var(--text-secondary); display: block; margin-top: 0.5rem;">Separate multiple skills with commas</small>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Detailed Professional Bio</label>
+                        <textarea name="experience_details" class="form-control" style="border-radius: 1rem; min-height: 150px;" placeholder="Describe your work history, specialties, and why employers should hire you...">{{ worker.experience_details or '' }}</textarea>
+                    </div>
+                </section>
+
+                <!-- References -->
+                <section class="card" style="border-radius: 1.5rem; padding: 2.5rem;">
+                    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="background: rgba(245, 158, 11, 0.1); padding: 0.5rem; border-radius: 0.75rem; color: var(--warning-color);"><i class='bx bxs-phone'></i></span>
+                        Reference Contact
+                    </h3>
+                    
+                    <div class="grid grid-2" style="gap: 1.5rem; margin-bottom: 1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label">Reference Name</label>
+                            <input type="text" name="reference_name" class="form-control" style="border-radius: 0.75rem;" value="{{ worker.reference_name or '' }}" placeholder="Full name of contact">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Reference Phone</label>
+                            <input type="tel" name="reference_phone" class="form-control" style="border-radius: 0.75rem;" value="{{ worker.reference_phone or '' }}" placeholder="+250 78X XXX XXX">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label class="form-label">Relationship</label>
+                        <select name="reference_relationship" class="form-control" style="border-radius: 0.75rem;">
+                            <option value="">Select relationship...</option>
+                            <option value="former_employer" {% if worker.reference_relationship == 'former_employer' %}selected{% endif %}>Former Employer</option>
+                            <option value="current_employer" {% if worker.reference_relationship == 'current_employer' %}selected{% endif %}>Current Employer</option>
+                            <option value="colleague" {% if worker.reference_relationship == 'colleague' %}selected{% endif %}>Work Colleague</option>
+                            <option value="community_leader" {% if worker.reference_relationship == 'community_leader' %}selected{% endif %}>Community Leader</option>
+                        </select>
+                    </div>
+                </section>
+
+                <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                    <button type="submit" class="btn btn-primary" style="padding: 1rem 3rem; border-radius: 1rem; font-weight: 700;">
+                        {% if completion >= 100 %}Update Profile Details{% else %}Save & Complete Profile{% endif %}
+                    </button>
+                    <a href="{{ url_for('dashboard') }}" class="btn btn-outline" style="padding: 1rem 2rem; border-radius: 1rem;">Cancel</a>
+                </div>
+            </div>
+
+            <!-- Right Sidebar Panel -->
+            <div style="display: flex; flex-direction: column; gap: 2rem;">
+                <!-- Content removed as requested -->
+            </div>
+        </form>
+    </main>
+</div>
+
+<style>
+.image-upload-wrapper:hover #idPreview {
+    border-color: var(--primary-color) !important;
+}
+.image-upload-wrapper:hover .hover-upload {
+    opacity: 1 !important;
+}
+</style>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+function previewImage(input, previewId) {
+    if (input.files && input.files[0]) {
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const preview = document.getElementById(previewId);
+            const isProfile = previewId === 'profilePreview';
+            preview.innerHTML = `<img src="${e.target.result}" style="width: 100%; height: 100%; object-fit: cover; border-radius: ${isProfile ? '50%' : '1rem'};">`;
+            if (!isProfile) {
+                preview.style.borderStyle = 'solid';
+                preview.style.borderColor = 'var(--primary-color)';
+            }
+        };
+        reader.readAsDataURL(input.files[0]);
+    }
+}
+
+function confirmLogout(event) {
+    event.preventDefault();
+    const logoutUrl = document.querySelector('[data-logout-url]').getAttribute('data-logout-url');
+    if (confirm('Are you sure you want to logout?')) {
+        window.location.href = logoutUrl;
+    }
+}
+
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const requiredFields = [
+        'national_id_number',
+        'experience_years', 
+        'experience_details',
+        'skills',
+        'reference_name',
+        'reference_phone',
+        'reference_relationship'
+    ];
+    
+    let isValid = true;
+    requiredFields.forEach(fieldName => {
+        const field = document.querySelector(`[name="${fieldName}"]`);
+        if (field && !field.value.trim()) {
+            isValid = false;
+            field.style.borderColor = 'var(--danger-color)';
+        } else if (field) {
+            field.style.borderColor = '';
+        }
+    });
+    
+    if (!isValid) {
+        e.preventDefault();
+        alert('Please fill in all required fields marked with *');
+    }
+});
+</script>
+{% endblock %}

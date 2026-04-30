@@ -1,0 +1,377 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Umukozi{% endblock %}
+
+{% block content %}
+<!-- Mobile Sidebar Toggle -->
+<button class="mobile-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar {% if employer.profile_picture %}has-profile-picture{% endif %}">
+                    {% if employer.profile_picture %}
+                        <img src="{{ url_for('static', filename='uploads/' + employer.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
+                    {% else %}
+                        {{ current_user.full_name[0].upper() }}
+                    {% endif %}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name }}</h4>
+                    <p>Employer Account</p>
+                </div>
+            </div>
+            {% if employer.is_verified %}
+                <div style="font-size: 0.75rem; opacity: 0.9;">✓ Verified Employer</div>
+            {% else %}
+                <div style="font-size: 0.75rem; opacity: 0.9;">⚠ Verification Pending</div>
+            {% endif %}
+        </div>
+        
+        <nav class="sidebar-menu">
+            <div class="sidebar-section">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-dashboard'></i></span>
+                    Overview
+                </a>
+                <a href="{{ url_for('employer_my_jobs') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-briefcase'></i></span>
+                    My Jobs
+                    <span class="sidebar-badge">{{ employer.jobs|length }}</span>
+                </a>
+                <a href="{{ url_for('employer_find_workers') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bx-search-alt'></i></span>
+                    Find Workers
+                </a>
+                <a href="{{ url_for('employer_applications') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-file-doc'></i></span>
+                    Applications
+                    <span class="sidebar-badge">
+                        {% set total_applications = 0 %}
+                        {% for job in employer.jobs %}
+                            {% set total_applications = total_applications + job.applications|length %}
+                        {% endfor %}
+                        {{ total_applications }}
+                    </span>
+                </a>
+                <a href="{{ url_for('employer_activity') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bx-line-chart'></i></span>
+                    Activity
+                </a>
+                <a href="{{ url_for('employer_settings') }}" class="sidebar-item active">
+                    <span class="sidebar-item-icon"><i class='bx bxs-cog'></i></span>
+                    Settings
+                </a>
+                <a href="{{ url_for('logout') }}" class="sidebar-item" style="color: var(--danger-color);">
+                    <span class="sidebar-item-icon"><i class='bx bx-log-out'></i></span>
+                    Logout
+                </a>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                <div>
+                    <h1 style="margin-bottom: 0.5rem;">Settings</h1>
+                    <p style="color: var(--text-secondary); margin: 0;">
+                        Manage your account settings, company information, and preferences.
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Settings Sections -->
+        <div class="grid grid-3">
+            <!-- Personal Information -->
+            <div class="card" style="grid-column: span 1;">
+                <h3 style="margin-bottom: 1rem;">Personal Information</h3>
+                <form>
+                    <div class="form-group">
+                        <label class="form-label">Full Name</label>
+                        <input type="text" class="form-control" value="{{ current_user.full_name }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Email</label>
+                        <input type="email" class="form-control" value="{{ current_user.email }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Phone</label>
+                        <input type="tel" class="form-control" value="{{ current_user.phone }}">
+                    </div>
+                    <button type="button" class="btn btn-primary" style="width: 100%;" onclick="updatePersonalInfo()">
+                        Save Changes
+                    </button>
+                </form>
+            </div>
+
+            <!-- Company Information -->
+            <div class="card" style="grid-column: span 1;">
+                <h3 style="margin-bottom: 1rem;">Company Information</h3>
+                <form>
+                    <div class="form-group">
+                        <label class="form-label">Company Name</label>
+                        <input type="text" class="form-control" value="{{ employer.company_name or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Household Type</label>
+                        <select class="form-control">
+                            <option value="family" {% if employer.household_type == 'family' %}selected{% endif %}>Family</option>
+                            <option value="individual" {% if employer.household_type == 'individual' %}selected{% endif %}>Individual</option>
+                            <option value="company" {% if employer.household_type == 'company' %}selected{% endif %}>Company</option>
+                            <option value="organization" {% if employer.household_type == 'organization' %}selected{% endif %}>Organization</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Website (Optional)</label>
+                        <input type="url" class="form-control" value="{{ employer.website or '' }}">
+                    </div>
+                    <button type="button" class="btn btn-primary" style="width: 100%;" onclick="updateCompanyInfo()">
+                        Save Changes
+                    </button>
+                </form>
+            </div>
+
+            <!-- Location Information -->
+            <div class="card" style="grid-column: span 1;">
+                <h3 style="margin-bottom: 1rem;">Location Information</h3>
+                <form>
+                    <div class="form-group">
+                        <label class="form-label">Province</label>
+                        <select class="form-control">
+                            <option value="">Select Province</option>
+                            <option value="kigali" {% if employer.province == 'kigali' %}selected{% endif %}>Kigali</option>
+                            <option value="northern" {% if employer.province == 'northern' %}selected{% endif %}>Northern Province</option>
+                            <option value="southern" {% if employer.province == 'southern' %}selected{% endif %}>Southern Province</option>
+                            <option value="eastern" {% if employer.province == 'eastern' %}selected{% endif %}>Eastern Province</option>
+                            <option value="western" {% if employer.province == 'western' %}selected{% endif %}>Western Province</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">District</label>
+                        <input type="text" class="form-control" value="{{ employer.district or '' }}">
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Sector</label>
+                        <input type="text" class="form-control" value="{{ employer.sector or '' }}">
+                    </div>
+                    <button type="button" class="btn btn-primary" style="width: 100%;" onclick="updateLocationInfo()">
+                        Save Changes
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Bio & Description -->
+        <div class="card" style="margin-top: 2rem;">
+            <h3 style="margin-bottom: 1rem;">Company Description</h3>
+            <div class="grid grid-2">
+                <div>
+                    <div class="form-group">
+                        <label class="form-label">Company Bio</label>
+                        <textarea class="form-control" rows="4" placeholder="Tell workers about your company/household...">{{ employer.bio or '' }}</textarea>
+                    </div>
+                </div>
+                <div>
+                    <div class="form-group">
+                        <label class="form-label">What You're Looking For</label>
+                        <textarea class="form-control" rows="4" placeholder="Describe the type of workers you're looking for..."></textarea>
+                    </div>
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="updateBio()">
+                Save Description
+            </button>
+        </div>
+
+        <!-- Notification Settings -->
+        <div class="card" style="margin-top: 2rem;">
+            <h3 style="margin-bottom: 1rem;">Notification Preferences</h3>
+            <div class="grid grid-2">
+                <div>
+                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
+                        <input type="checkbox" checked style="margin-right: 0.5rem;">
+                        <span>Email notifications for new applications</span>
+                    </label>
+                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
+                        <input type="checkbox" checked style="margin-right: 0.5rem;">
+                        <span>Email notifications for worker messages</span>
+                    </label>
+                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
+                        <input type="checkbox" checked style="margin-right: 0.5rem;">
+                        <span>Email notifications for job updates</span>
+                    </label>
+                </div>
+                <div>
+                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
+                        <input type="checkbox" style="margin-right: 0.5rem;">
+                        <span>SMS notifications for urgent applications</span>
+                    </label>
+                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
+                        <input type="checkbox" checked style="margin-right: 0.5rem;">
+                        <span>Weekly worker recommendations</span>
+                    </label>
+                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
+                        <input type="checkbox" style="margin-right: 0.5rem;">
+                        <span>Marketing emails</span>
+                    </label>
+                </div>
+            </div>
+            <button type="button" class="btn btn-primary" onclick="updateNotifications()">
+                Save Notification Settings
+            </button>
+        </div>
+
+        <!-- Privacy & Security -->
+        <div class="card" style="margin-top: 2rem;">
+            <h3 style="margin-bottom: 1rem;">Privacy & Security</h3>
+            <div class="grid grid-2">
+                <div>
+                    <h4 style="margin-bottom: 1rem; font-size: 1rem;">Privacy Settings</h4>
+                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
+                        <input type="checkbox" checked style="margin-right: 0.5rem;">
+                        <span>Profile visible to workers</span>
+                    </label>
+                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
+                        <input type="checkbox" checked style="margin-right: 0.5rem;">
+                        <span>Show contact information to verified workers</span>
+                    </label>
+                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
+                        <input type="checkbox" style="margin-right: 0.5rem;">
+                        <span>Appear in worker search results</span>
+                    </label>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 1rem; font-size: 1rem;">Security</h4>
+                    <button class="btn btn-outline" style="width: 100%; margin-bottom: 0.5rem;" onclick="changePassword()">
+                        Change Password
+                    </button>
+                    <button class="btn btn-outline" style="width: 100%; margin-bottom: 0.5rem;" onclick="enableTwoFactor()">
+                        Enable Two-Factor Authentication
+                    </button>
+                    <button class="btn btn-outline" style="width: 100%;" onclick="viewLoginHistory()">
+                        View Login History
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Actions -->
+        <div class="card" style="margin-top: 2rem;">
+            <h3 style="margin-bottom: 1rem;">Account Actions</h3>
+            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <button class="btn btn-outline" onclick="downloadData()">
+                    <span style="margin-right: 0.5rem;">📥</span> Download My Data
+                </button>
+                <button class="btn btn-outline" onclick="deactivateAccount()">
+                    <span style="margin-right: 0.5rem;">⏸️</span> Deactivate Account
+                </button>
+                <button class="btn btn-danger" onclick="deleteAccount()">
+                    <span style="margin-right: 0.5rem;">🗑️</span> Delete Account
+                </button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+function updatePersonalInfo() {
+    alert('Personal information updated successfully!');
+}
+
+function updateCompanyInfo() {
+    alert('Company information updated successfully!');
+}
+
+function updateLocationInfo() {
+    alert('Location information updated successfully!');
+}
+
+function updateBio() {
+    alert('Company description updated successfully!');
+}
+
+function updateNotifications() {
+    alert('Notification preferences updated successfully!');
+}
+
+function changePassword() {
+    alert('Redirecting to password change page...');
+}
+
+function enableTwoFactor() {
+    alert('Two-factor authentication setup coming soon!');
+}
+
+function viewLoginHistory() {
+    alert('Login history feature coming soon!');
+}
+
+function downloadData() {
+    alert('Your data download will be prepared and sent to your email.');
+}
+
+function deactivateAccount() {
+    if (confirm('Are you sure you want to deactivate your account? You can reactivate it later.')) {
+        alert('Account deactivated. You can reactivate it by logging back in.');
+    }
+}
+
+function deleteAccount() {
+    const confirmation = prompt('This action cannot be undone. Type "DELETE" to confirm account deletion:');
+    if (confirmation === 'DELETE') {
+        alert('Account deletion request submitted. You will receive a confirmation email.');
+    } else if (confirmation !== null) {
+        alert('Account deletion cancelled.');
+    }
+}
+
+// Handle sidebar item clicks
+document.querySelectorAll('.sidebar-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+        if (this.getAttribute('href') === '#') {
+            e.preventDefault();
+            // Remove active class from all items
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            // Add active class to clicked item
+            this.classList.add('active');
+            // Close mobile sidebar
+            closeSidebar();
+        }
+    });
+});
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.querySelector('.mobile-sidebar-toggle');
+    
+    if (window.innerWidth <= 768 && 
+        !sidebar.contains(event.target) && 
+        !toggle.contains(event.target) &&
+        sidebar.classList.contains('active')) {
+        closeSidebar();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,462 @@
+{% extends "base.html" %}
+
+{% block title %}Job Management - Admin Dashboard{% endblock %}
+
+{% block content %}
+<!-- Mobile Menu Button -->
+<button class="mobile-menu-btn" onclick="toggleSidebar()">
+    <i class='bx bx-menu'></i>
+</button>
+
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Admin Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                    {{ current_user.full_name[0].upper() }}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name }}</h4>
+                    <p style="font-size: 0.7rem; opacity: 0.8;">System Administrator</p>
+                </div>
+            </div>
+            <div style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2); background: var(--success-color); color: white; padding: 0.5rem; border-radius: 0.5rem; text-align: center;">
+                ✓ Admin Access
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h6>Dashboard</h6>
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-link">
+                    <i class='bx bx-home-alt'></i>
+                    <span>Overview</span>
+                </a>
+                <a href="{{ url_for('admin_users') }}" class="nav-link">
+                    <i class='bx bx-user'></i>
+                    <span>Users</span>
+                </a>
+                <a href="{{ url_for('admin_workers') }}" class="nav-link">
+                    <i class='bx bxs-group'></i>
+                    <span>Workers</span>
+                </a>
+                <a href="{{ url_for('admin_employers') }}" class="nav-link">
+                    <i class='bx bxs-business'></i>
+                    <span>Employers</span>
+                </a>
+                <a href="{{ url_for('admin_jobs') }}" class="nav-link active">
+                    <i class='bx bx-briefcase'></i>
+                    <span>Jobs</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h6>Management</h6>
+                <a href="{{ url_for('admin_verification') }}" class="nav-link">
+                    <i class='bx bx-shield-check'></i>
+                    <span>Verification</span>
+                </a>
+                <a href="{{ url_for('admin_messages') }}" class="nav-link">
+                    <i class='bx bx-message-dots'></i>
+                    <span>Messages</span>
+                </a>
+                <a href="{{ url_for('admin_notifications') }}" class="nav-link">
+                    <i class='bx bx-bell'></i>
+                    <span>Notifications</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h6>System</h6>
+                <a href="{{ url_for('admin_settings') }}" class="nav-link">
+                    <i class='bx bx-cog'></i>
+                    <span>Settings</span>
+                </a>
+                <a href="{{ url_for('admin_reports') }}" class="nav-link">
+                    <i class='bx bx-chart-line'></i>
+                    <span>Reports</span>
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-link" style="color: var(--danger-color);">
+                    <i class='bx bx-log-out'></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <header class="dashboard-header">
+            <div>
+                <h1 style="font-size: 1.875rem; font-weight: 800; margin-bottom: 0.5rem;">Job Management</h1>
+                <p style="color: var(--text-secondary); margin: 0;">Monitor and regulate all job postings on the platform</p>
+            </div>
+        </header>
+
+        <div class="card" style="margin-top: 2rem; border-radius: 1.5rem; overflow: hidden;">
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="background: var(--light-bg);">
+                        <tr>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary);">Job Title</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary);">Employer</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary);">Location</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary);">Status</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary);">Posted On</th>
+                            <th style="padding: 1rem; text-align: center; font-weight: 600; color: var(--text-secondary);">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for job in jobs %}
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 1rem;">
+                                <div style="font-weight: 600;">{{ job.title }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">ID: {{ job.id }}</div>
+                            </td>
+                            <td style="padding: 1rem;">{{ job.employer.user.full_name }}</td>
+                            <td style="padding: 1rem;">{{ job.district }}, {{ job.province }}</td>
+                            <td style="padding: 1rem;">
+                                {% if job.status == 'open' %}
+                                    <span class="badge badge-success">Open</span>
+                                {% else %}
+                                    <span class="badge">{{ job.status|capitalize }}</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 1rem;">{{ job.created_at.strftime('%d %b %Y') }}</td>
+                            <td style="padding: 1rem; text-align: center;">
+                                <button class="btn btn-outline btn-sm" onclick="alert('Viewing job {{ job.id }}')">
+                                    <i class='bx bx-show'></i>
+                                </button>
+                                <button class="btn btn-danger btn-sm" onclick="alert('Deleting job {{ job.id }}')">
+                                    <i class='bx bx-trash'></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (sidebar.classList.contains('active')) {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    } else {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    }
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+// Close sidebar when clicking on navigation links on mobile
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                closeSidebar();
+            }
+        });
+    });
+    
+    // Close sidebar on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSidebar();
+        }
+    });
+});
+
+// Handle window resize
+window.addEventListener('resize', function() {
+    if (window.innerWidth > 768) {
+        closeSidebar();
+    }
+});
+</script>
+
+<style>
+/* Admin Dashboard Layout Styles */
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: var(--white);
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 100;
+    overflow-y: auto;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sidebar-user-info h4 {
+    font-size: 0.9rem !important;
+    margin: 0;
+}
+
+.sidebar-user-info p {
+    font-size: 0.7rem !important;
+    margin: 0;
+    opacity: 0.8;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0;
+    overflow-y: auto;
+}
+
+.nav-section {
+    margin-bottom: 2rem;
+}
+
+.nav-section h6 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.nav-link:hover {
+    background: var(--gray-50);
+    color: var(--primary-color);
+}
+
+.nav-link.active {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--primary-color);
+}
+
+.nav-link i {
+    font-size: 1.125rem;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 260px;
+    padding: 2rem;
+    background: var(--gray-50);
+    min-height: 100vh;
+    overflow-y: auto;
+}
+
+/* Mobile Menu Button */
+.mobile-menu-btn {
+    display: none;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1002;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    cursor: pointer;
+    font-size: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Dashboard Header */
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+
+/* Card Styles */
+.card {
+    background: var(--white);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Badge Styles */
+.badge {
+    padding: 0.25rem 0.75rem;
+    border-radius: 9999px;
+    font-size: 0.75rem;
+    font-weight: 600;
+}
+
+.badge-success {
+    background: rgba(16, 185, 129, 0.1);
+    color: var(--secondary-color);
+}
+
+/* Button Styles */
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-sm {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.75rem;
+}
+
+.btn-outline {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-outline:hover {
+    background: var(--gray-50);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+.btn-danger {
+    background: var(--danger-color);
+    color: white;
+}
+
+.btn-danger:hover {
+    background: var(--danger-color-dark);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        top: 0;
+        height: 100vh;
+        z-index: 1001;
+        transition: left 0.3s ease;
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+    }
+    
+    .mobile-menu-btn {
+        display: block;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+        padding-top: 80px;
+    }
+}
+
+@media (max-width: 480px) {
+    .card {
+        padding: 1rem;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+}
+
+/* Hide mobile menu button on desktop */
+@media (min-width: 769px) {
+    .mobile-menu-btn {
+        display: none;
+    }
+    
+    .sidebar-overlay {
+        display: none !important;
+    }
+    
+    .sidebar {
+        position: fixed;
+        left: 0 !important;
+    }
+}
+</style>
+{% endblock %}

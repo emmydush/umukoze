@@ -1,0 +1,576 @@
+{% extends "base.html" %}
+
+{% block title %}Find Workers - Umukozi{% endblock %}
+
+{% block content %}
+<!-- Mobile Sidebar Toggle -->
+<button class="mobile-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div style="padding: 1.5rem 1.5rem 0.5rem 1.5rem; display: flex; justify-content: center;">
+            <a href="{{ url_for('index') }}" style="text-decoration: none;">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Umukozi Logo" style="height: 60px; width: auto; object-fit: contain;">
+            </a>
+        </div>
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar {% if employer.profile_picture %}has-profile-picture{% endif %}">
+                    {% if employer.profile_picture %}
+                        <img src="{{ url_for('static', filename='uploads/' + employer.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
+                    {% else %}
+                        {{ current_user.full_name[0].upper() }}
+                    {% endif %}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name }}</h4>
+                    <p>Employer Account</p>
+                </div>
+            </div>
+            {% if employer.is_verified %}
+                <div style="font-size: 0.75rem; opacity: 0.9;">✓ Verified Employer</div>
+            {% else %}
+                <div style="font-size: 0.75rem; opacity: 0.9;">⚠ Verification Pending</div>
+            {% endif %}
+        </div>
+        
+        <nav class="sidebar-menu">
+            <div class="sidebar-section">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-dashboard'></i></span>
+                    Overview
+                </a>
+                <a href="{{ url_for('employer_my_jobs') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-briefcase'></i></span>
+                    My Jobs
+                    <span class="sidebar-badge">{{ employer.jobs|length }}</span>
+                </a>
+                <a href="{{ url_for('employer_find_workers') }}" class="sidebar-item active">
+                    <span class="sidebar-item-icon"><i class='bx bx-search-alt'></i></span>
+                    Find Workers
+                </a>
+                <a href="{{ url_for('employer_applications') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-file-doc'></i></span>
+                    Applications
+                    <span class="sidebar-badge">
+                        {% set total_applications = 0 %}
+                        {% for job in employer.jobs %}
+                            {% set total_applications = total_applications + job.applications|length %}
+                        {% endfor %}
+                        {{ total_applications }}
+                    </span>
+                </a>
+                <a href="{{ url_for('employer_activity') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bx-line-chart'></i></span>
+                    Activity
+                </a>
+                <a href="{{ url_for('employer_settings') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-cog'></i></span>
+                    Settings
+                </a>
+                <a href="{{ url_for('logout') }}" class="sidebar-item" style="color: var(--danger-color);">
+                    <span class="sidebar-item-icon"><i class='bx bx-log-out'></i></span>
+                    Logout
+                </a>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                <div>
+                    <h1 style="margin-bottom: 0.5rem;">Find Workers</h1>
+                    <p style="color: var(--text-secondary); margin: 0;">
+                        Discover talented workers who match your requirements.
+                    </p>
+                </div>
+                <div>
+                    <button class="btn btn-outline" onclick="toggleFilters()">
+                        <span style="margin-right: 0.5rem;">🔍</span> Filters
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search and Filters -->
+        <div class="card" id="filtersSection" style="margin-bottom: 2rem; display: none;">
+            <h3 style="margin-bottom: 1rem;">Search Filters</h3>
+            <div class="grid grid-3">
+                <div class="form-group">
+                    <label class="form-label">Skills</label>
+                    <input type="text" class="form-control" placeholder="e.g., Cleaning, Cooking, Childcare">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Location</label>
+                    <select class="form-control">
+                        <option value="">All Locations</option>
+                        <option value="kigali">Kigali</option>
+                        <option value="northern">Northern Province</option>
+                        <option value="southern">Southern Province</option>
+                        <option value="eastern">Eastern Province</option>
+                        <option value="western">Western Province</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Availability</label>
+                    <select class="form-control">
+                        <option value="">All Availability</option>
+                        <option value="available">Available</option>
+                        <option value="busy">Busy</option>
+                        <option value="unavailable">Unavailable</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display: flex; gap: 1rem; margin-top: 1rem;">
+                <button class="btn btn-primary">Apply Filters</button>
+                <button class="btn btn-outline" onclick="clearFilters()">Clear</button>
+            </div>
+        </div>
+
+        <!-- Worker Listings Grid -->
+        <div style="margin-bottom: 3rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
+                <h3 style="font-weight: 800;">Available Workers ({{ workers|length }})</h3>
+                <div style="display: flex; gap: 0.75rem; align-items: center;">
+                    <label style="font-size: 0.875rem; color: var(--text-secondary);">Sort by:</label>
+                    <select class="form-control" style="width: auto; border-radius: 0.75rem; height: 38px;">
+                        <option>Most Recent</option>
+                        <option>Rating: High to Low</option>
+                        <option>Experience: High to Low</option>
+                        <option>Verified First</option>
+                    </select>
+                </div>
+            </div>
+            
+            {% if workers_with_contact_status %}
+                <div class="grid grid-3" style="gap: 1.5rem;">
+                {% for worker_data in workers_with_contact_status %}
+                {% set worker = worker_data.worker %}
+                <div class="card worker-card" style="padding: 1.75rem; border-radius: 1.5rem; display: flex; flex-direction: column; transition: all 0.3s ease;">
+                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 1.5rem;">
+                        <div class="worker-avatar {% if worker.profile_picture %}has-profile-picture{% else %}default-avatar{% endif %}" style="width: 70px; height: 70px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.75rem; font-weight: bold; flex-shrink: 0; overflow: hidden; color: white;">
+                            {% if worker.profile_picture %}
+                                <img src="{{ url_for('static', filename='uploads/' + worker.profile_picture) }}" style="width: 100%; height: 100%; object-fit: cover;">
+                            {% else %}
+                                {{ worker.user.full_name[0].upper() }}
+                            {% endif %}
+                        </div>
+                        <div style="text-align: right;">
+                            {% if worker.is_verified %}
+                                <div class="badge badge-success" style="font-size: 0.65rem; margin-bottom: 0.4rem; justify-content: flex-end;">✓ Verified</div>
+                            {% endif %}
+                            <div class="badge badge-{{ 'success' if worker.availability_status == 'available' else 'warning' if worker.availability_status == 'busy' else 'secondary' }}" style="font-size: 0.65rem; justify-content: flex-end;">
+                                {{ worker.availability_status|title }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div style="margin-bottom: 1.25rem;">
+                        <h4 style="margin: 0 0 0.25rem 0; font-size: 1.15rem; font-weight: 700;">{{ worker.user.full_name }}</h4>
+                        <p style="color: var(--text-secondary); font-size: 0.85rem; display: flex; align-items: center; gap: 0.4rem;">
+                            <span>📍</span> {{ worker.district or 'Location N/A' }} 
+                            <span style="opacity: 0.3;">|</span>
+                            <span>💼</span> {{ worker.experience_years or 0 }}y Experience
+                        </p>
+                    </div>
+
+                    <p style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                        {{ worker.bio if worker.bio else 'Reliable professional with a commitment to excellence and customer satisfaction.' }}
+                    </p>
+
+                    <div style="margin-bottom: 1.5rem; flex-grow: 1;">
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.4rem;">
+                            {% if worker.skills %}
+                                {% for skill in worker.skills.split(',')[:4] %}
+                                    <span style="background: rgba(37, 99, 235, 0.08); color: var(--primary-color); padding: 0.3rem 0.75rem; border-radius: 2rem; font-size: 0.75rem; font-weight: 600; border: 1px solid rgba(37, 99, 235, 0.1);">
+                                        {{ skill.strip() }}
+                                    </span>
+                                {% endfor %}
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <div style="display: flex; gap: 0.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); margin-top: auto;">
+                        <button class="btn btn-outline btn-sm" onclick="viewWorkerProfile({{ worker.id }})" style="flex: 1; padding: 0.5rem 0; border-radius: 0.75rem; font-size: 0.85rem;">View Profile</button>
+                        {% if worker_data.has_access %}
+                        <button onclick="openWhatsApp('{{ worker_data.phone }}')" class="btn btn-sm" style="flex: 1; padding: 0.5rem 0; border-radius: 0.75rem; background-color: #25D366; color: white; display: flex; align-items: center; justify-content: center; gap: 0.25rem; font-size: 0.85rem; border: none; cursor: pointer;">
+                            <i class='bx bxl-whatsapp' style="font-size: 1.1rem;"></i> WhatsApp
+                        </button>
+                        <button onclick="makeCall('{{ worker_data.phone }}')" class="btn btn-primary btn-sm" style="flex: 1; padding: 0.5rem 0; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem; font-size: 0.85rem; border: none; cursor: pointer;">
+                            <i class='bx bxs-phone' style="font-size: 1.1rem;"></i> Call
+                        </button>
+                        {% else %}
+                        <button onclick="showPlatformPaymentModal({{ worker.id }}, '{{ worker.user.full_name|replace('\'', '\\\'') }}')" class="btn btn-sm" style="flex: 1; padding: 0.5rem 0; border-radius: 0.75rem; background-color: #6c757d; color: white; display: flex; align-items: center; justify-content: center; gap: 0.25rem; font-size: 0.85rem; border: none; cursor: pointer;">
+                            <i class='bx bxl-whatsapp' style="font-size: 1.1rem;"></i> WhatsApp
+                        </button>
+                        <button onclick="showPlatformPaymentModal({{ worker.id }}, '{{ worker.user.full_name|replace('\'', '\\\'') }}')" class="btn btn-primary btn-sm" style="flex: 1; padding: 0.5rem 0; border-radius: 0.75rem; display: flex; align-items: center; justify-content: center; gap: 0.25rem; font-size: 0.85rem; border: none; cursor: pointer; background-color: #6c757d;">
+                            <i class='bx bxs-phone' style="font-size: 1.1rem;"></i> Call
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 4rem; background: var(--white); border-radius: 2rem; border: 1px dashed var(--border-color);">
+                    <div style="font-size: 3.5rem; margin-bottom: 1rem;">🔍</div>
+                    <h3 style="font-weight: 700;">No Workers Found</h3>
+                    <p style="color: var(--text-secondary);">No workers are currently available based on your search filters.</p>
+                    <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="clearFilters()">Clear All Filters</button>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Pagination -->
+        {% if workers %}
+        <div style="display: flex; justify-content: center; margin-top: 2rem;">
+            <div style="display: flex; gap: 0.5rem;">
+                <button class="btn btn-outline btn-sm" disabled>Previous</button>
+                <button class="btn btn-primary btn-sm">1</button>
+                <button class="btn btn-outline btn-sm">2</button>
+                <button class="btn btn-outline btn-sm">3</button>
+                <button class="btn btn-outline btn-sm">Next</button>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+</div>
+
+<!-- Worker Profile Modal -->
+<div id="workerProfileModal" class="modal-overlay" style="display: none;" onclick="closeWorkerProfile(event)" data-workers='[
+    {% for worker_data in workers_with_contact_status %}
+    {% set worker = worker_data.worker %}
+    {
+        "id": {{ worker.id }},
+        "name": "{{ worker.user.full_name|replace('"', '\\"')|replace("'", "\\'") }}",
+        "phone": "{{ worker_data.phone }}",
+        "hasAccess": {{ worker_data.has_access|lower }},
+        "profile_picture": "{{ worker.profile_picture|replace('"', '\\"')|replace("'", "\\'") or '' }}",
+        "id_photo": "{{ worker.id_photo|replace('"', '\\"')|replace("'", "\\'") or '' }}",
+        "national_id_number": "{{ (worker.national_id_number or '')|replace('"', '\\"')|replace("'", "\\'") }}",
+        "bio": "{{ (worker.bio or 'No bio available.')|replace('"', '\\"')|replace("'", "\\'")|replace('\n', '\\n')|replace('\r', '\\r') }}",
+        "skills": "{{ (worker.skills or '')|replace('"', '\\"')|replace("'", "\\'") }}",
+        "experience_years": {{ worker.experience_years or 0 }},
+        "experience_details": "{{ (worker.experience_details or '')|replace('"', '\\"')|replace("'", "\\'")|replace('\n', '\\n')|replace('\r', '\\r') }}",
+        "hourly_rate": {{ worker.hourly_rate or 'null' }},
+        "district": "{{ (worker.district or '')|replace('"', '\\"')|replace("'", "\\'") }}",
+        "province": "{{ (worker.province or '')|replace('"', '\\"')|replace("'", "\\'") }}",
+        "phone": "{{ worker.user.phone|replace('"', '\\"')|replace("'", "\\'") }}",
+        "is_verified": {{ 'true' if worker.is_verified else 'false' }},
+        "availability_status": "{{ worker.availability_status|replace('"', '\\"')|replace("'", "\\'") }}",
+        "reviews": [
+            {% for review in worker.received_reviews %}
+            {
+                "rating": {{ review.rating }},
+                "comment": "{{ review.comment|replace('"', '\\"')|replace("'", "\\'")|replace('\n', '\\n')|replace('\r', '\\r') }}"
+            }{% if not loop.last %},{% endif %}
+            {% endfor %}
+        ]
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+]'>
+    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto; border-radius: 1.5rem;" onclick="event.stopPropagation()">
+        <div class="modal-header" style="padding: 2rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0;">Worker Profile</h3>
+            <button onclick="closeWorkerProfile()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">✕</button>
+        </div>
+        <div id="workerProfileContent" style="padding: 2rem;">
+            <!-- Profile content will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- ID Photo Full Size Modal -->
+<div id="idPhotoModal" class="modal-overlay" style="display: none;" onclick="closeIdPhotoModal(event)">
+    <div class="modal-content" style="max-width: 90%; max-height: 90vh; background: transparent; box-shadow: none; border-radius: 0;" onclick="event.stopPropagation()">
+        <div style="position: relative; display: flex; align-items: center; justify-content: center; height: 90vh;">
+            <img id="idPhotoFullSize" src="" alt="ID Card Full Size" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 0.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+            <button onclick="closeIdPhotoModal()" style="position: absolute; top: 1rem; right: 1rem; background: rgba(0, 0, 0, 0.8); color: white; border: none; font-size: 1.5rem; cursor: pointer; padding: 0.75rem; border-radius: 50%; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">✕</button>
+        </div>
+    </div>
+</div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+function toggleFilters() {
+    const filtersSection = document.getElementById('filtersSection');
+    filtersSection.style.display = filtersSection.style.display === 'none' ? 'block' : 'none';
+}
+
+function clearFilters() {
+    alert('Filters cleared! Showing all workers.');
+    toggleFilters();
+}
+
+function viewWorkerProfile(workerId) {
+    // Get worker data from HTML data attribute
+    const modal = document.getElementById('workerProfileModal');
+    const workersData = modal.getAttribute('data-workers');
+    const workers = JSON.parse(workersData);
+    
+    const worker = workers.find(w => w.id === workerId);
+    if (!worker) return;
+    
+    const profileContent = document.getElementById('workerProfileContent');
+    profileContent.innerHTML = `
+        <div style="display: flex; gap: 2rem; margin-bottom: 2rem;">
+            <div class="worker-avatar ${worker.profile_picture ? 'has-profile-picture' : 'default-avatar'}" style="width: 120px; height: 120px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 3rem; font-weight: bold; flex-shrink: 0; overflow: hidden; color: white;">
+                ${worker.profile_picture ? 
+                    `<img src="/static/uploads/${worker.profile_picture}" style="width: 100%; height: 100%; object-fit: cover;" alt="${worker.name}">` : 
+                    worker.name.charAt(0).toUpperCase()
+                }
+            </div>
+            <div style="flex: 1;">
+                <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 0.5rem;">
+                    <h2 style="margin: 0; font-size: 1.75rem;">${worker.name}</h2>
+                    ${worker.is_verified ? '<span class="badge badge-success">✓ Verified</span>' : ''}
+                    <span class="badge badge-${worker.availability_status === 'available' ? 'success' : worker.availability_status === 'busy' ? 'warning' : 'secondary'}">${worker.availability_status.charAt(0).toUpperCase() + worker.availability_status.slice(1)}</span>
+                </div>
+                <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+                    📍 ${worker.district || 'Location not specified'} • 💼 ${worker.experience_years} years experience
+                </p>
+                <div style="background: ${worker.hasAccess ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.05)'}; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem; border: 1px solid ${worker.hasAccess ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'}; display: inline-block;">
+                    <div style="display: flex; flex-direction: column; gap: 0.5rem; font-size: 0.875rem;">
+                        <span style="display: flex; align-items: center; gap: 0.5rem;">
+                            📞 <strong>Phone:</strong> 
+                            ${worker.hasAccess ? `<span style="color: var(--text-primary); font-family: monospace;">${worker.phone}</span>` : `<span style="color: var(--danger-color); font-style: italic;">Hidden (Payment Required)</span>`}
+                        </span>
+                        <span style="display: flex; align-items: center; gap: 0.5rem;">
+                            ✉️ <strong>Email:</strong> 
+                            ${worker.hasAccess ? `<span style="color: var(--text-primary); font-family: monospace;">${worker.email || 'No email provided'}</span>` : `<span style="color: var(--danger-color); font-style: italic;">Hidden (Payment Required)</span>`}
+                        </span>
+                    </div>
+                </div>
+                ${worker.hourly_rate ? `<p style="font-size: 1.25rem; font-weight: 700; color: var(--primary-color); margin-bottom: 1rem;">💰 ${worker.hourly_rate} RWF/hour</p>` : ''}
+            </div>
+        </div>
+        
+        ${worker.national_id_number || worker.id_photo ? `
+        <div style="margin-bottom: 2rem; padding: 1.5rem; background: #f8fafc; border-radius: 1rem; border: 1px solid #e2e8f0;">
+            <h4 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.5rem;">
+                <span style="color: var(--success-color);">🆔</span> Identity Verification
+            </h4>
+            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 2rem; align-items: start;">
+                <div>
+                    <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem;">National ID Number</div>
+                    <div style="font-size: 1rem; font-weight: 700; color: var(--text-primary); font-family: monospace; background: white; padding: 0.75rem; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+                        ${worker.national_id_number || 'Not provided'}
+                    </div>
+                </div>
+                <div>
+                    <div style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); margin-bottom: 0.5rem;">ID Card Photo</div>
+                    <div style="position: relative; width: 100%; height: 120px; border-radius: 0.75rem; border: 2px dashed var(--border-color); background: white; display: flex; align-items: center; justify-content: center; overflow: hidden; cursor: pointer; transition: all 0.2s;" onclick="openIdPhotoModal('${worker.id_photo}')" onmouseover="this.style.borderColor='var(--primary-color)'" onmouseout="this.style.borderColor='var(--border-color)'">
+                        ${worker.id_photo ? 
+                            `<img src="/static/uploads/${worker.id_photo}" style="width: 100%; height: 100%; object-fit: cover;" alt="ID Card">
+                            <div style="position: absolute; bottom: 0.5rem; right: 0.5rem; background: rgba(0, 0, 0, 0.7); color: white; padding: 0.25rem 0.5rem; border-radius: 0.25rem; font-size: 0.75rem; pointer-events: none;">
+                                🔍 Click to enlarge
+                            </div>` : 
+                            `<div style="text-align: center; color: var(--text-secondary);">
+                                <div style="font-size: 2rem;">🆔</div>
+                                <div style="font-size: 0.75rem;">No ID photo</div>
+                            </div>`
+                        }
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 1rem; padding-top: 1rem; border-top: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+                    <span style="color: ${worker.national_id_number && worker.id_photo ? 'var(--success-color)' : 'var(--warning-color)'};">
+                        ${worker.national_id_number && worker.id_photo ? '✓' : '⚠️'}
+                    </span>
+                    ${worker.national_id_number && worker.id_photo ? 
+                        'Identity documents verified and available for comparison' : 
+                        'Some identity documents missing - contact worker for verification'
+                    }
+                </div>
+            </div>
+        </div>
+        ` : ''}
+        
+        <div style="margin-bottom: 2rem;">
+            <h4 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em;">About</h4>
+            <p style="line-height: 1.6; color: var(--text-primary);">${worker.bio}</p>
+        </div>
+        
+        ${worker.skills ? `
+        <div style="margin-bottom: 2rem;">
+            <h4 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em;">Skills</h4>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.5rem;">
+                ${worker.skills.split(',').map(skill => 
+                    `<span class="badge" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-color); border: 1px solid rgba(37, 99, 235, 0.2);">${skill.trim()}</span>`
+                ).join('')}
+            </div>
+        </div>
+        ` : ''}
+        
+        ${worker.experience_details ? `
+        <div style="margin-bottom: 2rem;">
+            <h4 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em;">Experience Details</h4>
+            <p style="line-height: 1.6; color: var(--text-primary);">${worker.experience_details}</p>
+        </div>
+        ` : ''}
+        
+        ${worker.reviews.length > 0 ? `
+        <div style="margin-bottom: 2rem;">
+            <h4 style="margin-bottom: 1rem; color: var(--text-secondary); font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em;">Reviews (${worker.reviews.length})</h4>
+            <div style="display: flex; flex-direction: column; gap: 1rem;">
+                ${worker.reviews.map(review => `
+                    <div style="padding: 1rem; background: var(--light-bg); border-radius: 0.75rem;">
+                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                            ${'⭐'.repeat(review.rating)}${'☆'.repeat(5-review.rating)}
+                            <span style="color: var(--text-secondary); font-size: 0.875rem;">${review.rating}/5</span>
+                        </div>
+                        <p style="margin: 0; font-size: 0.875rem;">${review.comment}</p>
+                    </div>
+                `).join('')}
+            </div>
+        </div>
+        ` : ''}
+        
+        <div style="display: flex; gap: 0.75rem; padding-top: 1.5rem; border-top: 1px solid var(--border-color);">
+            ${worker.hasAccess ? `
+            <button onclick="openWhatsApp('${worker.phone}')" class="btn" style="flex: 1; background-color: #25D366; color: white; display: flex; justify-content: center; gap: 0.5rem; align-items: center; border: none; cursor: pointer;">
+                <i class='bx bxl-whatsapp' style="font-size: 1.25rem;"></i> WhatsApp
+            </button>
+            <button onclick="makeCall('${worker.phone}')" class="btn btn-primary" style="flex: 1; display: flex; justify-content: center; gap: 0.5rem; align-items: center; border: none; cursor: pointer;">
+                <i class='bx bxs-phone' style="font-size: 1.25rem;"></i> Call
+            </button>
+            ` : `
+            <button onclick="showPlatformPaymentModal('${worker.id}', '${worker.name.replace(/'/g, "\\'")}')" class="btn" style="flex: 1; background-color: #6c757d; color: white; display: flex; justify-content: center; gap: 0.5rem; align-items: center; border: none; cursor: pointer;">
+                <i class='bx bxl-whatsapp' style="font-size: 1.25rem;"></i> WhatsApp
+            </button>
+            <button onclick="showPlatformPaymentModal('${worker.id}', '${worker.name.replace(/'/g, "\\'")}')" class="btn btn-primary" style="flex: 1; display: flex; justify-content: center; gap: 0.5rem; align-items: center; border: none; cursor: pointer; background-color: #6c757d;">
+                <i class='bx bxs-phone' style="font-size: 1.25rem;"></i> Call
+            </button>
+            `}
+            <button class="btn btn-outline" onclick="saveWorker(${workerId})" title="Save Profile"><i class='bx bx-bookmark' style="font-size: 1.25rem;"></i></button>
+        </div>
+    `;
+    
+    document.getElementById('workerProfileModal').style.display = 'flex';
+}
+
+function closeWorkerProfile(event) {
+    if (event && event.target !== event.currentTarget) {
+        return; // Don't close if clicking inside the modal content
+    }
+    document.getElementById('workerProfileModal').style.display = 'none';
+}
+
+function contactWorker(workerId) {
+    alert('Contact worker feature coming soon! Worker ID: ' + workerId);
+}
+
+function saveWorker(workerId) {
+    alert('Save worker feature coming soon! Worker ID: ' + workerId);
+}
+
+function openIdPhotoModal(idPhoto) {
+    if (!idPhoto) return;
+    
+    const modal = document.getElementById('idPhotoModal');
+    const fullSizeImg = document.getElementById('idPhotoFullSize');
+    fullSizeImg.src = '/static/uploads/' + idPhoto;
+    modal.style.display = 'flex';
+}
+
+function closeIdPhotoModal(event) {
+    if (event && event.target !== event.currentTarget) {
+        return; // Don't close if clicking inside the modal content
+    }
+    document.getElementById('idPhotoModal').style.display = 'none';
+}
+
+function toggleFilters() {
+    const filtersSection = document.getElementById('filtersSection');
+    if (filtersSection.style.display === 'none') {
+        filtersSection.style.display = 'block';
+    } else {
+        filtersSection.style.display = 'none';
+    }
+}
+
+function clearFilters() {
+    // Clear all filter inputs
+    document.querySelectorAll('input[type="text"], select').forEach(input => {
+        input.value = '';
+    });
+    // Reload page or fetch filtered results
+    window.location.reload();
+}
+
+// Phone Number formatting and contacting handlers
+function formatRwandanPhone(phone) {
+    if (!phone) return '';
+    let num = phone.replace(/[\s\-()+]/g, '');
+    if (num.startsWith('0')) {
+        num = '250' + num.substring(1);
+    } else if (!num.startsWith('250')) {
+        num = '250' + num;
+    }
+    return num;
+}
+
+function openWhatsApp(phone) {
+    if (typeof showPlatformPaymentModal === 'function') {
+        showPlatformPaymentModal();
+    } else {
+        alert("Please pay 10,000 FRW to 079 555 5112 to connect with this worker.");
+    }
+}
+
+function makeCall(phone) {
+    if (typeof showPlatformPaymentModal === 'function') {
+        showPlatformPaymentModal();
+    } else {
+        alert("Please pay 10,000 FRW to 079 555 5112 to connect with this worker.");
+    }
+}
+
+// Handle sidebar item clicks
+document.querySelectorAll('.sidebar-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+        if (this.getAttribute('href') === '#') {
+            e.preventDefault();
+            // Remove active class from all items
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            // Add active class to clicked item
+            this.classList.add('active');
+            // Close mobile sidebar
+            closeSidebar();
+        }
+    });
+});
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.querySelector('.mobile-sidebar-toggle');
+    
+    if (window.innerWidth <= 768 && 
+        !sidebar.contains(event.target) && 
+        !toggle.contains(event.target) &&
+        sidebar.classList.contains('active')) {
+        closeSidebar();
+    }
+});
+</script>
+{% endblock %}

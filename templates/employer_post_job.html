@@ -1,0 +1,305 @@
+{% extends "base.html" %}
+
+{% block title %}Post a Job - Umukozi{% endblock %}
+
+{% block content %}
+<div class="container" style="max-width: 900px; margin-top: 2rem;">
+    <!-- Header -->
+    <div class="card" style="margin-bottom: 2rem;">
+        <div style="text-align: center; padding: 2rem;">
+            <h2 style="margin-bottom: 1rem; color: var(--primary-color);">
+                📝 Post a New Job
+            </h2>
+            <p style="color: var(--text-secondary);">
+                Create a detailed job posting to attract qualified workers for your needs.
+            </p>
+        </div>
+    </div>
+
+    <!-- Job Posting Form -->
+    <form method="POST" enctype="multipart/form-data">
+        <div class="card">
+            <!-- Basic Information -->
+            <div class="form-section">
+                <h3 style="margin-bottom: 1.5rem;">Basic Information</h3>
+                
+                <div class="form-group">
+                    <label class="form-label">Job Title *</label>
+                    <input type="text" name="title" class="form-control" 
+                           value="{{ form_data.title if form_data else '' }}"
+                           placeholder="e.g., House Helper, Childcare Provider, Cook" required>
+                    <small style="color: var(--text-secondary);">Be specific about the role</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Job Description *</label>
+                    <textarea name="description" class="form-control" rows="6" 
+                              placeholder="Describe the job responsibilities, duties, and what the worker will be doing..." required>{{ form_data.description if form_data else '' }}</textarea>
+                    <small style="color: var(--text-secondary);">Be detailed to attract the right candidates</small>
+                </div>
+
+                <div class="form-group">
+                    <label class="form-label">Job Type *</label>
+                    <select name="job_type" class="form-control" required>
+                        <option value="">Select job type...</option>
+                        <option value="full_time" {% if form_data and form_data.job_type == 'full_time' %}selected{% endif %}>Full Time</option>
+                        <option value="part_time" {% if form_data and form_data.job_type == 'part_time' %}selected{% endif %}>Part Time</option>
+                        <option value="temporary" {% if form_data and form_data.job_type == 'temporary' %}selected{% endif %}>Temporary</option>
+                        <option value="live_in" {% if form_data and form_data.job_type == 'live_in' %}selected{% endif %}>Live In</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Location Information -->
+            <div class="form-section">
+                <h3 style="margin-bottom: 1.5rem;">Job Location</h3>
+                
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Province</label>
+                        <select name="province" class="form-control">
+                            <option value="">Select province...</option>
+                            <option value="kigali" {% if form_data and form_data.province == 'kigali' %}selected{% endif %}>Kigali</option>
+                            <option value="northern" {% if form_data and form_data.province == 'northern' %}selected{% endif %}>Northern</option>
+                            <option value="southern" {% if form_data and form_data.province == 'southern' %}selected{% endif %}>Southern</option>
+                            <option value="eastern" {% if form_data and form_data.province == 'eastern' %}selected{% endif %}>Eastern</option>
+                            <option value="western" {% if form_data and form_data.province == 'western' %}selected{% endif %}>Western</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">District</label>
+                        <input type="text" name="district" class="form-control" 
+                               value="{{ form_data.district if form_data else '' }}"
+                               placeholder="e.g., Gasabo, Nyarugenge">
+                    </div>
+                </div>
+                
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Sector</label>
+                        <input type="text" name="sector" class="form-control" 
+                               value="{{ form_data.sector if form_data else '' }}"
+                               placeholder="e.g., Kimihurura, Kacyiru">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Cell</label>
+                        <input type="text" name="cell" class="form-control" 
+                               value="{{ form_data.cell if form_data else '' }}"
+                               placeholder="Cell name">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Village</label>
+                    <input type="text" name="village" class="form-control" 
+                           value="{{ form_data.village if form_data else '' }}"
+                           placeholder="Village name">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Address Details</label>
+                    <textarea name="address_details" class="form-control" rows="3" 
+                              placeholder="Additional address information, landmarks, etc...">{{ form_data.address_details if form_data else '' }}</textarea>
+                </div>
+            </div>
+
+            <!-- Compensation -->
+            <div class="form-section">
+                <h3 style="margin-bottom: 1.5rem;">Compensation</h3>
+                
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Salary Type</label>
+                        <select name="salary_type" class="form-control">
+                            <option value="">Select salary type...</option>
+                            <option value="hourly" {% if form_data and form_data.salary_type == 'hourly' %}selected{% endif %}>Hourly</option>
+                            <option value="daily" {% if form_data and form_data.salary_type == 'daily' %}selected{% endif %}>Daily</option>
+                            <option value="weekly" {% if form_data and form_data.salary_type == 'weekly' %}selected{% endif %}>Weekly</option>
+                            <option value="monthly" {% if form_data and form_data.salary_type == 'monthly' %}selected{% endif %}>Monthly</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Salary Amount (RWF)</label>
+                        <input type="number" name="salary_amount" class="form-control" 
+                               value="{{ form_data.salary_amount if form_data else '' }}"
+                               placeholder="e.g., 50000" min="0" step="100">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" name="negotiable" {% if form_data and form_data.negotiable %}checked{% endif %}>
+                        <span>Salary is negotiable</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Requirements -->
+            <div class="form-section">
+                <h3 style="margin-bottom: 1.5rem;">Requirements</h3>
+                
+                <div class="form-group">
+                    <label class="form-label">Skills Required</label>
+                    <textarea name="skills_required" class="form-control" rows="3" 
+                              placeholder="List the skills needed (e.g., Cleaning, Cooking, Childcare, Laundry, Gardening...)">{{ form_data.skills_required if form_data else '' }}</textarea>
+                    <small style="color: var(--text-secondary);">Separate skills with commas</small>
+                </div>
+                
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Experience Required</label>
+                        <select name="experience_required" class="form-control">
+                            <option value="">Select experience level...</option>
+                            <option value="no_experience" {% if form_data and form_data.experience_required == 'no_experience' %}selected{% endif %}>No Experience Required</option>
+                            <option value="less_than_1_year" {% if form_data and form_data.experience_required == 'less_than_1_year' %}selected{% endif %}>Less than 1 year</option>
+                            <option value="1_2_years" {% if form_data and form_data.experience_required == '1_2_years' %}selected{% endif %}>1-2 years</option>
+                            <option value="3_5_years" {% if form_data and form_data.experience_required == '3_5_years' %}selected{% endif %}>3-5 years</option>
+                            <option value="more_than_5_years" {% if form_data and form_data.experience_required == 'more_than_5_years' %}selected{% endif %}>More than 5 years</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Education Required</label>
+                        <input type="text" name="education_required" class="form-control" 
+                               value="{{ form_data.education_required if form_data else '' }}"
+                               placeholder="e.g., High School, Certificate, None">
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">Languages Required</label>
+                    <textarea name="languages_required" class="form-control" rows="2" 
+                              placeholder="e.g., Kinyarwanda, English, French">{{ form_data.languages_required if form_data else '' }}</textarea>
+                    <small style="color: var(--text-secondary);">Separate languages with commas</small>
+                </div>
+            </div>
+
+            <!-- Schedule -->
+            <div class="form-section">
+                <h3 style="margin-bottom: 1.5rem;">Work Schedule</h3>
+                
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Working Hours</label>
+                        <input type="text" name="working_hours" class="form-control" 
+                               value="{{ form_data.working_hours if form_data else '' }}"
+                               placeholder="e.g., 8:00 AM - 5:00 PM">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Working Days</label>
+                        <input type="text" name="working_days" class="form-control" 
+                               value="{{ form_data.working_days if form_data else '' }}"
+                               placeholder="e.g., Monday - Friday">
+                    </div>
+                </div>
+                
+                <div class="grid grid-2">
+                    <div class="form-group">
+                        <label class="form-label">Start Date</label>
+                        <input type="date" name="start_date" class="form-control" 
+                               value="{{ form_data.start_date if form_data else '' }}">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">End Date (for temporary jobs)</label>
+                        <input type="date" name="end_date" class="form-control" 
+                               value="{{ form_data.end_date if form_data else '' }}">
+                        <small style="color: var(--text-secondary);">Leave blank for permanent positions</small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Additional Options -->
+            <div class="form-section">
+                <h3 style="margin-bottom: 1.5rem;">Additional Options</h3>
+                
+                <div class="form-group">
+                    <label style="display: flex; align-items: center; gap: 0.5rem;">
+                        <input type="checkbox" name="is_urgent" {% if form_data and form_data.is_urgent %}checked{% endif %}>
+                        <span>Mark as Urgent</span>
+                    </label>
+                    <small style="color: var(--text-secondary);">Urgent jobs will be highlighted to workers</small>
+                </div>
+            </div>
+
+            <!-- Submit Button -->
+            <div style="text-align: center; margin-top: 2rem;">
+                <button type="submit" class="btn btn-primary" style="padding: 1rem 3rem; font-size: 1.1rem;">
+                    📝 Post Job
+                </button>
+                <p style="color: var(--text-secondary); margin-top: 1rem; font-size: 0.875rem;">
+                    You can edit or close your job posting at any time from your dashboard
+                </p>
+            </div>
+        </div>
+    </form>
+</div>
+
+<style>
+.form-section {
+    margin-bottom: 2rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.grid.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+@media (max-width: 768px) {
+    .grid.grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Form validation
+document.querySelector('form').addEventListener('submit', function(e) {
+    const requiredFields = [
+        'title',
+        'description', 
+        'job_type'
+    ];
+    
+    let isValid = true;
+    requiredFields.forEach(fieldName => {
+        const field = document.querySelector(`[name="${fieldName}"]`);
+        if (!field.value.trim()) {
+            isValid = false;
+            field.style.borderColor = 'var(--danger-color)';
+        } else {
+            field.style.borderColor = '';
+        }
+    });
+    
+    if (!isValid) {
+        e.preventDefault();
+        alert('Please fill in all required fields marked with *');
+    }
+});
+
+// Real-time validation
+document.querySelectorAll('input[required], textarea[required], select[required]').forEach(field => {
+    field.addEventListener('blur', function() {
+        if (this.value.trim()) {
+            this.style.borderColor = 'var(--success-color)';
+        } else {
+            this.style.borderColor = 'var(--danger-color)';
+        }
+    });
+});
+</script>
+{% endblock %}

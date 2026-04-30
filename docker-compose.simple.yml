@@ -1,0 +1,34 @@
+services:
+  # Flask Application
+  web:
+    build: 
+      context: .
+      dockerfile: Dockerfile.simple
+    container_name: umukozi_web
+    ports:
+      - "5000:5000"
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=${SECRET_KEY:-your-secret-key-change-in-production}
+      - DATABASE_URL=sqlite:///umukozi.db
+    volumes:
+      - ./instance:/app/instance
+      - ./static/uploads:/app/static/uploads
+    restart: unless-stopped
+
+  # PostgreSQL Database (optional - comment out to use SQLite)
+  # db:
+  #   image: postgres:15-alpine
+  #   container_name: umukozi_db
+  #   environment:
+  #     - POSTGRES_DB=umukozi_db
+  #     - POSTGRES_USER=umukozi_user
+  #     - POSTGRES_PASSWORD=umukozi_password
+  #   volumes:
+  #     - postgres_data:/var/lib/postgresql/data
+  #   ports:
+  #     - "5432:5432"
+  #   restart: unless-stopped
+
+# volumes:
+#   postgres_data:

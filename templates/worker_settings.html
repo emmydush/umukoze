@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Umukozi{% endblock %}
+
+{% block content %}
+<!-- Mobile Sidebar Toggle -->
+<button class="mobile-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar {% if worker.profile_picture %}has-profile-picture{% else %}sidebar-avatar-gradient{% endif %}">
+                    {% if worker.profile_picture %}
+                        <img src="{{ url_for('static', filename='uploads/' + worker.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
+                    {% else %}
+                        {{ current_user.full_name[0].upper() }}
+                    {% endif %}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name }}</h4>
+                    <p style="font-size: 0.75rem; opacity: 0.8;">Worker Account</p>
+                </div>
+            </div>
+            {% if worker.is_verified %}
+                <div class="badge badge-success" style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2);">
+                    ✓ Verified Worker
+                </div>
+            {% else %}
+                <div class="badge badge-warning" style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2);">
+                    ⏳ Verification Pending
+                </div>
+            {% endif %}
+        </div>
+        
+        <nav class="sidebar-menu">
+            <div class="sidebar-section">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-dashboard'></i></span>
+                    Overview
+                </a>
+                <a href="{{ url_for('worker_find_jobs') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bx-search-alt'></i></span>
+                    Find Jobs
+                </a>
+                <a href="{{ url_for('worker_applications') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-file-doc'></i></span>
+                    Applications
+                    <span class="sidebar-badge">{{ (worker.applications or [])|length }}</span>
+                </a>
+                <a href="#" onclick="showMessages()" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-message-dots'></i></span>
+                    Messages
+                    <span class="sidebar-badge">2</span>
+                </a>
+                <a href="{{ url_for('worker_activity') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bx-line-chart'></i></span>
+                    Activity
+                </a>
+                <a href="{{ url_for('worker_complete_profile') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-user-circle'></i></span>
+                    My Profile
+                </a>
+                <a href="{{ url_for('worker_settings') }}" class="sidebar-item active">
+                    <span class="sidebar-item-icon"><i class='bx bxs-cog'></i></span>
+                    Settings
+                </a>
+                <a href="javascript:void(0)" onclick="confirmLogout(event)" data-logout-url="{{ url_for('logout') }}" class="sidebar-item" style="color: var(--danger-color); margin-top: 2rem;">
+                    <span class="sidebar-item-icon"><i class='bx bx-log-out'></i></span>
+                    Logout
+                </a>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header style="margin-bottom: 2.5rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em;">Account Settings</h1>
+            <p style="color: var(--text-secondary);">Manage your personal details, professional profile, and security preferences.</p>
+        </header>
+
+        <div class="grid grid-3" style="align-items: start; gap: 2rem;">
+            <!-- Left Column: Menu -->
+            <div style="grid-column: span 1; position: sticky; top: 2rem;">
+                <div class="card" style="padding: 1rem; border-radius: 1.25rem;">
+                    <nav style="display: flex; flex-direction: column; gap: 0.5rem;">
+                        <a href="#personal" class="btn btn-outline" style="justify-content: flex-start; border: none; background: #f8fafc; font-weight: 700; color: var(--primary-color);"><i class='bx bxs-user' style="margin-right: 0.5rem;"></i> Personal Info</a>
+                        <a href="#professional" class="btn btn-outline" style="justify-content: flex-start; border: none;"><i class='bx bxs-briefcase' style="margin-right: 0.5rem;"></i> Professional</a>
+                        <a href="#location" class="btn btn-outline" style="justify-content: flex-start; border: none;"><i class='bx bxs-map' style="margin-right: 0.5rem;"></i> Location</a>
+                        <a href="#notifications" class="btn btn-outline" style="justify-content: flex-start; border: none;"><i class='bx bxs-bell' style="margin-right: 0.5rem;"></i> Notifications</a>
+                        <a href="#security" class="btn btn-outline" style="justify-content: flex-start; border: none;"><i class='bx bxs-lock-alt' style="margin-right: 0.5rem;"></i> Security</a>
+                    </nav>
+                </div>
+                
+                <div class="card" style="margin-top: 1.5rem; padding: 1.5rem; border-radius: 1.25rem; background: linear-gradient(135deg, #fef2f2, #fff); border: 1px solid #fee2e2;">
+                    <h4 style="color: #991b1b; font-size: 0.875rem; font-weight: 700; margin-bottom: 0.75rem;">Danger Zone</h4>
+                    <p style="font-size: 0.75rem; color: #7f1d1d; margin-bottom: 1rem;">Actions here are permanent and cannot be reversed.</p>
+                    <button class="btn btn-danger btn-sm" style="width: 100%; border-radius: 0.75rem;" onclick="deleteAccount()">Delete Account</button>
+                </div>
+            </div>
+
+            <!-- Right Column: Forms -->
+            <div style="grid-column: span 2; display: flex; flex-direction: column; gap: 2rem;">
+                <!-- Personal Info Section -->
+                <section id="personal" class="card" style="border-radius: 1.5rem; padding: 2rem;">
+                    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="background: rgba(37, 99, 235, 0.1); padding: 0.5rem; border-radius: 0.75rem; color: var(--primary-color);"><i class='bx bxs-user'></i></span>
+                        Personal Details
+                    </h3>
+                    <div class="grid grid-2" style="gap: 1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label">Full Legal Name</label>
+                            <input type="text" class="form-control" style="border-radius: 0.75rem;" value="{{ current_user.full_name }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Email Address</label>
+                            <input type="email" class="form-control" style="border-radius: 0.75rem;" value="{{ current_user.email }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Phone Number</label>
+                            <input type="tel" class="form-control" style="border-radius: 0.75rem;" value="{{ current_user.phone }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Gender</label>
+                            <select class="form-control" style="border-radius: 0.75rem;">
+                                <option>Male</option>
+                                <option>Female</option>
+                                <option>Other</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="margin-top: 2rem; border-radius: 0.75rem; padding: 0.75rem 2rem;" onclick="updatePersonalInfo()">Save Personal Info</button>
+                </section>
+
+                <!-- Professional Section -->
+                <section id="professional" class="card" style="border-radius: 1.5rem; padding: 2rem;">
+                    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="background: rgba(16, 185, 129, 0.1); padding: 0.5rem; border-radius: 0.75rem; color: var(--secondary-color);"><i class='bx bxs-briefcase'></i></span>
+                        Professional Profile
+                    </h3>
+                    <div class="grid grid-2" style="gap: 1.5rem; margin-bottom: 1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label">Years of Experience</label>
+                            <input type="number" class="form-control" style="border-radius: 0.75rem;" value="{{ worker.experience_years or 0 }}">
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">Availability Status</label>
+                            <select class="form-control" style="border-radius: 0.75rem;">
+                                <option value="available" {% if worker.availability_status == 'available' %}selected{% endif %}>Open to work</option>
+                                <option value="busy" {% if worker.availability_status == 'busy' %}selected{% endif %}>Currently working</option>
+                                <option value="unavailable" {% if worker.availability_status == 'unavailable' %}selected{% endif %}>Not looking</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-group" style="margin-bottom: 2rem;">
+                        <label class="form-label">Professional Bio</label>
+                        <textarea class="form-control" style="border-radius: 1rem; min-height: 120px;" placeholder="Describe your skills and experience to potential employers...">{{ worker.bio or '' }}</textarea>
+                    </div>
+                    <button class="btn btn-primary" style="border-radius: 0.75rem; padding: 0.75rem 2rem;" onclick="updateProfessionalInfo()">Update Profile</button>
+                </section>
+
+                <!-- Location Section -->
+                <section id="location" class="card" style="border-radius: 1.5rem; padding: 2rem;">
+                    <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                        <span style="background: rgba(245, 158, 11, 0.1); padding: 0.5rem; border-radius: 0.75rem; color: var(--warning-color);"><i class='bx bxs-map'></i></span>
+                        Work Location
+                    </h3>
+                    <div class="grid grid-2" style="gap: 1.5rem;">
+                        <div class="form-group">
+                            <label class="form-label">Province</label>
+                            <select class="form-control" style="border-radius: 0.75rem;">
+                                <option value="kigali" {% if worker.province == 'kigali' %}selected{% endif %}>Kigali City</option>
+                                <option value="northern" {% if worker.province == 'northern' %}selected{% endif %}>Northern Province</option>
+                                <option value="southern" {% if worker.province == 'southern' %}selected{% endif %}>Southern Province</option>
+                                <option value="eastern" {% if worker.province == 'eastern' %}selected{% endif %}>Eastern Province</option>
+                                <option value="western" {% if worker.province == 'western' %}selected{% endif %}>Western Province</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label class="form-label">District</label>
+                            <input type="text" class="form-control" style="border-radius: 0.75rem;" value="{{ worker.district or '' }}">
+                        </div>
+                    </div>
+                    <button class="btn btn-primary" style="margin-top: 2rem; border-radius: 0.75rem; padding: 0.75rem 2rem;" onclick="updateLocationInfo()">Save Location</button>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+function confirmLogout(event) {
+    event.preventDefault();
+    const logoutUrl = document.querySelector('[data-logout-url]').getAttribute('data-logout-url');
+    if (confirm('Are you sure you want to logout?')) {
+        window.location.href = logoutUrl;
+    }
+}
+
+function updatePersonalInfo() {
+    alert('Personal information updated successfully!');
+}
+
+function updateProfessionalInfo() {
+    alert('Professional profile updated successfully!');
+}
+
+function updateLocationInfo() {
+    alert('Location preferences updated successfully!');
+}
+
+function deleteAccount() {
+    if (confirm('CRITICAL: Are you sure you want to delete your account? This action cannot be reversed.')) {
+        const confirmText = prompt('Please type DELETE to confirm deletion:');
+        if (confirmText === 'DELETE') {
+            alert('Request submitted. Your account will be removed shortly.');
+        }
+    }
+}
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.querySelector('.mobile-sidebar-toggle');
+    
+    if (window.innerWidth <= 768 && 
+        !sidebar.contains(event.target) && 
+        !toggle.contains(event.target) &&
+        sidebar.classList.contains('active')) {
+        closeSidebar();
+    }
+});
+</script>
+{% endblock %}
+

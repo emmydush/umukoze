@@ -1,0 +1,257 @@
+{% extends "base.html" %}
+
+{% block title %}Employer Dashboard - Umukozi{% endblock %}
+
+{% block content %}
+<section style="padding: 2rem 0;">
+    <div class="container">
+        <!-- Welcome Header -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                <div style="display: flex; align-items: center;">
+                    <div style="width: 60px; height: 60px; border-radius: 50%; background: var(--secondary-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; margin-right: 1rem;">
+                        {{ current_user.full_name[0].upper() }}
+                    </div>
+                    <div>
+                        <h2 style="margin-bottom: 0.25rem;">Welcome, {{ current_user.full_name }}!</h2>
+                        <p style="color: var(--text-secondary); margin: 0;">
+                            {% if employer.is_verified %}
+                                <span class="badge badge-success">✓ Verified Employer</span>
+                            {% else %}
+                                <span class="badge badge-warning">⚠ Verification Pending</span>
+                            {% endif %}
+                            <span style="font-size: 0.875rem; margin-left: 0.5rem;">{{ employer.company_name or 'Individual Employer' }}</span>
+                        </p>
+                    </div>
+                </div>
+                <div>
+                    <a href="#" class="btn btn-primary btn-sm" onclick="postNewJob()">Post New Job</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Stats Overview -->
+        <div class="grid grid-4" style="margin-bottom: 2rem;">
+            <div class="card text-center">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">{{ employer.total_jobs_posted }}</div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Jobs Posted</p>
+            </div>
+            <div class="card text-center">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--secondary-color);">{{ employer.jobs|selectattr('status', 'equalto', 'filled')|list|length }}</div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Positions Filled</p>
+            </div>
+            <div class="card text-center">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--accent-color);">{{ employer.jobs|selectattr('status', 'equalto', 'open')|sum(attribute='applications')|length }}</div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Active Applications</p>
+            </div>
+            <div class="card text-center">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--danger-color);">{% if employer.average_rating %}{{ "%.1f"|format(employer.average_rating) }}{% else %}0.0{% endif %}</div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Average Rating</p>
+            </div>
+        </div>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-3">
+            <!-- Recent Job Posts -->
+            <div class="card" style="grid-column: span 2;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                    <h3>Your Job Posts</h3>
+                    <a href="#" class="btn btn-outline btn-sm">View All</a>
+                </div>
+                
+                {% if employer.jobs %}
+                    {% for job in employer.jobs[:5] %}
+                    <div style="border-bottom: 1px solid var(--border-color); padding-bottom: 1rem; margin-bottom: 1rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: start;">
+                            <div>
+                                <h4 style="margin-bottom: 0.25rem;">{{ job.title }}</h4>
+                                <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">
+                                    {{ job.district }} • {{ job.job_type|title }}
+                                </p>
+                                <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                                    <span class="badge badge-{{ 'success' if job.status == 'filled' else 'warning' if job.status == 'open' else 'danger' }}">
+                                        {{ job.status|title }}
+                                    </span>
+                                    {% if job.is_urgent %}
+                                    <span class="badge badge-danger">Urgent</span>
+                                    {% endif %}
+                                    <span style="font-size: 0.75rem; color: var(--text-secondary);">
+                                        Posted {{ job.created_at.strftime('%d %b %Y') }}
+                                    </span>
+                                </div>
+                            </div>
+                            <div style="text-align: right;">
+                                <div style="font-weight: 600; color: var(--primary-color);">
+                                    {% if job.salary_amount %}
+                                        {{ job.salary_amount }} RWF/{{ job.salary_type }}
+                                    {% else %}
+                                        Negotiable
+                                    {% endif %}
+                                </div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                                    {{ job.applications|length }} applications
+                                </div>
+                                <div style="display: flex; gap: 0.25rem;">
+                                    <a href="#" class="btn btn-sm btn-outline">View</a>
+                                    {% if job.status == 'open' %}
+                                    <a href="#" class="btn btn-sm btn-outline">Edit</a>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; padding: 2rem; color: var(--text-secondary);">
+                        <div style="font-size: 3rem; margin-bottom: 1rem;">📝</div>
+                        <p>No jobs posted yet. Create your first job posting to find workers!</p>
+                        <a href="#" class="btn btn-primary" style="margin-top: 1rem;" onclick="postNewJob()">Post Your First Job</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Quick Actions & Activity -->
+            <div>
+                <!-- Recent Activity -->
+                <div class="card" style="margin-bottom: 1.5rem;">
+                    <h3 style="margin-bottom: 1rem;">Recent Activity</h3>
+                    <div style="max-height: 200px; overflow-y: auto;">
+                        <div style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-color); font-size: 0.875rem;">
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">New Application</div>
+                            <div style="color: var(--text-secondary);">Marie Uwimana applied for "House Helper"</div>
+                            <div style="color: var(--text-secondary); font-size: 0.75rem;">2 hours ago</div>
+                        </div>
+                        <div style="padding: 0.5rem 0; border-bottom: 1px solid var(--border-color); font-size: 0.875rem;">
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Job Posted</div>
+                            <div style="color: var(--text-secondary);">Your job "Childcare Provider" is now live</div>
+                            <div style="color: var(--text-secondary); font-size: 0.75rem;">1 day ago</div>
+                        </div>
+                        <div style="padding: 0.5rem 0; font-size: 0.875rem;">
+                            <div style="font-weight: 600; margin-bottom: 0.25rem;">Profile Updated</div>
+                            <div style="color: var(--text-secondary);">Your profile was successfully verified</div>
+                            <div style="color: var(--text-secondary); font-size: 0.75rem;">3 days ago</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="card">
+                    <h3 style="margin-bottom: 1rem;">Quick Actions</h3>
+                    <div style="display: flex; flex-direction: column; gap: 0.75rem;">
+                        <a href="#" class="btn btn-outline" style="text-align: left;" onclick="postNewJob()">
+                            <span style="margin-right: 0.5rem;">➕</span> Post New Job
+                        </a>
+                        <a href="#" class="btn btn-outline" style="text-align: left;">
+                            <span style="margin-right: 0.5rem;">🔍</span> Browse Workers
+                        </a>
+                        <a href="#" class="btn btn-outline" style="text-align: left;">
+                            <span style="margin-right: 0.5rem;">📊</span> View Applications
+                        </a>
+                        <a href="#" class="btn btn-outline" style="text-align: left;">
+                            <span style="margin-right: 0.5rem;">💬</span> Messages
+                        </a>
+                        <a href="#" class="btn btn-outline" style="text-align: left;">
+                            <span style="margin-right: 0.5rem;">⭐</span> Give Reviews
+                        </a>
+                        <a href="#" class="btn btn-outline" style="text-align: left;">
+                            <span style="margin-right: 0.5rem;">⚙️</span> Account Settings
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recommended Workers -->
+        <div class="card" style="margin-top: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3>Recommended Workers</h3>
+                <a href="#" class="btn btn-outline btn-sm">Browse All Workers</a>
+            </div>
+            
+            <div class="grid grid-3">
+                <!-- Sample Worker Cards -->
+                <div class="card">
+                    <div class="card-header">
+                        <img src="https://picsum.photos/seed/worker1/50/50" alt="Worker" class="card-avatar">
+                        <div>
+                            <h4>Florence Mukamana</h4>
+                            <p class="card-subtitle">House Helper • 5 years exp</p>
+                        </div>
+                    </div>
+                    <div class="rating mb-2">
+                        ⭐⭐⭐⭐⭐ <span style="color: var(--text-secondary); font-size: 0.875rem;">(4.9)</span>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem;">
+                        Experienced in cleaning, cooking, and childcare. Available full-time.
+                    </p>
+                    <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                        <div>📍 Kigali, Nyarugenge</div>
+                        <div>💰 45,000 RWF/month</div>
+                        <div>✅ Verified</div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a href="#" class="btn btn-primary btn-sm" style="flex: 1;">View Profile</a>
+                        <a href="#" class="btn btn-outline btn-sm" style="flex: 1;">Message</a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <img src="https://picsum.photos/seed/worker2/50/50" alt="Worker" class="card-avatar">
+                        <div>
+                            <h4>Jean Baptiste Niyonzima</h4>
+                            <p class="card-subtitle">Gardener • 3 years exp</p>
+                        </div>
+                    </div>
+                    <div class="rating mb-2">
+                        ⭐⭐⭐⭐ <span style="color: var(--text-secondary); font-size: 0.875rem;">(4.2)</span>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem;">
+                        Skilled gardener with experience in landscape maintenance and plant care.
+                    </p>
+                    <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                        <div>📍 Kigali, Gasabo</div>
+                        <div>💰 2,500 RWF/day</div>
+                        <div>✅ Verified</div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a href="#" class="btn btn-primary btn-sm" style="flex: 1;">View Profile</a>
+                        <a href="#" class="btn btn-outline btn-sm" style="flex: 1;">Message</a>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <div class="card-header">
+                        <img src="https://picsum.photos/seed/worker3/50/50" alt="Worker" class="card-avatar">
+                        <div>
+                            <h4>Marie Louise Uwimana</h4>
+                            <p class="card-subtitle">Nanny • 7 years exp</p>
+                        </div>
+                    </div>
+                    <div class="rating mb-2">
+                        ⭐⭐⭐⭐⭐ <span style="color: var(--text-secondary); font-size: 0.875rem;">(5.0)</span>
+                    </div>
+                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1rem;">
+                        Professional nanny with early childhood education background.
+                    </p>
+                    <div style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 1rem;">
+                        <div>📍 Kigali, Kicukiro</div>
+                        <div>💰 60,000 RWF/month</div>
+                        <div>✅ Verified</div>
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <a href="#" class="btn btn-primary btn-sm" style="flex: 1;">View Profile</a>
+                        <a href="#" class="btn btn-outline btn-sm" style="flex: 1;">Message</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<script>
+function postNewJob() {
+    alert('Job posting feature coming soon!');
+}
+</script>
+{% endblock %}

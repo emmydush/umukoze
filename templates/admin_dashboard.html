@@ -1,0 +1,789 @@
+{% extends "base.html" %}
+
+{% block title %}Admin Dashboard - Umukozi{% endblock %}
+
+{% block content %}
+<!-- Mobile Menu Button -->
+<button class="mobile-menu-btn" onclick="toggleSidebar()">
+    <i class='bx bx-menu'></i>
+</button>
+
+<!-- Top Navigation Bar -->
+<div class="top-nav-bar" style="position: fixed; top: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-color); padding: 0.75rem 1.5rem; z-index: 1000; display: flex; justify-content: space-between; align-items: center;">
+    <!-- Left Side: Logo and Menu -->
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <!-- Logo -->
+        <a href="{{ url_for('index') }}" style="text-decoration: none;">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Umukozi Logo" style="height: 65px; width: auto; object-fit: contain;">
+        </a>
+    </div>
+
+    <!-- Right Side: Navigation Items -->
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <!-- Profile Picture -->
+        <button onclick="showProfileMenu()" style="display: flex; align-items: center; gap: 0.75rem; background: var(--white); padding: 0.4rem 0.75rem; border-radius: 9999px; border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s; height: 45px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: bold; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                {{ current_user.full_name[0].upper() }}
+            </div>
+            <div style="text-align: left;">
+                <div style="font-weight: 600; font-size: 0.875rem; line-height: 1.2; color: var(--text-primary);">{{ current_user.full_name }}</div>
+                <div style="font-size: 0.625rem; color: var(--success-color); line-height: 1;">Administrator</div>
+            </div>
+            <i class='bx bx-chevron-down' style="font-size: 1rem; color: var(--text-secondary);"></i>
+        </button>
+    </div>
+</div>
+
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                    {{ current_user.full_name[0].upper() }}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name }}</h4>
+                    <p style="font-size: 0.75rem; opacity: 0.8;">System Administrator</p>
+                </div>
+            </div>
+            <div style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2); background: var(--success-color); color: white; padding: 0.5rem; border-radius: 0.5rem; text-align: center;">
+                ✓ Admin Access
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h6>Dashboard</h6>
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-link active">
+                    <i class='bx bx-home-alt'></i>
+                    <span>Overview</span>
+                </a>
+                <a href="{{ url_for('admin_users') }}" class="nav-link">
+                    <i class='bx bx-user'></i>
+                    <span>Users</span>
+                </a>
+                <a href="{{ url_for('admin_workers') }}" class="nav-link">
+                    <i class='bx bxs-group'></i>
+                    <span>Workers</span>
+                </a>
+                <a href="{{ url_for('admin_employers') }}" class="nav-link">
+                    <i class='bx bxs-business'></i>
+                    <span>Employers</span>
+                </a>
+                <a href="{{ url_for('admin_jobs') }}" class="nav-link">
+                    <i class='bx bx-briefcase'></i>
+                    <span>Jobs</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h6>Management</h6>
+                <a href="{{ url_for('admin_verification') }}" class="nav-link">
+                    <i class='bx bx-shield-check'></i>
+                    <span>Verification</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class='bx bx-message-dots'></i>
+                    <span>Messages</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class='bx bx-bell'></i>
+                    <span>Notifications</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h6>System</h6>
+                <a href="{{ url_for('admin_settings') }}" class="nav-link">
+                    <i class='bx bx-cog'></i>
+                    <span>Settings</span>
+                </a>
+                <a href="{{ url_for('admin_reports') }}" class="nav-link">
+                    <i class='bx bx-chart-line'></i>
+                    <span>Reports</span>
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-link" style="color: var(--danger-color);">
+                    <i class='bx bx-log-out'></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Header -->
+        <header style="margin-bottom: 2.5rem; padding-top: 1rem;">
+            <div>
+                <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em;">Admin Dashboard</h1>
+                <p style="color: var(--text-secondary);">Welcome back, {{ current_user.full_name.split()|last }}! Here's your system overview.</p>
+            </div>
+        </header>
+
+        <!-- Stats Grid -->
+        <div class="dashboard-grid">
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-color);"><i class='bx bxs-user'></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ total_workers }}</div>
+                    <div class="stat-label">Total Workers</div>
+                </div>
+            </div>
+            
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);"><i class='bx bxs-building'></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ total_employers }}</div>
+                    <div class="stat-label">Total Employers</div>
+                </div>
+            </div>
+            
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color);"><i class='bx bxs-briefcase-alt'></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ total_jobs }}</div>
+                    <div class="stat-label">Total Jobs</div>
+                </div>
+            </div>
+            
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color);"><i class='bx bxs-file-doc'></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ total_applications }}</div>
+                    <div class="stat-label">Total Applications</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-3" style="gap: 2rem;">
+            <!-- Recent Users -->
+            <div style="grid-column: span 2;">
+                <section style="margin-bottom: 3rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="font-size: 1.25rem; font-weight: 700;">Recent Users</h2>
+                        <a href="{{ url_for('admin_users') }}" style="color: var(--primary-color); font-size: 0.875rem; font-weight: 600; text-decoration: none;">View All Users →</a>
+                    </div>
+                    
+                    <div style="display: grid; gap: 1rem;">
+                        {% for user in recent_users %}
+                        <div class="card" style="padding: 1.5rem; border-radius: 1rem;">
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                {% set profile_pic = None %}
+                                {% if user.worker and user.worker.profile_picture %}
+                                    {% set profile_pic = url_for('static', filename='uploads/' + user.worker.profile_picture) %}
+                                {% elif user.employer and user.employer.profile_picture %}
+                                    {% set profile_pic = url_for('static', filename='uploads/' + user.employer.profile_picture) %}
+                                {% endif %}
+                                
+                                {% if profile_pic %}
+                                <img src="{{ profile_pic }}" alt="{{ user.full_name }}" style="width: 50px; height: 50px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);">
+                                {% else %}
+                                <div style="width: 50px; height: 50px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; font-weight: bold; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                                    {{ user.full_name[0].upper() }}
+                                </div>
+                                {% endif %}
+                                
+                                <div style="flex: 1;">
+                                    <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.25rem;">{{ user.full_name }}</h4>
+                                    <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.25rem;">{{ user.email }}</p>
+                                    <div style="display: flex; align-items: center; gap: 1rem;">
+                                        {% if user.user_type == 'worker' %}
+                                        <span style="font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: 9999px; background: rgba(37, 99, 235, 0.1); color: var(--primary-color);">
+                                        {% elif user.user_type == 'employer' %}
+                                        <span style="font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: 9999px; background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);">
+                                        {% else %}
+                                        <span style="font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: 9999px; background: rgba(239, 68, 68, 0.1); color: var(--danger-color);">
+                                        {% endif %}
+                                            {{ user.user_type.title() }}
+                                        </span>
+                                        <span style="font-size: 0.75rem; color: var(--text-secondary);">
+                                            {{ user.created_at.strftime('%b %d, %Y') }}
+                                        </span>
+                                        {% if user.worker and user.worker.is_verified %}
+                                        <span style="font-size: 0.7rem; color: var(--success-color);">
+                                            <i class='bx bx-check-circle'></i> Verified
+                                        </span>
+                                        {% elif user.employer and user.employer.is_verified %}
+                                        <span style="font-size: 0.7rem; color: var(--success-color);">
+                                            <i class='bx bx-check-circle'></i> Verified
+                                        </span>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+
+            <!-- Recent Jobs -->
+            <div>
+                <section>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="font-size: 1.25rem; font-weight: 700;">Recent Jobs</h2>
+                        <a href="#" style="color: var(--primary-color); font-size: 0.875rem; font-weight: 600; text-decoration: none;">View All →</a>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        {% for job in recent_jobs %}
+                        <div class="card" style="padding: 1.5rem; border-radius: 1rem;">
+                            <h4 style="font-size: 1rem; font-weight: 600; margin-bottom: 0.5rem;">{{ job.title }}</h4>
+                            <p style="font-size: 0.875rem; color: var(--text-secondary); margin-bottom: 0.75rem; line-height: 1.4;">{{ job.description[:100] }}{% if job.description|length > 100 %}...{% endif %}</p>
+                            <div style="display: flex; align-items: center; gap: 1rem;">
+                                <span style="font-size: 0.75rem; padding: 0.25rem 0.75rem; border-radius: 9999px; background: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+                                    {{ job.job_type.replace('_', ' ').title() }}
+                                </span>
+                                <span style="font-size: 0.75rem; color: var(--text-secondary);">
+                                    {{ job.created_at.strftime('%b %d') }}
+                                </span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </section>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+function showProfileMenu() {
+    // Profile menu functionality
+    alert('Profile menu coming soon!');
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (sidebar.classList.contains('active')) {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    } else {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    }
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+// Close sidebar when clicking on navigation links on mobile
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                closeSidebar();
+            }
+        });
+    });
+    
+    // Close sidebar on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSidebar();
+        }
+    });
+});
+
+// Handle window resize
+window.addEventListener('resize', function() {
+    if (window.innerWidth > 768) {
+        closeSidebar();
+    }
+});
+</script>
+
+<style>
+/* Admin specific styles */
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: var(--white);
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 100;
+    overflow-y: auto;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 260px;
+    padding: 2rem;
+    background: var(--gray-50);
+    min-height: 100vh;
+    overflow-y: auto;
+}
+
+.main-content header {
+    margin-bottom: 2rem;
+}
+
+.card {
+    background: var(--white);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.grid-3 {
+    display: grid;
+    grid-template-columns: 2fr 1fr;
+    gap: 2rem;
+}
+
+.stat-card-modern {
+    background: var(--white);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.stat-card-modern:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.stat-icon-wrapper {
+    width: 60px;
+    height: 60px;
+    border-radius: 1rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+.card {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    border-radius: 1rem;
+    transition: all 0.3s ease;
+}
+
+.card:hover {
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+/* Sidebar Navigation Styles */
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0;
+    overflow-y: auto;
+}
+
+.nav-section {
+    margin-bottom: 2rem;
+}
+
+.nav-section h6 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 1rem 1.5rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-radius: 0;
+    margin-bottom: 0.25rem;
+    position: relative;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    background: rgba(37, 99, 235, 0.05);
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.nav-link.active {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--primary-color);
+    border-radius: 0 3px 3px 0;
+}
+
+.nav-link i {
+    font-size: 1.25rem;
+    width: 20px;
+    text-align: center;
+}
+
+.nav-link span {
+    font-size: 0.875rem;
+}
+
+/* Sidebar User Info */
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+}
+
+.sidebar-user-info h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.sidebar-user-info p {
+    font-size: 0.75rem;
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+/* Sidebar Size Adjustment */
+.sidebar {
+    width: 260px !important;
+    min-width: 260px !important;
+}
+
+/* Compact Sidebar Navigation */
+.nav-link {
+    padding: 0.6rem 1.2rem !important;
+    gap: 0.6rem !important;
+}
+
+.nav-link i {
+    font-size: 1.1rem !important;
+    width: 18px !important;
+}
+
+.nav-link span {
+    font-size: 0.8rem !important;
+}
+
+.nav-section h6 {
+    margin: 0 0 0.8rem 1.2rem !important;
+    font-size: 0.7rem !important;
+}
+
+.sidebar-user {
+    padding: 0.8rem !important;
+    gap: 0.8rem !important;
+}
+
+.sidebar-user > div:first-child {
+    width: 40px !important;
+    height: 40px !important;
+    font-size: 1rem !important;
+}
+
+.sidebar-user-info h4 {
+    font-size: 0.9rem !important;
+}
+
+.sidebar-user-info p {
+    font-size: 0.7rem !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .grid-3 {
+        grid-template-columns: 1fr;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Mobile Sidebar */
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        top: 0;
+        height: 100vh;
+        z-index: 1001;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+    }
+    
+    /* Mobile Menu Button */
+    .mobile-menu-btn {
+        display: block;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 1002;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        cursor: pointer;
+        font-size: 1.25rem;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+    }
+    
+    .main-content {
+        padding: 1rem;
+        margin-left: 0 !important;
+        padding-top: 80px;
+    }
+    
+    .dashboard-layout {
+        min-height: auto;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .grid-3 {
+        grid-template-columns: 1fr;
+    }
+    
+    /* Stats Cards */
+    .stat-card-modern {
+        padding: 1rem;
+    }
+    
+    .stat-icon-wrapper {
+        width: 50px;
+        height: 50px;
+        font-size: 1.25rem;
+    }
+    
+    .stat-value {
+        font-size: 1.5rem;
+    }
+    
+    /* Cards */
+    .card {
+        padding: 1rem;
+    }
+    
+    /* Top Navigation */
+    .top-nav-bar {
+        padding: 0.5rem 1rem;
+    }
+    
+    .top-nav-bar img {
+        height: 50px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Mobile Specific */
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stat-card-modern {
+        padding: 0.75rem;
+    }
+    
+    .stat-icon-wrapper {
+        width: 40px;
+        height: 40px;
+        font-size: 1rem;
+        margin-bottom: 0.5rem;
+    }
+    
+    .stat-value {
+        font-size: 1.25rem;
+    }
+    
+    .stat-label {
+        font-size: 0.75rem;
+    }
+    
+    /* User Cards */
+    .card {
+        padding: 0.75rem;
+    }
+    
+    /* Typography */
+    h1 {
+        font-size: 1.5rem !important;
+    }
+    
+    h2 {
+        font-size: 1.125rem !important;
+    }
+    
+    h4 {
+        font-size: 0.875rem !important;
+    }
+    
+    /* Profile Pictures */
+    img[style*="width: 50px"] {
+        width: 40px !important;
+        height: 40px !important;
+    }
+    
+    div[style*="width: 50px"] {
+        width: 40px !important;
+        height: 40px !important;
+        font-size: 1rem !important;
+    }
+    
+    /* Navigation */
+    .top-nav-bar {
+        padding: 0.5rem;
+    }
+    
+    .top-nav-bar img {
+        height: 40px !important;
+    }
+    
+    /* Badges */
+    span[style*="font-size: 0.75rem"] {
+        font-size: 0.625rem !important;
+        padding: 0.2rem 0.5rem !important;
+    }
+}
+
+/* Landscape Mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+    .sidebar {
+        top: 0;
+        height: 100vh;
+    }
+    
+    .main-content {
+        padding-top: 60px;
+    }
+}
+
+/* Tablet Styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .sidebar {
+        width: 240px !important;
+        min-width: 240px !important;
+    }
+    
+    .main-content {
+        margin-left: 240px;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+/* Hide mobile menu button on desktop */
+@media (min-width: 769px) {
+    .mobile-menu-btn {
+        display: none;
+    }
+    
+    .sidebar-overlay {
+        display: none !important;
+    }
+    
+    .sidebar {
+        position: fixed;
+        left: 0 !important;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+    }
+    
+    .main-content {
+        margin-left: 260px;
+        padding: 2rem;
+    }
+    
+    .dashboard-layout {
+        min-height: 100vh;
+    }
+}
+</style>
+{% endblock %}

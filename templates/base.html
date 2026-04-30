@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Umukozi - Connect Household Workers with Employers in Rwanda{% endblock %}</title>
+    <meta name="description" content="{% block description %}Find trusted household workers and connect with employers in Rwanda. Safe, reliable, and easy to use platform.{% endblock %}">
+    
+    <!-- PWA Meta Tags -->
+    <meta name="theme-color" content="#4F46E5">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="Umukozi">
+    <meta name="application-name" content="Umukozi">
+    <meta name="msapplication-TileColor" content="#4F46E5">
+    <meta name="msapplication-config" content="{{ url_for('static', filename='browserconfig.xml') }}">
+    
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/icon-192x192.png') }}">
+    
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <nav class="container">
+            <div class="nav">
+                <style>
+                .logo-animated {
+                    font-size: 28px;
+                    font-weight: 900;
+                    text-decoration: none;
+                    display: flex;
+                    letter-spacing: 2px;
+                    text-transform: uppercase;
+                }
+                .logo-animated span {
+                    display: inline-block;
+                    color: var(--c);
+                    animation: waveLogo 2.5s infinite ease-in-out;
+                    animation-delay: calc(0.15s * var(--i));
+                }
+                @keyframes waveLogo {
+                    0%, 40%, 100% {
+                        transform: translateY(0);
+                        text-shadow: 0 0 0 rgba(0,0,0,0);
+                        filter: brightness(1);
+                    }
+                    20% {
+                        transform: translateY(-8px);
+                        text-shadow: 0 4px 12px var(--c);
+                        filter: brightness(1.25);
+                    }
+                }
+                </style>
+                <a href="{{ url_for('index') }}" class="logo logo-animated">
+                    <span style="--i:1; --c:#2563eb;">U</span><span style="--i:2; --c:#ef4444;">M</span><span style="--i:3; --c:#10b981;">U</span><span style="--i:4; --c:#f59e0b;">K</span><span style="--i:5; --c:#8b5cf6;">O</span><span style="--i:6; --c:#14b8a6;">Z</span><span style="--i:7; --c:#f43f5e;">I</span>
+                </a>
+                
+                <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
+                    <i class='bx bx-menu'></i>
+                </button>
+                
+                <ul class="nav-links" id="navLinks">
+                    <li>
+                        <button id="pwa-install-btn" onclick="installApp()" style="display: none; background: linear-gradient(135deg, #4F46E5, #7C3AED); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;">
+                            <i class='bx bxs-download'></i> Install App
+                        </button>
+                    </li>
+                    {% if current_user.is_authenticated %}
+                        <li class="notification-dropdown" id="notificationDropdown">
+                            <button class="notification-toggle" onclick="toggleNotificationDropdown()">
+                                <span class="notification-icon"><i class='bx bxs-bell' style="font-size: 1.5rem;"></i></span>
+                                <span class="notification-badge" id="notifBadge">2</span>
+                            </button>
+                            
+                            <div class="notification-menu">
+                                <div class="notification-header">
+                                    <span>Notifications</span>
+                                    <button onclick="markAllAsRead()" style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; cursor: pointer; font-weight: 600;">Mark all as read</button>
+                                </div>
+                                
+                                <div class="notification-list" id="notificationList">
+                                    <!-- Sample Notifications -->
+                                    <div class="notification-item-new">
+                                        <div class="notif-icon-circle" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-color);">
+                                            <i class='bx bxs-check-circle'></i>
+                                        </div>
+                                        <div class="notif-content">
+                                            <div class="notif-title">Application Submitted</div>
+                                            <div class="notif-msg">Your application for "House Cleaner" was sent.</div>
+                                            <div class="notif-time">Just now</div>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="notification-item-new">
+                                        <div class="notif-icon-circle" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);">
+                                            <i class='bx bxs-user-detail'></i>
+                                        </div>
+                                        <div class="notif-content">
+                                            <div class="notif-title">Profile Update</div>
+                                            <div class="notif-msg">Your profile completion is now at 80%.</div>
+                                            <div class="notif-time">2 hours ago</div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="notification-footer">
+                                    <a href="#">See all notifications</a>
+                                </div>
+                            </div>
+                        </li>
+                                                
+                        <!-- Profile Dropdown -->
+                        <li class="profile-dropdown" id="profileDropdown">
+                            <button class="profile-toggle" onclick="toggleProfileDropdown()">
+                                <div class="profile-avatar">
+                                    {% if current_user.is_authenticated %}
+                                        {% if current_user.user_type == 'worker' and worker is defined and worker.profile_picture %}
+                                            <img src="{{ url_for('static', filename='uploads/' + worker.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
+                                        {% elif current_user.user_type == 'employer' and employer is defined and employer.profile_picture %}
+                                            <img src="{{ url_for('static', filename='uploads/' + employer.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
+                                        {% else %}
+                                            {{ current_user.full_name[0].upper() }}
+                                        {% endif %}
+                                    {% else %}
+                                        <i class='bx bx-user' style="font-size: 1.5rem; color: var(--text-secondary);"></i>
+                                    {% endif %}
+                                </div>
+                                <span class="profile-name">{{ current_user.full_name }}</span>
+                                <span class="profile-arrow"><i class='bx bxs-chevron-down'></i></span>
+                            </button>
+                            
+                            <div class="profile-menu">
+                                <div class="profile-menu-header">
+                                    <div class="profile-menu-name">{{ current_user.full_name }}</div>
+                                    <div class="profile-menu-email">{{ current_user.email }}</div>
+                                    {% if current_user.user_type == 'worker' %}
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                                            Worker Account
+                                        </div>
+                                    {% else %}
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                                            Employer Account
+                                        </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <a href="#" class="profile-menu-item">
+                                    <i class='bx bxs-user-circle' style="margin-right: 0.8rem; font-size: 1.25rem;"></i> My Profile
+                                </a>
+                                <a href="#" class="profile-menu-item">
+                                    <i class='bx bxs-cog' style="margin-right: 0.8rem; font-size: 1.25rem;"></i> Account Settings
+                                </a>
+                                <a href="#" class="profile-menu-item">
+                                    <i class='bx bxs-lock-alt' style="margin-right: 0.8rem; font-size: 1.25rem;"></i> Privacy & Security
+                                </a>
+                                <div class="profile-menu-divider"></div>
+                                <a href="#" class="profile-menu-item">
+                                    <i class='bx bxs-help-circle' style="margin-right: 0.8rem; font-size: 1.25rem;"></i> Help & Support
+                                </a>
+                                <a href="javascript:void(0)" onclick="confirmLogout(event, '{{ url_for('logout') }}')" class="profile-menu-item logout">
+                                    <i class='bx bx-log-out' style="margin-right: 0.8rem; font-size: 1.25rem;"></i> Logout
+                                </a>
+                            </div>
+                        </li>
+                    {% else %}
+                        <li><a href="#how-it-works">How It Works</a></li>
+                        <li><a href="#features">Features</a></li>
+                        <li><a href="{{ url_for('login') }}" class="btn btn-primary btn-sm">Login</a></li>
+                        <li><a href="{{ url_for('register') }}" class="btn btn-outline btn-sm">Sign Up</a></li>
+                    {% endif %}
+                </ul>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Flash Messages -->
+    {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+            <div class="container" style="margin-top: 1rem;">
+                {% for category, message in messages %}
+                    {% set alert_class = 'alert-info' %}
+                    {% set icon = 'bx-info-circle' %}
+                    
+                    {% if category == 'error' %}
+                        {% set alert_class = 'alert-danger' %}
+                        {% set icon = 'bx-error-circle' %}
+                    {% elif category == 'success' %}
+                        {% set alert_class = 'alert-success' %}
+                        {% set icon = 'bx-check-circle' %}
+                    {% elif category == 'warning' %}
+                        {% set alert_class = 'alert-warning' %}
+                        {% set icon = 'bx-error' %}
+                    {% endif %}
+                    
+                    <div class="alert {{ alert_class }}" style="display: flex; align-items: center; justify-content: space-between; position: relative;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <i class='bx {{ icon }}' style="font-size: 1.25rem;"></i>
+                            <span>{{ message }}</span>
+                        </div>
+                        <button onclick="this.parentElement.remove()" style="background: none; border: none; cursor: pointer; color: inherit; opacity: 0.5; font-size: 1.25rem; display: flex; align-items: center;">&times;</button>
+                    </div>
+                {% endfor %}
+            </div>
+        {% endif %}
+    {% endwith %}
+
+    <!-- Main Content -->
+    <main>
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer" style="background: var(--text-primary); color: var(--white); padding: 3rem 0; margin-top: 4rem;">
+        <div class="container">
+            <div class="grid grid-4">
+                <div>
+                    <h3 style="margin-bottom: 1rem; color: var(--white);">Umukozi</h3>
+                    <p style="color: #9ca3af; margin-bottom: 1.5rem;">Connecting trusted household workers with employers across Rwanda.</p>
+                    <div style="margin-bottom: 1.5rem; color: #9ca3af;">
+                        <div style="margin-bottom: 0.5rem;"><i class='bx bx-phone' style="margin-right: 0.5rem; color: var(--primary-color);"></i> <a href="tel:+250795555112" style="color: #9ca3af; text-decoration: none;">079 555 5112</a></div>
+                        <div style="margin-bottom: 0.5rem;"><i class='bx bxl-whatsapp' style="margin-right: 0.5rem; color: #25D366;"></i> <a href="https://wa.me/250795555112" target="_blank" style="color: #9ca3af; text-decoration: none;">WhatsApp Us</a></div>
+                        <div><i class='bx bx-envelope' style="margin-right: 0.5rem; color: var(--warning-color);"></i> <a href="mailto:support@umukozi.rw" style="color: #9ca3af; text-decoration: none;">support@umukozi.rw</a></div>
+                    </div>
+                    <div style="display: flex; gap: 1rem;">
+                        <a href="https://wa.me/250795555112" target="_blank" title="WhatsApp" style="color: #9ca3af; font-size: 1.75rem; transition: color 0.3s; text-decoration: none;" onmouseover="this.style.color='#25D366'" onmouseout="this.style.color='#9ca3af'"><i class='bx bxl-whatsapp'></i></a>
+                        <a href="tel:+250795555112" title="Call" style="color: #9ca3af; font-size: 1.75rem; transition: color 0.3s; text-decoration: none;" onmouseover="this.style.color='var(--primary-color)'" onmouseout="this.style.color='#9ca3af'"><i class='bx bxs-phone'></i></a>
+                        <a href="https://instagram.com/umukozirw" target="_blank" title="Instagram" style="color: #9ca3af; font-size: 1.75rem; transition: color 0.3s; text-decoration: none;" onmouseover="this.style.color='#E1306C'" onmouseout="this.style.color='#9ca3af'"><i class='bx bxl-instagram'></i></a>
+                        <a href="https://t.me/umukozirw" target="_blank" title="Telegram" style="color: #9ca3af; font-size: 1.75rem; transition: color 0.3s; text-decoration: none;" onmouseover="this.style.color='#0088cc'" onmouseout="this.style.color='#9ca3af'"><i class='bx bxl-telegram'></i></a>
+                    </div>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 1rem; color: var(--white);">Quick Links</h4>
+                    <ul style="list-style: none; color: #9ca3af;">
+                        <li style="margin-bottom: 0.5rem;"><a href="{{ url_for('index') }}" style="color: #9ca3af; text-decoration: none;">Home</a></li>
+                        <li style="margin-bottom: 0.5rem;"><a href="{{ url_for('register') }}" style="color: #9ca3af; text-decoration: none;">Register</a></li>
+                        <li style="margin-bottom: 0.5rem;"><a href="#" style="color: #9ca3af; text-decoration: none;">About Us</a></li>
+                        <li style="margin-bottom: 0.5rem;"><a href="#" style="color: #9ca3af; text-decoration: none;">Contact</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 1rem; color: var(--white);">For Workers</h4>
+                    <ul style="list-style: none; color: #9ca3af;">
+                        <li style="margin-bottom: 0.5rem;"><a href="#" style="color: #9ca3af; text-decoration: none;">Find Jobs</a></li>
+                        <li style="margin-bottom: 0.5rem;"><a href="#" style="color: #9ca3af; text-decoration: none;">Create Profile</a></li>
+                        <li style="margin-bottom: 0.5rem;"><a href="#" style="color: #9ca3af; text-decoration: none;">Safety Tips</a></li>
+                        <li style="margin-bottom: 0.5rem;"><a href="#" style="color: #9ca3af; text-decoration: none;">Success Stories</a></li>
+                    </ul>
+                </div>
+                <div>
+                    <h4 style="margin-bottom: 1rem; color: var(--white);">For Employers</h4>
+                    <ul style="list-style: none; color: #9ca3af;">
+                        <li style="margin-bottom: 0.5rem;"><a href="#" style="color: #9ca3af; text-decoration: none;">Post Jobs</a></li>
+                        <li style="margin-bottom: 0.5rem;"><a href="#" style="color: #9ca3af; text-decoration: none;">Find Workers</a></li>
+                        <li style="margin-bottom: 0.5rem;"><a href="#" style="color: #9ca3af; text-decoration: none;">Hiring Guide</a></li>
+                        <li style="margin-bottom: 0.5rem;"><a href="#" style="color: #9ca3af; text-decoration: none;">Pricing</a></li>
+                    </ul>
+                </div>
+            </div>
+            <div style="text-align: center; margin-top: 2rem; padding-top: 2rem; border-top: 1px solid #374151; color: #9ca3af;">
+                <p>&copy; 2024 Umukozi. All rights reserved. Made with ❤️ in Rwanda</p>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Logout Confirmation Modal -->
+    <div id="logoutModal" class="modal-overlay">
+        <div class="modal">
+            <div class="modal-icon"><i class='bx bx-log-out-circle'></i></div>
+            <h3 class="modal-title">Ready to leave?</h3>
+            <p class="modal-text">Are you sure you want to logout? You will need to login again to access your account.</p>
+            <div class="modal-actions">
+                <button onclick="closeLogoutModal()" class="modal-btn modal-btn-cancel">No, Stay</button>
+                <button id="confirmLogoutBtn" class="modal-btn modal-btn-confirm">Yes, Logout</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript -->
+    <script>
+        function toggleMobileMenu() {
+            const navLinks = document.getElementById('navLinks');
+            navLinks.classList.toggle('active');
+        }
+
+        function toggleNotificationDropdown() {
+            const dropdown = document.getElementById('notificationDropdown');
+            dropdown.classList.toggle('active');
+            
+            // Close profile dropdown if open
+            document.getElementById('profileDropdown')?.classList.remove('active');
+        }
+
+        function markAllAsRead() {
+            document.getElementById('notifBadge').style.display = 'none';
+            const newNotifs = document.querySelectorAll('.notification-item-new');
+            newNotifs.forEach(n => {
+                n.style.opacity = '0.6';
+                n.classList.remove('notification-item-new');
+                n.classList.add('notification-item-read');
+            });
+        }
+
+        function toggleProfileDropdown() {
+            const profileDropdown = document.getElementById('profileDropdown');
+            profileDropdown.classList.toggle('active');
+        }
+
+        // Logout Confirmation Logic
+        let logoutUrl = '';
+        
+        function confirmLogout(event, url) {
+            if (event) event.preventDefault();
+            logoutUrl = url;
+            const modal = document.getElementById('logoutModal');
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('active');
+            }, 10);
+        }
+
+        function closeLogoutModal() {
+            const modal = document.getElementById('logoutModal');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        // Global Action Confirmation Modal
+        let actionCallback = null;
+        function showActionModal(title, text, type, callback) {
+            // Create modal if it doesn't exist
+            let modal = document.getElementById('globalActionModal');
+            if (!modal) {
+                const modalHtml = `
+                <div id="globalActionModal" class="modal-overlay">
+                    <div class="modal" style="max-width: 400px; text-align: center;">
+                        <div class="modal-icon" id="actionModalIcon" style="margin: 0 auto 1.5rem;"><i class='bx bx-question-mark'></i></div>
+                        <h3 class="modal-title" id="actionModalTitle">Confirm</h3>
+                        <p class="modal-text" id="actionModalText">Are you sure you want to proceed?</p>
+                        <div class="modal-actions" style="justify-content: center; margin-top: 2rem;">
+                            <button onclick="closeActionModal()" class="btn btn-outline" style="min-width: 100px;">Cancel</button>
+                            <button id="confirmActionBtn" class="btn" style="min-width: 100px;">Confirm</button>
+                        </div>
+                    </div>
+                </div>`;
+                document.body.insertAdjacentHTML('beforeend', modalHtml);
+                modal = document.getElementById('globalActionModal');
+                
+                document.getElementById('confirmActionBtn').addEventListener('click', function() {
+                    if (actionCallback) actionCallback();
+                    closeActionModal();
+                });
+            }
+            
+            document.getElementById('actionModalTitle').innerText = title;
+            document.getElementById('actionModalText').innerText = text;
+            
+            const icon = document.getElementById('actionModalIcon');
+            const confirmBtn = document.getElementById('confirmActionBtn');
+            
+            if (type === 'danger') {
+                icon.innerHTML = "<i class='bx bx-error-circle'></i>";
+                icon.style.color = "var(--danger-color)";
+                icon.style.background = "rgba(239, 68, 68, 0.1)";
+                confirmBtn.className = "btn btn-danger";
+            } else if (type === 'warning') {
+                icon.innerHTML = "<i class='bx bx-error'></i>";
+                icon.style.color = "var(--warning-color)";
+                icon.style.background = "rgba(245, 158, 11, 0.1)";
+                confirmBtn.className = "btn btn-primary";
+                confirmBtn.style.background = "var(--warning-color)";
+            } else {
+                icon.innerHTML = "<i class='bx bx-check-circle'></i>";
+                icon.style.color = "var(--secondary-color)";
+                icon.style.background = "rgba(16, 185, 129, 0.1)";
+                confirmBtn.className = "btn btn-primary";
+            }
+            
+            actionCallback = callback;
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.classList.add('active'); }, 10);
+        }
+
+        function closeActionModal() {
+            const modal = document.getElementById('globalActionModal');
+            if(modal) {
+                modal.classList.remove('active');
+                setTimeout(() => {
+                    modal.style.display = 'none';
+                    actionCallback = null;
+                }, 300);
+            }
+        }
+
+        // Global Platform Payment Modal
+        function showPlatformPaymentModal(workerId = '', workerName = '') {
+            let modal = document.getElementById('globalPaymentModal');
+            if (modal) {
+                modal.remove(); // Remove existing modal to reset dynamic content
+            }
+            
+            const workerContext = workerName ? ` to connect with <strong>${workerName}</strong>` : ' to connect with this worker';
+            const whatsappText = encodeURIComponent(`Hello, I have paid 10,000 FRW to connect with worker ${workerName ? workerName + ' ' : ''}${workerId ? '(ID: ' + workerId + ')' : ''}. Here is my screenshot proof of payment:`);
+            
+            const modalHtml = `
+            <div id="globalPaymentModal" class="modal-overlay">
+                <div class="modal" style="max-width: 400px; text-align: center; padding: 2rem;">
+                    <button onclick="closePaymentModal()" style="position: absolute; right: 1rem; top: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); transition: color 0.2s;" onmouseover="this.style.color='var(--danger-color)'" onmouseout="this.style.color='var(--text-secondary)'">✕</button>
+                    <div style="margin: 0 auto 1rem; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                        <img src="/static/images/momo%20icon.png" alt="MTN MoMo" style="max-width: 100%; max-height: 100%; border-radius: 50%; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); object-fit: contain;">
+                    </div>
+                    <h3 class="modal-title" style="margin-bottom: 0.5rem; font-size: 1.25rem;">10,000 FRW Connection Fee</h3>
+                    <p class="modal-text" style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem;">
+                        Pay via MoMo or Airtel Money to <strong style="color: var(--primary-color); font-size: 1.1rem;">079 555 5112</strong> and send us the screenshot on WhatsApp${workerContext}.
+                    </p>
+                    <div class="modal-actions" style="justify-content: center; margin: 0;">
+                        <a href="https://wa.me/250795555112?text=${whatsappText}" target="_blank" class="btn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: #25D366; color: white;">
+                            <i class='bx bxl-whatsapp' style="font-size: 1.3rem;"></i> Send Screenshot
+                        </a>
+                    </div>
+                </div>
+            </div>`;
+            document.body.insertAdjacentHTML('beforeend', modalHtml);
+            modal = document.getElementById('globalPaymentModal');
+            
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.classList.add('active'); }, 10);
+        }
+
+        function closePaymentModal() {
+            const modal = document.getElementById('globalPaymentModal');
+            if(modal) {
+                modal.classList.remove('active');
+                setTimeout(() => { modal.style.display = 'none'; }, 300);
+            }
+        }
+
+
+
+        document.getElementById('confirmLogoutBtn').addEventListener('click', function() {
+            if (logoutUrl) {
+                window.location.href = logoutUrl;
+            }
+        });
+
+        // Close modal when clicking outside
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('logoutModal');
+            if (event.target === modal) {
+                closeLogoutModal();
+            }
+        });
+
+        // Close mobile menu when clicking outside
+        document.addEventListener('click', function(event) {
+            const navLinks = document.getElementById('navLinks');
+            const mobileMenuToggle = document.querySelector('.mobile-menu-toggle');
+            
+            if (navLinks && !navLinks.contains(event.target) && mobileMenuToggle && !mobileMenuToggle.contains(event.target)) {
+                navLinks.classList.remove('active');
+            }
+            
+            // Close profile dropdown when clicking outside
+            const profileDropdown = document.getElementById('profileDropdown');
+            if (profileDropdown && !profileDropdown.contains(event.target)) {
+                profileDropdown.classList.remove('active');
+            }
+
+            // Close notification dropdown when clicking outside
+            const notifDropdown = document.getElementById('notificationDropdown');
+            if (notifDropdown && !notifDropdown.contains(event.target)) {
+                notifDropdown.classList.remove('active');
+            }
+        });
+
+        // PWA Service Worker Registration and Install Prompt
+        let deferredPrompt;
+        
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('/service-worker.js')
+                    .then(function(registration) {
+                        console.log('ServiceWorker registration successful with scope: ', registration.scope);
+                    })
+                    .catch(function(error) {
+                        console.log('ServiceWorker registration failed: ', error);
+                    });
+            });
+        }
+
+        // Listen for install prompt
+        window.addEventListener('beforeinstallprompt', function(e) {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show install button in navigation
+            const installBtn = document.getElementById('pwa-install-btn');
+            if (installBtn) {
+                installBtn.style.display = 'block';
+            }
+            
+            // Also show install banner
+            showInstallPrompt();
+        });
+
+        // Show install prompt to user
+        function showInstallPrompt() {
+            // Create install banner
+            const installBanner = document.createElement('div');
+            installBanner.id = 'install-banner';
+            installBanner.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: linear-gradient(135deg, #4F46E5, #7C3AED);
+                color: white;
+                padding: 16px 24px;
+                border-radius: 12px;
+                box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+                z-index: 10000;
+                display: flex;
+                align-items: center;
+                gap: 12px;
+                font-family: 'Inter', sans-serif;
+                animation: slideUp 0.5s ease;
+                max-width: 350px;
+            `;
+            
+            installBanner.innerHTML = `
+                <i class='bx bxs-download' style='font-size: 24px;'></i>
+                <div style='flex: 1;'>
+                    <div style='font-weight: 600; margin-bottom: 4px;'>Install Umukozi App</div>
+                    <div style='font-size: 14px; opacity: 0.9;'>Get the full experience on your device</div>
+                </div>
+                <button onclick="installApp()" style='background: white; color: #4F46E5; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;'>Install</button>
+                <button onclick="dismissInstallBanner()" style='background: transparent; color: white; border: 1px solid rgba(255,255,255,0.3); padding: 8px 12px; border-radius: 8px; cursor: pointer; font-size: 18px; line-height: 1;'>&times;</button>
+            `;
+            
+            // Add animation
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes slideUp {
+                    from { transform: translateX(-50%) translateY(100px); opacity: 0; }
+                    to { transform: translateX(-50%) translateY(0); opacity: 1; }
+                }
+            `;
+            document.head.appendChild(style);
+            
+            document.body.appendChild(installBanner);
+        }
+
+        // Install the app
+        function installApp() {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then(function(choiceResult) {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    deferredPrompt = null;
+                    dismissInstallBanner();
+                });
+            }
+        }
+
+        // Dismiss install banner
+        function dismissInstallBanner() {
+            const banner = document.getElementById('install-banner');
+            if (banner) {
+                banner.style.animation = 'slideUp 0.5s ease reverse';
+                setTimeout(() => banner.remove(), 500);
+            }
+        }
+
+        // Auto-dismiss alerts after 4 seconds
+        document.addEventListener('DOMContentLoaded', function() {
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.opacity = '0';
+                    alert.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+                    alert.style.transform = 'translateY(-10px)';
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 600);
+                }, 4000); // 4 seconds
+            });
+        });
+    </script>
+    
+    {% block scripts %}{% endblock %}
+</body>
+</html>

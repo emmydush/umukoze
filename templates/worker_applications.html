@@ -1,0 +1,239 @@
+{% extends "base.html" %}
+
+{% block title %}My Applications - Umukozi{% endblock %}
+
+{% block content %}
+<!-- Mobile Sidebar Toggle -->
+<button class="mobile-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar {% if worker.profile_picture %}has-profile-picture{% else %}sidebar-avatar-gradient{% endif %}">
+                    {% if worker.profile_picture %}
+                        <img src="{{ url_for('static', filename='uploads/' + worker.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
+                    {% else %}
+                        {{ current_user.full_name[0].upper() }}
+                    {% endif %}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name }}</h4>
+                    <p style="font-size: 0.75rem; opacity: 0.8;">Worker Account</p>
+                </div>
+            </div>
+            {% if worker.is_verified %}
+                <div class="badge badge-success" style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2);">
+                    ✓ Verified Worker
+                </div>
+            {% else %}
+                <div class="badge badge-warning" style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2);">
+                    ⏳ Verification Pending
+                </div>
+            {% endif %}
+        </div>
+        
+        <nav class="sidebar-menu">
+            <div class="sidebar-section">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-dashboard'></i></span>
+                    Overview
+                </a>
+                <a href="{{ url_for('worker_find_jobs') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bx-search-alt'></i></span>
+                    Find Jobs
+                </a>
+                <a href="{{ url_for('worker_applications') }}" class="sidebar-item active">
+                    <span class="sidebar-item-icon"><i class='bx bxs-file-doc'></i></span>
+                    Applications
+                    <span class="sidebar-badge">{{ (applications or [])|length }}</span>
+                </a>
+                <a href="{{ url_for('worker_activity') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bx-line-chart'></i></span>
+                    Activity
+                </a>
+                <a href="{{ url_for('worker_complete_profile') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-user-circle'></i></span>
+                    My Profile
+                </a>
+                <a href="{{ url_for('worker_settings') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-cog'></i></span>
+                    Settings
+                </a>
+                <a href="javascript:void(0)" onclick="confirmLogout(event)" data-logout-url="{{ url_for('logout') }}" class="sidebar-item" style="color: var(--danger-color); margin-top: 2rem;">
+                    <span class="sidebar-item-icon"><i class='bx bx-log-out'></i></span>
+                    Logout
+                </a>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header style="margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em;">Job Applications</h1>
+                <p style="color: var(--text-secondary);">Track and manage your ongoing employment requests.</p>
+            </div>
+            <a href="{{ url_for('worker_find_jobs') }}" class="btn btn-primary" style="border-radius: 0.75rem; padding: 0.75rem 1.5rem;">
+                Browse More Jobs
+            </a>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="dashboard-grid">
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-color);"><i class='bx bxs-file-doc'></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ (applications or [])|length }}</div>
+                    <div class="stat-label">Total Applied</div>
+                </div>
+            </div>
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color);"><i class='bx bx-time-five'></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ (applications|selectattr('status', 'equalto', 'pending')|list if applications else [])|length }}</div>
+                    <div class="stat-label">Pending Review</div>
+                </div>
+            </div>
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);"><i class='bx bxs-check-circle'></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ (applications|selectattr('status', 'equalto', 'accepted')|list if applications else [])|length }}</div>
+                    <div class="stat-label">Accepted</div>
+                </div>
+            </div>
+            <div class="stat-card-modern" style="grid-column: span 1;">
+                <div class="stat-icon-wrapper" style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color);"><i class='bx bxs-x-circle'></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ (applications|selectattr('status', 'equalto', 'rejected')|list if applications else [])|length }}</div>
+                    <div class="stat-label">Rejected</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Applications List -->
+        <div style="background: var(--white); border-radius: 1.5rem; border: 1px solid var(--border-color); overflow: hidden;">
+            <div style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                <h3 style="font-size: 1.125rem; font-weight: 700;">Submission History</h3>
+                <div style="display: flex; gap: 0.5rem; align-items: center;">
+                    <span style="font-size: 0.8125rem; color: var(--text-secondary);">Sort:</span>
+                    <select style="background: none; border: none; font-size: 0.8125rem; font-weight: 600; color: var(--primary-color); outline: none;">
+                        <option>Recently Applied</option>
+                        <option>Status Updates</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="border-list" style="padding: 1rem;">
+                {% if applications %}
+                    {% for application in applications %}
+                        <div style="padding: 2rem; transition: all 0.2s;" onmouseover="this.style.background='#fbfcfe'" onmouseout="this.style.background='transparent'">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1.5rem; margin-bottom: 1rem;">
+                                <div style="display: flex; gap: 1.25rem;">
+                                    <div style="width: 56px; height: 56px; background: #f1f5f9; border-radius: 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.75rem;">
+                                        {% if 'house' in application.job.title|lower %}🏠{% elif 'child' in application.job.title|lower %}👶{% else %}💼{% endif %}
+                                    </div>
+                                    <div>
+                                        <h4 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 0.25rem;">{{ application.job.title }}</h4>
+                                        <p style="color: var(--text-secondary); font-size: 0.875rem;">{{ application.job.employer.user.full_name }} • {{ application.job.district }}</p>
+                                    </div>
+                                </div>
+                                <div style="text-align: right;">
+                                    <span class="badge badge-{{ 'success' if application.status == 'accepted' else 'warning' if application.status == 'pending' else 'danger' if application.status == 'rejected' else 'secondary' }}" style="padding: 0.5rem 1.25rem; border-radius: 9999px; font-weight: 700; letter-spacing: 0.02em;">
+                                        {{ application.status|upper }}
+                                    </span>
+                                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">Applied {{ application.applied_at.strftime('%b d, %Y') }}</p>
+                                </div>
+                            </div>
+                            
+                            <div style="margin-bottom: 1.5rem;">
+                                <p style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; padding: 1rem; background: #f8fafc; border-radius: 0.75rem;">
+                                    "{{ application.cover_letter or 'No cover letter was provided.' }}"
+                                </p>
+                            </div>
+                            
+                            <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 1.5rem;">
+                                <div style="display: flex; gap: 2rem;">
+                                    <div style="display: flex; flex-direction: column;">
+                                        <span style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Proposed Salary</span>
+                                        <span style="font-size: 0.875rem; font-weight: 600;">{{ application.job.salary_amount or 'Negotiable' }} RWF</span>
+                                    </div>
+                                    <div style="display: flex; flex-direction: column;">
+                                        <span style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Job Type</span>
+                                        <span style="font-size: 0.875rem; font-weight: 600;">{{ application.job.job_type.replace('_', ' ').title() }}</span>
+                                    </div>
+                                </div>
+                                <div style="display: flex; gap: 0.75rem;">
+                                    <button class="btn btn-outline btn-sm" style="border-radius: 0.5rem;" onclick="viewApplication('{{ application.id }}')">Details</button>
+                                    {% if application.status == 'pending' %}
+                                        <button class="btn btn-outline btn-sm" style="border-radius: 0.5rem; color: var(--danger-color); border-color: var(--danger-color);" onclick="withdrawApplication('{{ application.id }}')">Withdraw</button>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="text-align: center; padding: 5rem 2rem;">
+                        <div style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.1;">💼</div>
+                        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">No applications yet</h3>
+                        <p style="color: var(--text-secondary); max-width: 350px; margin: 0 auto 2rem;">You haven't submitted any applications. Start exploring jobs to find your next opportunity!</p>
+                        <a href="{{ url_for('worker_find_jobs') }}" class="btn btn-primary" style="padding: 0.75rem 2rem; border-radius: 0.75rem;">Browse Jobs</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+function confirmLogout(event) {
+    event.preventDefault();
+    const logoutUrl = document.querySelector('[data-logout-url]').getAttribute('data-logout-url');
+    if (confirm('Are you sure you want to logout?')) {
+        window.location.href = logoutUrl;
+    }
+}
+
+function viewApplication(id) {
+    alert('Viewing application details for ID: ' + id);
+}
+
+function withdrawApplication(id) {
+    if (confirm('Are you sure you want to withdraw this application? This action cannot be undone.')) {
+        alert('Application withdrawn successfully.');
+    }
+}
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.querySelector('.mobile-sidebar-toggle');
+    
+    if (window.innerWidth <= 768 && 
+        !sidebar.contains(event.target) && 
+        !toggle.contains(event.target) &&
+        sidebar.classList.contains('active')) {
+        closeSidebar();
+    }
+});
+</script>
+{% endblock %}
+

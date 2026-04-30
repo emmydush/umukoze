@@ -1,0 +1,581 @@
+{% extends "base.html" %}
+
+{% block title %}Worker Dashboard - Umukozi - UPDATED{% endblock %}
+
+{% block content %}
+<!-- Top Navigation Bar -->
+<div class="top-nav-bar" style="position: fixed; top: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-color); padding: 0.75rem 1.5rem; z-index: 1000; display: flex; justify-content: space-between; align-items: center;">
+    <!-- Left Side: Logo and Menu -->
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <!-- Logo -->
+        <a href="{{ url_for('index') }}" style="text-decoration: none;">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Umukozi Logo" style="height: 65px; width: auto; object-fit: contain;">
+        </a>
+        
+        <!-- Mobile Menu Toggle -->
+        <button class="mobile-sidebar-toggle" onclick="toggleSidebar()" style="background: var(--white); border: 1px solid var(--border-color); padding: 0.75rem; border-radius: 50%; cursor: pointer; display: none; align-items: center; justify-content: center; transition: all 0.2s; width: 45px; height: 45px;">
+            <i class='bx bx-menu' style="font-size: 1.5rem; color: var(--text-primary);"></i>
+        </button>
+    </div>
+
+    <!-- Right Side: Navigation Items -->
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <!-- Notifications -->
+        <button onclick="showNotifications()" style="position: relative; background: var(--white); border: 1px solid var(--border-color); padding: 0.75rem; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; width: 45px; height: 45px;">
+            <i class='bx bx-bell' style="font-size: 1.25rem; color: var(--text-secondary);"></i>
+            <span style="position: absolute; top: -2px; right: -2px; background: var(--danger-color); color: white; font-size: 0.625rem; padding: 0.125rem 0.375rem; border-radius: 9999px; font-weight: 600; min-width: 18px; text-align: center;">2</span>
+        </button>
+        
+        <!-- Profile Picture -->
+        <button onclick="showProfileMenu()" style="display: flex; align-items: center; gap: 0.75rem; background: var(--white); padding: 0.4rem 0.75rem; border-radius: 9999px; border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s; height: 45px;">
+            <div class="header-avatar {% if worker.profile_picture %}has-profile-picture{% else %}header-avatar-gradient{% endif %}" style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: bold; flex-shrink: 0; overflow: hidden; color: white;">
+                {% if worker.profile_picture %}
+                    <img src="{{ url_for('static', filename='uploads/' + worker.profile_picture) }}" style="width: 100%; height: 100%; object-fit: cover;" alt="Profile Picture">
+                {% else %}
+                    {{ current_user.full_name[0].upper() }}
+                {% endif %}
+            </div>
+            <div style="text-align: left;">
+                <div style="font-weight: 600; font-size: 0.875rem; line-height: 1.2; color: var(--text-primary);">{{ current_user.full_name.split()|last }}</div>
+                {% if worker.is_verified %}
+                    <div style="font-size: 0.625rem; color: var(--success-color); line-height: 1;">Verified</div>
+                {% else %}
+                    <div style="font-size: 0.625rem; color: var(--warning-color); line-height: 1;">Pending</div>
+                {% endif %}
+            </div>
+            <i class='bx bx-chevron-down' style="font-size: 1rem; color: var(--text-secondary);"></i>
+        </button>
+    </div>
+</div>
+
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar {% if worker.profile_picture %}has-profile-picture{% else %}sidebar-avatar-gradient{% endif %}">
+                    {% if worker.profile_picture %}
+                        <img src="{{ url_for('static', filename='uploads/' + worker.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
+                    {% else %}
+                        {{ current_user.full_name[0].upper() }}
+                    {% endif %}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name.split()|last }}</h4>
+                    <p style="font-size: 0.75rem; opacity: 0.8;">Worker Account</p>
+                </div>
+            </div>
+            {% if worker.is_verified %}
+                <div class="badge badge-success" style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2);">
+                    ✓ Verified Profiles
+                </div>
+            {% else %}
+                <div class="badge badge-warning" style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2);">
+                    ⏳ Verification Pending
+                </div>
+            {% endif %}
+        </div>
+        
+        <nav class="sidebar-menu">
+            <div class="sidebar-section">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-item active">
+                    <span class="sidebar-item-icon"><i class='bx bxs-dashboard'></i></span>
+                    Overview
+                </a>
+                <a href="{{ url_for('worker_find_jobs') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bx-search-alt'></i></span>
+                    Find Jobs
+                </a>
+                <a href="{{ url_for('worker_applications') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-file-doc'></i></span>
+                    Applications
+                    <span class="sidebar-badge">{{ worker.applications|length }}</span>
+                </a>
+                <a href="#" onclick="showMessages()" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-message-dots'></i></span>
+                    Messages
+                    <span class="sidebar-badge">2</span>
+                </a>
+                <a href="{{ url_for('worker_activity') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bx-line-chart'></i></span>
+                    Activity
+                </a>
+                <a href="{{ url_for('worker_complete_profile') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-user-circle'></i></span>
+                    My Profile
+                </a>
+                <a href="{{ url_for('worker_settings') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-cog'></i></span>
+                    Settings
+                </a>
+                <a href="javascript:void(0)" onclick="confirmLogout(event)" data-logout-url="{{ url_for('logout') }}" class="sidebar-item" style="color: var(--danger-color); margin-top: 2rem;">
+                    <span class="sidebar-item-icon"><i class='bx bx-log-out'></i></span>
+                    Logout
+                </a>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Header -->
+        <header style="margin-bottom: 2.5rem; padding-top: 1rem;">
+            <div>
+                <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em;">Welcome back, {{ current_user.full_name.split()|last }}!</h1>
+            </div>
+        </header>
+
+        <!-- Stats Grid -->
+        <div class="dashboard-grid">
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-color);"><i class='bx bxs-briefcase'></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ worker.total_jobs_completed }}</div>
+                    <div class="stat-label">Jobs Completed</div>
+                </div>
+            </div>
+                        <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color);"><i class='bx bxs-file-doc'></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ worker.applications|length }}</div>
+                    <div class="stat-label">Applications</div>
+                </div>
+            </div>
+                    </div>
+
+        <div class="grid grid-3" style="gap: 2rem;">
+            <!-- Main Content Area -->
+            <div style="grid-column: span 2;">
+                <!-- Recent Job Matches -->
+                <section style="margin-bottom: 3rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="font-size: 1.25rem; font-weight: 700;">Job Recommendations</h2>
+                        <a href="{{ url_for('worker_find_jobs') }}" style="color: var(--primary-color); font-size: 0.875rem; font-weight: 600; text-decoration: none;">View All Jobs →</a>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
+                        <!-- Sample Job 1 -->
+                        <div class="job-card-modern">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                                <div class="badge" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-color); font-size: 0.7rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">New Opportunity</div>
+                                <span style="font-size: 1.25rem; color: var(--primary-color);"><i class='bx bxs-home'></i></span>
+                            </div>
+                            <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 0.5rem;">Experienced House Helper</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem; flex-grow: 1;">Looking for a reliable assistant for daily household management in Nyarugenge.</p>
+                            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                                <span class="job-type-pill" style="background: #f1f5f9; color: #475569;">Full-time</span>
+                                <span class="job-type-pill" style="background: #f0fdf4; color: #166534;">50,000 RWF</span>
+                            </div>
+                            <button class="btn btn-primary" style="width: 100%; border-radius: 0.75rem;">Apply Now</button>
+                        </div>
+
+                        <!-- Sample Job 2 -->
+                        <div class="job-card-modern">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1rem;">
+                                <div class="badge" style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color); font-size: 0.7rem; text-transform: uppercase; font-weight: 700; letter-spacing: 0.05em;">Urgent</div>
+                                <span style="font-size: 1.25rem; color: var(--danger-color);"><i class='bx bxs-baby-carriage'></i></span>
+                            </div>
+                            <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 0.5rem;">Caring Nanny Needed</h3>
+                            <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 1.5rem; flex-grow: 1;">Part-time nanny for two children. Must be energetic and patient.</p>
+                            <div style="display: flex; gap: 0.5rem; margin-bottom: 1.5rem; flex-wrap: wrap;">
+                                <span class="job-type-pill" style="background: #f1f5f9; color: #475569;">Part-time</span>
+                                <span class="job-type-pill" style="background: #f0fdf4; color: #166534;">2,500 RWF/hr</span>
+                            </div>
+                            <button class="btn btn-primary" style="width: 100%; border-radius: 0.75rem;">Apply Now</button>
+                        </div>
+                    </div>
+                </section>
+
+                <!-- Active Applications -->
+                <section>
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                        <h2 style="font-size: 1.25rem; font-weight: 700;">Active Applications</h2>
+                        <span class="badge" style="background: var(--light-bg); color: var(--text-secondary);">{{ worker.applications|length }} Total</span>
+                    </div>
+                    
+                    <div class="border-list" style="background: var(--white); border-radius: 1.25rem; border: 1px solid var(--border-color); overflow: hidden;">
+                        {% if worker.applications %}
+                            {% for application in worker.applications[:3] %}
+                                <div style="padding: 1.5rem; transition: background 0.2s;" onmouseover="this.style.background='var(--light-bg)'" onmouseout="this.style.background='transparent'">
+                                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                                        <div>
+                                            <h4 style="font-weight: 700; margin-bottom: 0.25rem;">{{ application.job.title }}</h4>
+                                            <p style="color: var(--text-secondary); font-size: 0.8125rem;">{{ application.job.employer.user.full_name }} • Applied {{ application.applied_at.strftime('%b %d, %Y') }}</p>
+                                        </div>
+                                        <span class="badge badge-{{ 'success' if application.status == 'accepted' else 'warning' if application.status == 'pending' else 'danger' }}" style="padding: 0.4rem 1rem; border-radius: 0.5rem;">
+                                            {{ application.status|title }}
+                                        </span>
+                                    </div>
+                                    <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.75rem; color: var(--text-secondary);">
+                                        <div style="flex-grow: 1; height: 4px; background: #f1f5f9; border-radius: 2px; overflow: hidden;">
+                                            {% if application.status == 'accepted' %}
+                                                <div style="width: 100%; height: 100%; background: var(--success-color); transition: width 1s ease;"></div>
+                                            {% elif application.status == 'pending' %}
+                                                <div style="width: 50%; height: 100%; background: var(--warning-color); transition: width 1s ease;"></div>
+                                            {% else %}
+                                                <div style="width: 10%; height: 100%; background: var(--danger-color); transition: width 1s ease;"></div>
+                                            {% endif %}
+                                        </div>
+                                        <span>Status: {{ application.status|title }}</span>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        {% else %}
+                            <div style="padding: 3rem; text-align: center; color: var(--text-secondary);">
+                                <div style="font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.5;"><i class='bx bx-briefcase-alt-2'></i></div>
+                                <p>No active applications at the moment.</p>
+                            </div>
+                        {% endif %}
+                    </div>
+                </section>
+            </div>
+
+            <!-- Sidebar Info Panels -->
+            <div style="display: flex; flex-direction: column; gap: 2rem;">
+                
+                            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+function confirmLogout(event) {
+    event.preventDefault();
+    const logoutUrl = document.querySelector('[data-logout-url]').getAttribute('data-logout-url');
+    if (confirm('Are you sure you want to logout?')) {
+        window.location.href = logoutUrl;
+    }
+}
+
+function showNotifications() {
+    // Toggle notifications dropdown
+    const existingDropdown = document.getElementById('notifications-dropdown');
+    if (existingDropdown) {
+        existingDropdown.remove();
+        return;
+    }
+    
+    // Close profile menu if open
+    const profileDropdown = document.getElementById('profile-dropdown');
+    if (profileDropdown) {
+        profileDropdown.remove();
+    }
+    
+    // Create notifications dropdown
+    const dropdown = document.createElement('div');
+    dropdown.id = 'notifications-dropdown';
+    dropdown.style.cssText = `
+        position: fixed;
+        top: 70px;
+        right: 120px;
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        width: 320px;
+        max-height: 400px;
+        z-index: 1000;
+        overflow: hidden;
+    `;
+    
+    dropdown.innerHTML = `
+        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color); font-weight: 600; display: flex; justify-content: space-between; align-items: center;">
+            <span>Notifications</span>
+            <span style="background: var(--primary-color); color: white; font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 9999px;">2 New</span>
+        </div>
+        <div style="max-height: 300px; overflow-y: auto;">
+            <div style="padding: 1rem; border-bottom: 1px solid var(--light-bg); cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--light-bg)'" onmouseout="this.style.background='white'">
+                <div style="display: flex; gap: 0.75rem; align-items: start;">
+                    <div style="width: 8px; height: 8px; background: var(--primary-color); border-radius: 50%; margin-top: 0.5rem; flex-shrink: 0;"></div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">New Job Application</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Your application for "House Cleaning" has been viewed.</div>
+                        <div style="font-size: 0.625rem; color: var(--text-secondary);">2 hours ago</div>
+                    </div>
+                </div>
+            </div>
+            <div style="padding: 1rem; cursor: pointer; transition: background 0.2s;" onmouseover="this.style.background='var(--light-bg)'" onmouseout="this.style.background='white'">
+                <div style="display: flex; gap: 0.75rem; align-items: start;">
+                    <div style="width: 8px; height: 8px; background: var(--success-color); border-radius: 50%; margin-top: 0.5rem; flex-shrink: 0;"></div>
+                    <div style="flex: 1;">
+                        <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">Profile Verified</div>
+                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Your profile has been successfully verified.</div>
+                        <div style="font-size: 0.625rem; color: var(--text-secondary);">1 day ago</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div style="padding: 0.75rem; text-align: center; border-top: 1px solid var(--border-color);">
+            <button style="background: none; border: none; color: var(--primary-color); font-weight: 600; font-size: 0.875rem; cursor: pointer;">View All Notifications</button>
+        </div>
+    `;
+    
+    document.body.appendChild(dropdown);
+    
+    // Close dropdown when clicking outside
+    setTimeout(() => {
+        document.addEventListener('click', function closeDropdown(e) {
+            if (!dropdown.contains(e.target) && !e.target.closest('button[onclick="showNotifications()"]')) {
+                dropdown.remove();
+                document.removeEventListener('click', closeDropdown);
+            }
+        });
+    }, 100);
+}
+
+function showProfileMenu() {
+    // Toggle profile dropdown
+    const existingDropdown = document.getElementById('profile-dropdown');
+    if (existingDropdown) {
+        existingDropdown.remove();
+        return;
+    }
+    
+    // Close notifications if open
+    const notificationsDropdown = document.getElementById('notifications-dropdown');
+    if (notificationsDropdown) {
+        notificationsDropdown.remove();
+    }
+    
+    // Create profile dropdown
+    const dropdown = document.createElement('div');
+    dropdown.id = 'profile-dropdown';
+    dropdown.style.cssText = `
+        position: fixed;
+        top: 70px;
+        right: 20px;
+        background: white;
+        border: 1px solid var(--border-color);
+        border-radius: 12px;
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+        width: 250px;
+        z-index: 1000;
+        overflow: hidden;
+    `;
+    
+    dropdown.innerHTML = `
+        <div style="padding: 1rem; border-bottom: 1px solid var(--border-color);">
+            <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <div class="header-avatar {% if worker.profile_picture %}has-profile-picture{% else %}header-avatar-gradient{% endif %}" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; flex-shrink: 0; overflow: hidden; color: white;">
+                    {% if worker.profile_picture %}
+                        <img src="{{ url_for('static', filename='uploads/' + worker.profile_picture) }}" style="width: 100%; height: 100%; object-fit: cover;" alt="Profile Picture">
+                    {% else %}
+                        {{ current_user.full_name[0].upper() }}
+                    {% endif %}
+                </div>
+                <div>
+                    <div style="font-weight: 600; font-size: 0.875rem;">{{ current_user.full_name.split()|last }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-secondary);">Worker Account</div>
+                </div>
+            </div>
+        </div>
+        <div>
+            <a href="{{ url_for('worker_complete_profile') }}" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; text-decoration: none; color: inherit; transition: background 0.2s;" onmouseover="this.style.background='var(--light-bg)'" onmouseout="this.style.background='white'">
+                <i class='bx bx-user' style="font-size: 1.125rem;"></i>
+                <span>My Profile</span>
+            </a>
+            <a href="{{ url_for('worker_settings') }}" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; text-decoration: none; color: inherit; transition: background 0.2s;" onmouseover="this.style.background='var(--light-bg)'" onmouseout="this.style.background='white'">
+                <i class='bx bx-cog' style="font-size: 1.125rem;"></i>
+                <span>Settings</span>
+            </a>
+            <div style="border-top: 1px solid var(--border-color); margin: 0.5rem 0;"></div>
+            <a href="javascript:void(0)" onclick="confirmLogout(event)" data-logout-url="{{ url_for('logout') }}" style="display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; text-decoration: none; color: var(--danger-color); transition: background 0.2s;" onmouseover="this.style.background='var(--light-bg)'" onmouseout="this.style.background='white'">
+                <i class='bx bx-log-out' style="font-size: 1.125rem;"></i>
+                <span>Logout</span>
+            </a>
+        </div>
+    `;
+    
+    document.body.appendChild(dropdown);
+    
+    // Close dropdown when clicking outside
+    setTimeout(() => {
+        document.addEventListener('click', function closeDropdown(e) {
+            if (!dropdown.contains(e.target) && !e.target.closest('button[onclick="showProfileMenu()"]')) {
+                dropdown.remove();
+                document.removeEventListener('click', closeDropdown);
+            }
+        });
+    }, 100);
+}
+
+// Handle sidebar item clicks
+document.querySelectorAll('.sidebar-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+        if (this.getAttribute('href') === '#') {
+            e.preventDefault();
+            // Remove active class from all items
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            // Add active class to clicked item
+            this.classList.add('active');
+            // Close mobile sidebar
+            closeSidebar();
+        }
+    });
+});
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.querySelector('.mobile-sidebar-toggle');
+    
+    if (window.innerWidth <= 768 && 
+        !sidebar.contains(event.target) && 
+        !toggle.contains(event.target) &&
+        sidebar.classList.contains('active')) {
+        closeSidebar();
+    }
+});
+</script>
+
+<style>
+.header-avatar.has-profile-picture {
+    background: none;
+    border: 2px solid var(--border-color);
+}
+
+.header-avatar-gradient {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+}
+
+/* Force correct top nav positioning */
+.top-nav-bar {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+}
+
+.top-nav-bar > .mobile-sidebar-toggle {
+    order: 1 !important;
+}
+
+.top-nav-bar > div:last-child {
+    order: 2 !important;
+    margin-left: auto !important;
+}
+
+/* Add padding to main content to account for fixed top nav */
+.main-content {
+    padding-top: 80px;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+    .main-content {
+        padding-top: 70px;
+    }
+    
+    .top-nav-bar {
+        padding: 0.5rem 0.75rem;
+    }
+    
+    /* Show hamburger menu on mobile/tablet */
+    .mobile-sidebar-toggle {
+        display: flex !important;
+    }
+    
+    .top-nav-bar .header-avatar {
+        width: 30px;
+        height: 30px;
+        font-size: 0.75rem;
+    }
+    
+    .top-nav-bar button[onclick="showProfileMenu()"] {
+        padding: 0.375rem;
+        gap: 0.5rem;
+    }
+    
+    .top-nav-bar button[onclick="showProfileMenu()"] div:last-child {
+        margin-right: 0;
+    }
+    
+    .top-nav-bar button[onclick="showProfileMenu()"] div:last-child > div:first-child {
+        font-size: 0.75rem;
+    }
+    
+    .top-nav-bar button[onclick="showProfileMenu()"] div:last-child > div:last-child {
+        font-size: 0.625rem;
+    }
+    
+    /* Grid layout for mobile */
+    .dashboard-grid {
+        grid-template-columns: 1fr 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    .grid-3 {
+        grid-template-columns: 1fr !important;
+        gap: 1.5rem !important;
+    }
+    
+    /* Job cards grid for mobile */
+    .grid-3 > div:first-child {
+        grid-column: span 1 !important;
+    }
+    
+    .grid-3 > div:first-child > div {
+        display: grid !important;
+        grid-template-columns: 1fr 1fr !important;
+        gap: 1rem !important;
+    }
+    
+    /* For smaller mobile screens, use single column */
+    @media (max-width: 480px) {
+        .grid-3 > div:first-child > div {
+            grid-template-columns: 1fr !important;
+        }
+    }
+    
+    /* Adjust dropdown positions for mobile */
+    #notifications-dropdown,
+    #profile-dropdown {
+        left: 10px !important;
+        right: 10px !important;
+        width: auto !important;
+        max-width: calc(100vw - 20px) !important;
+    }
+    
+    #notifications-dropdown,
+    #profile-dropdown {
+        top: 60px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    .top-nav-bar {
+        padding: 0.5rem;
+    }
+    
+    .top-nav-bar button[onclick="showProfileMenu()"] div:last-child {
+        display: none; /* Hide name on very small screens */
+    }
+}
+
+@media (max-width: 480px) {
+    .top-nav-bar {
+        padding: 0.5rem;
+    }
+    
+    .top-nav-bar button[onclick="showProfileMenu()"] div:last-child {
+        display: none; /* Hide name on very small screens */
+    }
+}
+</style>
+{% endblock %}
+

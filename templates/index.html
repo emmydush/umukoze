@@ -1,0 +1,256 @@
+{% extends "base.html" %}
+
+{% block title %}Umukozi - Find Trusted Household Workers in Rwanda{% endblock %}
+
+{% block content %}
+<!-- Enhanced Modern Hero Section -->
+<section class="hero" style="position: relative; min-height: 90vh; display: flex; align-items: center; overflow: hidden; background-color: var(--light-bg);">
+    <!-- Background Image with Parallax Effect -->
+    <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 0;">
+        <img src="{{ url_for('static', filename='images/hero_bg.png') }}" alt="Professional Household Worker" style="width: 100%; height: 100%; object-fit: cover; object-position: center top; transition: transform 0.5s ease; filter: brightness(0.85);" />
+        <!-- Gradient Overlay for better text readability -->
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(90deg, rgba(15, 23, 42, 0.95) 0%, rgba(30, 58, 138, 0.8) 50%, rgba(255, 255, 255, 0) 100%);"></div>
+    </div>
+
+    <div class="container" style="position: relative; z-index: 10; display: flex; align-items: center; justify-content: space-between; gap: 2rem;">
+        <div style="max-width: 650px;">
+            <div style="display: inline-block; padding: 0.5rem 1rem; background: rgba(16, 185, 129, 0.2); border: 1px solid rgba(16, 185, 129, 0.4); border-radius: 2rem; color: #10b981; font-weight: 600; font-size: 0.875rem; margin-bottom: 1.5rem; backdrop-filter: blur(4px);">
+                <i class='bx bxs-star'></i> #1 Domestic Staff Platform in Rwanda
+            </div>
+            
+            <h1 style="font-size: clamp(3rem, 5vw, 4.5rem); font-weight: 800; line-height: 1.1; margin-bottom: 1.5rem; color: white; letter-spacing: -0.03em; text-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+                Find <span style="color: var(--secondary-color); position: relative; display: inline-block;">Trusted</span><br/>Household Staff
+            </h1>
+            
+            <p style="font-size: 1.25rem; color: rgba(248, 250, 252, 0.9); margin-bottom: 2.5rem; line-height: 1.6; max-width: 540px;">
+                The most reliable way to hire verified nannies, chefs, cleaners, and caregivers. Professional service starts with the right people.
+            </p>
+            
+            <div class="hero-buttons" style="display: flex; gap: 1rem; flex-wrap: wrap;">
+                <a href="{{ url_for('register') }}" class="btn" style="background: var(--secondary-color); color: white; font-size: 1.125rem; padding: 1rem 2rem; border-radius: 0.75rem; font-weight: 600; box-shadow: 0 10px 25px -5px rgba(16, 185, 129, 0.4); display: flex; align-items: center; gap: 0.5rem; transition: transform 0.3s, box-shadow 0.3s;">
+                    Hire Staff <i class='bx bx-right-arrow-alt'></i>
+                </a>
+                <a href="{{ url_for('register') }}" class="btn" style="background: rgba(255, 255, 255, 0.1); color: white; border: 1px solid rgba(255, 255, 255, 0.3); backdrop-filter: blur(10px); font-size: 1.125rem; padding: 1rem 2rem; border-radius: 0.75rem; font-weight: 600; transition: background 0.3s;">
+                    Find a Job
+                </a>
+            </div>
+            
+            <div style="margin-top: 3.5rem; display: flex; align-items: center; gap: 2rem; flex-wrap: wrap;">
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: white; font-weight: 700; font-size: 1.5rem;">
+                        <i class='bx bxs-check-shield' style="color: #10b981;"></i> 100%
+                    </div>
+                    <span style="color: rgba(255,255,255,0.7); font-size: 0.875rem;">Verified Profiles</span>
+                </div>
+                <div style="width: 1px; height: 40px; background: rgba(255,255,255,0.2);"></div>
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: white; font-weight: 700; font-size: 1.5rem;">
+                        <i class='bx bxs-lock-alt' style="color: #f59e0b;"></i> Safe
+                    </div>
+                    <span style="color: rgba(255,255,255,0.7); font-size: 0.875rem;">Secure platform</span>
+                </div>
+                <div style="width: 1px; height: 40px; background: rgba(255,255,255,0.2);"></div>
+                <div style="display: flex; flex-direction: column; gap: 0.25rem;">
+                    <div style="display: flex; align-items: center; gap: 0.5rem; color: white; font-weight: 700; font-size: 1.5rem;">
+                        <i class='bx bxs-star' style="color: #fbbf24;"></i> 4.8
+                    </div>
+                    <span style="color: rgba(255,255,255,0.7); font-size: 0.875rem;">Average Rating</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Optional Decorative Element for Desktop -->
+        <div class="hero-decorative" style="display: none; @media(min-width: 992px){ display: block; } width: max-content;">
+            <div style="background: rgba(255, 255, 255, 0.15); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,0.3); border-radius: 1.5rem; padding: 2rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25); transform: rotate(3deg); transition: transform 0.5s;">
+                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                    <div style="width: 50px; height: 50px; background: var(--secondary-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; color: white; font-size: 1.5rem;">
+                        <i class='bx bxs-quote-left'></i>
+                    </div>
+                    <div>
+                        <div style="color: white; font-weight: 700;">Sarah M.</div>
+                        <div style="color: rgba(255,255,255,0.8); font-size: 0.875rem;">Employer in Kigali</div>
+                    </div>
+                </div>
+                <p style="color: white; font-size: 1.1rem; font-style: italic; max-width: 250px; line-height: 1.5;">
+                    "Found an amazing nanny for my kids within 48 hours. The verification process gave me complete peace of mind."
+                </p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- How It Works -->
+<section id="how-it-works" style="padding: 4rem 0; background: white;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem; color: var(--text-primary);">How It Works</h2>
+            <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto; font-size: 1.125rem;">Simple three-step process to connect with the right household worker or employer</p>
+        </div>
+        
+        <div class="grid grid-3">
+            <div class="card text-center" style="border: 1px solid #f1f5f9; transition: all 0.3s ease;">
+                <div style="font-size: 3.5rem; margin-bottom: 1.5rem; color: var(--primary-color);"><i class='bx bx-user-plus'></i></div>
+                <h3 style="margin-bottom: 1rem; font-weight: 700;">1. Register & Profile</h3>
+                <p style="color: var(--text-secondary);">Sign up in minutes and create your detailed profile with skills, experience, and preferences.</p>
+            </div>
+            
+            <div class="card text-center" style="border: 1px solid #f1f5f9; transition: all 0.3s ease;">
+                <div style="font-size: 3.5rem; margin-bottom: 1.5rem; color: var(--secondary-color);"><i class='bx bx-search-alt'></i></div>
+                <h3 style="margin-bottom: 1rem; font-weight: 700;">2. Search & Match</h3>
+                <p style="color: var(--text-secondary);">Browse through verified profiles or post your job requirements to find the perfect match.</p>
+            </div>
+            
+            <div class="card text-center" style="border: 1px solid #f1f5f9; transition: all 0.3s ease;">
+                <div style="font-size: 3.5rem; margin-bottom: 1.5rem; color: var(--warning-color);"><i class='bx bx-handshake'></i></div>
+                <h3 style="margin-bottom: 1rem; font-weight: 700;">3. Connect & Hire</h3>
+                <p style="color: var(--text-secondary);">Message directly, arrange interviews, and hire with confidence through our secure platform.</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Features -->
+<section id="features" style="padding: 6rem 0; background: #f8fafc;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem;">Why Choose Umukozi?</h2>
+            <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto; font-size: 1.125rem;">Rwanda's trusted platform for household employment connections</p>
+        </div>
+        
+        <div class="grid grid-2" style="gap: 2rem;">
+            <div class="card" style="display: flex; gap: 1.5rem; align-items: flex-start; padding: 2rem;">
+                <div style="font-size: 2.5rem; color: #10b981; background: #ecfdf5; padding: 1rem; border-radius: 1.25rem;"><i class='bx bxs-check-circle'></i></div>
+                <div>
+                    <h3 style="font-weight: 700; margin-bottom: 0.5rem;">Verified Workers</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">All workers go through a thorough verification process including identity verification and reference checks.</p>
+                </div>
+            </div>
+            
+            <div class="card" style="display: flex; gap: 1.5rem; align-items: flex-start; padding: 2rem;">
+                <div style="font-size: 2.5rem; color: var(--primary-color); background: #eff6ff; padding: 1rem; border-radius: 1.25rem;"><i class='bx bx-mobile-alt'></i></div>
+                <div>
+                    <h3 style="font-weight: 700; margin-bottom: 0.5rem;">Mobile Friendly</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">Access the platform from any device. Our responsive design ensures a seamless experience on mobile phones.</p>
+                </div>
+            </div>
+            
+            <div class="card" style="display: flex; gap: 1.5rem; align-items: flex-start; padding: 2rem;">
+                <div style="font-size: 2.5rem; color: var(--secondary-color); background: #f0fdfa; padding: 1rem; border-radius: 1.25rem;"><i class='bx bxs-message-rounded-dots'></i></div>
+                <div>
+                    <h3 style="font-weight: 700; margin-bottom: 0.5rem;">Direct Messaging</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">Built-in messaging system allows you to communicate directly with workers or employers while maintaining privacy.</p>
+                </div>
+            </div>
+            
+            <div class="card" style="display: flex; gap: 1.5rem; align-items: flex-start; padding: 2rem;">
+                <div style="font-size: 2.5rem; color: #fbbf24; background: #fffbeb; padding: 1rem; border-radius: 1.25rem;"><i class='bx bxs-star'></i></div>
+                <div>
+                    <h3 style="font-weight: 700; margin-bottom: 0.5rem;">Reviews & Ratings</h3>
+                    <p style="color: var(--text-secondary); line-height: 1.6;">Read reviews and ratings from previous employers to make informed decisions and build a trusted community.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Popular Services -->
+<section style="padding: 6rem 0; background: white;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 style="font-size: 2.5rem; font-weight: 800; margin-bottom: 1rem;">Popular Categories</h2>
+            <p style="color: var(--text-secondary); max-width: 600px; margin: 0 auto; font-size: 1.125rem;">Find workers for all your household needs</p>
+        </div>
+        
+        <div class="grid grid-4" style="gap: 1.5rem;">
+            <div class="card text-center" style="padding: 2.5rem 1.5rem; transition: transform 0.3s ease;">
+                <div style="font-size: 3rem; margin-bottom: 1rem; color: #3b82f6;"><i class='bx bxs-baby-carriage'></i></div>
+                <h4 style="font-weight: 700; margin-bottom: 0.5rem;">Childcare</h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Expert caregivers</p>
+            </div>
+            
+            <div class="card text-center" style="padding: 2.5rem 1.5rem; transition: transform 0.3s ease;">
+                <div style="font-size: 3rem; margin-bottom: 1rem; color: #10b981;"><i class='bx bxs-brush'></i></div>
+                <h4 style="font-weight: 700; margin-bottom: 0.5rem;">Cleaning</h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Deep cleaning help</p>
+            </div>
+            
+            <div class="card text-center" style="padding: 2.5rem 1.5rem; transition: transform 0.3s ease;">
+                <div style="font-size: 3rem; margin-bottom: 1rem; color: #ef4444;"><i class='bx bxs-bowl-hot'></i></div>
+                <h4 style="font-weight: 700; margin-bottom: 0.5rem;">Cooking</h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Skilled home cooks</p>
+            </div>
+            
+            <div class="card text-center" style="padding: 2.5rem 1.5rem; transition: transform 0.3s ease;">
+                <div style="font-size: 3rem; margin-bottom: 1rem; color: #8b5cf6;"><i class='bx bxs-user-heart'></i></div>
+                <h4 style="font-weight: 700; margin-bottom: 0.5rem;">Elderly Care</h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Compassionate care</p>
+            </div>
+            
+            <div class="card text-center" style="padding: 2.5rem 1.5rem; transition: transform 0.3s ease;">
+                <div style="font-size: 3rem; margin-bottom: 1rem; color: #2563eb;"><i class='bx bxs-home-heart'></i></div>
+                <h4 style="font-weight: 700; margin-bottom: 0.5rem;">General Help</h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">All-around assistance</p>
+            </div>
+            
+            <div class="card text-center" style="padding: 2.5rem 1.5rem; transition: transform 0.3s ease;">
+                <div style="font-size: 3rem; margin-bottom: 1rem; color: #16a34a;"><i class='bx bxs-tree'></i></div>
+                <h4 style="font-weight: 700; margin-bottom: 0.5rem;">Gardening</h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Estate maintenance</p>
+            </div>
+            
+            <div class="card text-center" style="padding: 2.5rem 1.5rem; transition: transform 0.3s ease;">
+                <div style="font-size: 3rem; margin-bottom: 1rem; color: #f59e0b;"><i class='bx bxs-dog'></i></div>
+                <h4 style="font-weight: 700; margin-bottom: 0.5rem;">Pet Care</h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Love for your pets</p>
+            </div>
+            
+            <div class="card text-center" style="padding: 2.5rem 1.5rem; transition: transform 0.3s ease;">
+                <div style="font-size: 3rem; margin-bottom: 1rem; color: #64748b;"><i class='bx bxs-car'></i></div>
+                <h4 style="font-weight: 700; margin-bottom: 0.5rem;">Driving</h4>
+                <p style="color: var(--text-secondary); font-size: 0.9rem;">Professional drivers</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- Statistics -->
+<section style="padding: 4rem 0; background: linear-gradient(135deg, var(--primary-color), var(--primary-dark)); color: white;">
+    <div class="container">
+        <div class="text-center mb-5">
+            <h2 style="font-size: 2rem; margin-bottom: 1rem;">Trusted Across Rwanda</h2>
+            <p style="opacity: 0.9;">Join thousands of satisfied users</p>
+        </div>
+        
+        <div class="grid grid-4">
+            <div class="text-center">
+                <div style="font-size: 2.5rem; font-weight: bold; margin-bottom: 0.5rem;">1000+</div>
+                <p style="opacity: 0.9;">Verified Workers</p>
+            </div>
+            <div class="text-center">
+                <div style="font-size: 2.5rem; font-weight: bold; margin-bottom: 0.5rem;">500+</div>
+                <p style="opacity: 0.9;">Happy Employers</p>
+            </div>
+            <div class="text-center">
+                <div style="font-size: 2.5rem; font-weight: bold; margin-bottom: 0.5rem;">30</div>
+                <p style="opacity: 0.9;">Districts Covered</p>
+            </div>
+            <div class="text-center">
+                <div style="font-size: 2.5rem; font-weight: bold; margin-bottom: 0.5rem;">4.8</div>
+                <p style="opacity: 0.9;">Average Rating</p>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- CTA Section -->
+<section style="padding: 4rem 0; background: white;">
+    <div class="container text-center">
+        <h2 style="font-size: 2rem; margin-bottom: 1rem;">Ready to Get Started?</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 2rem; max-width: 600px; margin-left: auto; margin-right: auto;">Join thousands of Rwandans who have found trusted household workers and employment opportunities through Umukozi.</p>
+        <div style="display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap;">
+            <a href="{{ url_for('register') }}" class="btn btn-primary" style="font-size: 1.1rem; padding: 1rem 2rem;">Sign Up as Worker</a>
+            <a href="{{ url_for('register') }}" class="btn btn-secondary" style="font-size: 1.1rem; padding: 1rem 2rem;">Sign Up as Employer</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

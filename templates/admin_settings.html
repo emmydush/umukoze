@@ -1,0 +1,859 @@
+{% extends "base.html" %}
+
+{% block title %}System Settings - Admin Dashboard{% endblock %}
+
+{% block content %}
+<!-- Mobile Menu Button -->
+<button class="mobile-menu-btn" onclick="toggleSidebar()">
+    <i class='bx bx-menu'></i>
+</button>
+
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Admin Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                    {{ current_user.full_name[0].upper() }}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name }}</h4>
+                    <p style="font-size: 0.7rem; opacity: 0.8;">System Administrator</p>
+                </div>
+            </div>
+            <div style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2); background: var(--success-color); color: white; padding: 0.5rem; border-radius: 0.5rem; text-align: center;">
+                ✓ Admin Access
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h6>Dashboard</h6>
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-link">
+                    <i class='bx bx-home-alt'></i>
+                    <span>Overview</span>
+                </a>
+                <a href="{{ url_for('admin_users') }}" class="nav-link">
+                    <i class='bx bx-user'></i>
+                    <span>Users</span>
+                </a>
+                <a href="{{ url_for('admin_workers') }}" class="nav-link">
+                    <i class='bx bxs-group'></i>
+                    <span>Workers</span>
+                </a>
+                <a href="{{ url_for('admin_employers') }}" class="nav-link">
+                    <i class='bx bxs-business'></i>
+                    <span>Employers</span>
+                </a>
+                <a href="{{ url_for('admin_jobs') }}" class="nav-link">
+                    <i class='bx bx-briefcase'></i>
+                    <span>Jobs</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h6>Management</h6>
+                <a href="{{ url_for('admin_verification') }}" class="nav-link">
+                    <i class='bx bx-shield-check'></i>
+                    <span>Verification</span>
+                </a>
+                <a href="{{ url_for('admin_messages') }}" class="nav-link">
+                    <i class='bx bx-message-dots'></i>
+                    <span>Messages</span>
+                </a>
+                <a href="{{ url_for('admin_notifications') }}" class="nav-link">
+                    <i class='bx bx-bell'></i>
+                    <span>Notifications</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h6>System</h6>
+                <a href="{{ url_for('admin_settings') }}" class="nav-link active">
+                    <i class='bx bx-cog'></i>
+                    <span>Settings</span>
+                </a>
+                <a href="{{ url_for('admin_reports') }}" class="nav-link">
+                    <i class='bx bx-chart-line'></i>
+                    <span>Reports</span>
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-link" style="color: var(--danger-color);">
+                    <i class='bx bx-log-out'></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div>
+                    <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em;">System Settings</h1>
+                    <p style="color: var(--text-secondary); margin: 0;">Configure platform settings and policies</p>
+                </div>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <button class="btn btn-outline" onclick="exportSettings()">
+                        <i class='bx bx-download' style="margin-right: 0.5rem;"></i> Export
+                    </button>
+                    <button class="btn btn-primary" onclick="saveAllSettings()">
+                        <i class='bx bx-save' style="margin-right: 0.5rem;"></i> Save All
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Settings Navigation -->
+        <div class="card" style="margin-bottom: 2rem; padding: 1rem; background: var(--light-bg);">
+            <nav style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                <a href="#general" class="btn btn-outline" style="border: none; background: white; font-weight: 700; color: var(--primary-color);">
+                    <i class='bx bxs-cog' style="margin-right: 0.5rem;"></i> General
+                </a>
+                <a href="#verification" class="btn btn-outline" style="border: none;">
+                    <i class='bx bxs-check-shield' style="margin-right: 0.5rem;"></i> Verification
+                </a>
+                <a href="#security" class="btn btn-outline" style="border: none;">
+                    <i class='bx bxs-lock-alt' style="margin-right: 0.5rem;"></i> Security
+                </a>
+                <a href="#notifications" class="btn btn-outline" style="border: none;">
+                    <i class='bx bxs-bell' style="margin-right: 0.5rem;"></i> Notifications
+                </a>
+                <a href="#payments" class="btn btn-outline" style="border: none;">
+                    <i class='bx bxs-credit-card' style="margin-right: 0.5rem;"></i> Payments
+                </a>
+                <a href="#maintenance" class="btn btn-outline" style="border: none;">
+                    <i class='bx bxs-wrench' style="margin-right: 0.5rem;"></i> Maintenance
+                </a>
+            </nav>
+        </div>
+
+        <!-- General Settings -->
+        <section id="general" class="card">
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                <span style="background: rgba(37, 99, 235, 0.1); padding: 0.5rem; border-radius: 0.75rem; color: var(--primary-color);">
+                    <i class='bx bxs-cog'></i>
+                </span>
+                General Settings
+            </h3>
+            
+            <div class="settings-grid">
+                <div>
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Platform Name</label>
+                    <input type="text" class="form-control" value="Umukozi">
+                </div>
+                <div>
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Platform Email</label>
+                    <input type="email" class="form-control" value="admin@umukozi.rw">
+                </div>
+                <div>
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Contact Phone</label>
+                    <input type="tel" class="form-control" value="+250 788 123 456">
+                </div>
+                <div>
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Default Language</label>
+                    <select class="form-control">
+                        <option value="en" selected>English</option>
+                        <option value="fr">French</option>
+                        <option value="rw">Kinyarwanda</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Platform Description</label>
+                <textarea class="form-control" rows="3" style="resize: vertical;">Umukozi connects skilled workers with employers in Rwanda, providing a trusted platform for job opportunities and reliable services.</textarea>
+            </div>
+
+            <div style="margin-top: 2rem;">
+                <label style="font-weight: 600; margin-bottom: 1rem; display: block;">Platform Status</label>
+                <div style="display: flex; gap: 1rem;">
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="radio" name="platform_status" value="online" checked>
+                        <span>🟢 Online</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="radio" name="platform_status" value="maintenance">
+                        <span>🟡 Maintenance</span>
+                    </label>
+                    <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                        <input type="radio" name="platform_status" value="offline">
+                        <span>🔴 Offline</span>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- Verification Settings -->
+        <section id="verification" class="card">
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                <span style="background: rgba(16, 185, 129, 0.1); padding: 0.5rem; border-radius: 0.75rem; color: var(--secondary-color);">
+                    <i class='bx bxs-check-shield'></i>
+                </span>
+                Verification Settings
+            </h3>
+            
+            <div class="settings-grid">
+                <div>
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; margin-bottom: 1rem;">
+                        <input type="checkbox" checked>
+                        <div>
+                            <div style="font-weight: 600;">Require ID Verification</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">All users must verify identity</div>
+                        </div>
+                    </label>
+                    
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; margin-bottom: 1rem;">
+                        <input type="checkbox" checked>
+                        <div>
+                            <div style="font-weight: 600;">Auto-approve Verified Users</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Automatically approve users with valid ID</div>
+                        </div>
+                    </label>
+                    
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                        <input type="checkbox">
+                        <div>
+                            <div style="font-weight: 600;">Require Background Check</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Optional background verification</div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div>
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Verification Timeout (hours)</label>
+                    <input type="number" class="form-control" value="72" min="1" max="168">
+                    
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block; margin-top: 1rem;">Max Retries</label>
+                    <input type="number" class="form-control" value="3" min="1" max="10">
+                    
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block; margin-top: 1rem;">Document Size Limit (MB)</label>
+                    <input type="number" class="form-control" value="5" min="1" max="20">
+                </div>
+            </div>
+        </section>
+
+        <!-- Security Settings -->
+        <section id="security" class="card">
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                <span style="background: rgba(239, 68, 68, 0.1); padding: 0.5rem; border-radius: 0.75rem; color: var(--danger-color);">
+                    <i class='bx bxs-lock-alt'></i>
+                </span>
+                Security Settings
+            </h3>
+            
+            <div class="settings-grid">
+                <div>
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; margin-bottom: 1rem;">
+                        <input type="checkbox" checked>
+                        <div>
+                            <div style="font-weight: 600;">Two-Factor Authentication</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Require 2FA for admin accounts</div>
+                        </div>
+                    </label>
+                    
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; margin-bottom: 1rem;">
+                        <input type="checkbox" checked>
+                        <div>
+                            <div style="font-weight: 600;">Session Timeout</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Auto-logout inactive users</div>
+                        </div>
+                    </label>
+                    
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                        <input type="checkbox" checked>
+                        <div>
+                            <div style="font-weight: 600;">IP Whitelist</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Restrict admin access by IP</div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div>
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Session Duration (minutes)</label>
+                    <input type="number" class="form-control" value="30" min="5" max="480">
+                    
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block; margin-top: 1rem;">Max Login Attempts</label>
+                    <input type="number" class="form-control" value="5" min="3" max="10">
+                    
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block; margin-top: 1rem;">Lockout Duration (minutes)</label>
+                    <input type="number" class="form-control" value="15" min="5" max="60">
+                </div>
+            </div>
+        </section>
+
+        <!-- Notification Settings -->
+        <section id="notifications" class="card">
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                <span style="background: rgba(245, 158, 11, 0.1); padding: 0.5rem; border-radius: 0.75rem; color: var(--warning-color);">
+                    <i class='bx bxs-bell'></i>
+                </span>
+                Notification Settings
+            </h3>
+            
+            <div class="settings-grid">
+                <div>
+                    <h4 style="font-weight: 600; margin-bottom: 1rem;">Email Notifications</h4>
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; margin-bottom: 1rem;">
+                        <input type="checkbox" checked>
+                        <div>
+                            <div style="font-weight: 600;">New User Registration</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Notify when users register</div>
+                        </div>
+                    </label>
+                    
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; margin-bottom: 1rem;">
+                        <input type="checkbox" checked>
+                        <div>
+                            <div style="font-weight: 600;">Verification Requests</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Notify for ID verification</div>
+                        </div>
+                    </label>
+                    
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                        <input type="checkbox">
+                        <div>
+                            <div style="font-weight: 600;">System Alerts</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Critical system notifications</div>
+                        </div>
+                    </label>
+                </div>
+                
+                <div>
+                    <h4 style="font-weight: 600; margin-bottom: 1rem;">SMS Notifications</h4>
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; margin-bottom: 1rem;">
+                        <input type="checkbox">
+                        <div>
+                            <div style="font-weight: 600;">Emergency Alerts</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Critical issues only</div>
+                        </div>
+                    </label>
+                    
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; margin-bottom: 1rem;">
+                        <input type="checkbox">
+                        <div>
+                            <div style="font-weight: 600;">Security Breaches</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Security incidents</div>
+                        </div>
+                    </label>
+                    
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                        <input type="checkbox">
+                        <div>
+                            <div style="font-weight: 600;">System Maintenance</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Scheduled maintenance</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- Payment Settings -->
+        <section id="payments" class="card">
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                <span style="background: rgba(139, 92, 246, 0.1); padding: 0.5rem; border-radius: 0.75rem; color: #8b5cf6;">
+                    <i class='bx bxs-credit-card'></i>
+                </span>
+                Payment Settings
+            </h3>
+            
+            <div class="settings-grid">
+                <div>
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Payment Gateway</label>
+                    <select class="form-control">
+                        <option value="momo" selected>Mobile Money (MoMo)</option>
+                        <option value="bank">Bank Transfer</option>
+                        <option value="card">Credit/Debit Card</option>
+                    </select>
+                    
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block; margin-top: 1rem;">Service Fee (%)</label>
+                    <input type="number" class="form-control" value="5" min="0" max="20" step="0.1">
+                    
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block; margin-top: 1rem;">Minimum Withdrawal (RWF)</label>
+                    <input type="number" class="form-control" value="1000" min="100" step="100">
+                </div>
+                
+                <div>
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; margin-bottom: 1rem;">
+                        <input type="checkbox" checked>
+                        <div>
+                            <div style="font-weight: 600;">Enable Payments</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Allow payment processing</div>
+                        </div>
+                    </label>
+                    
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; margin-bottom: 1rem;">
+                        <input type="checkbox" checked>
+                        <div>
+                            <div style="font-weight: 600;">Auto-withdraw</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Automatic withdrawals</div>
+                        </div>
+                    </label>
+                    
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer;">
+                        <input type="checkbox">
+                        <div>
+                            <div style="font-weight: 600;">Test Mode</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Use test payment gateway</div>
+                        </div>
+                    </label>
+                </div>
+            </div>
+        </section>
+
+        <!-- Maintenance Settings -->
+        <section id="maintenance" class="card">
+            <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 2rem; display: flex; align-items: center; gap: 0.75rem;">
+                <span style="background: rgba(107, 114, 128, 0.1); padding: 0.5rem; border-radius: 0.75rem; color: #6b7280;">
+                    <i class='bx bxs-wrench'></i>
+                </span>
+                Maintenance Settings
+            </h3>
+            
+            <div class="settings-grid">
+                <div>
+                    <label style="display: flex; align-items: center; gap: 0.75rem; cursor: pointer; margin-bottom: 1rem;">
+                        <input type="checkbox">
+                        <div>
+                            <div style="font-weight: 600;">Enable Maintenance Mode</div>
+                            <div style="font-size: 0.875rem; color: var(--text-secondary);">Temporarily disable platform</div>
+                        </div>
+                    </label>
+                    
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Maintenance Message</label>
+                    <textarea class="form-control" rows="3" placeholder="Message to show users during maintenance" style="resize: vertical;">We are currently performing scheduled maintenance. The platform will be back online shortly. Thank you for your patience.</textarea>
+                </div>
+                
+                <div>
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block;">Auto Backup Frequency</label>
+                    <select class="form-control">
+                        <option value="daily" selected>Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="monthly">Monthly</option>
+                    </select>
+                    
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block; margin-top: 1rem;">Log Retention (days)</label>
+                    <input type="number" class="form-control" value="30" min="7" max="365">
+                    
+                    <label style="font-weight: 600; margin-bottom: 0.5rem; display: block; margin-top: 1rem;">Cache Cleanup (hours)</label>
+                    <input type="number" class="form-control" value="24" min="1" max="168">
+                </div>
+            </div>
+        </section>
+
+        <!-- Save Settings Button -->
+        <div style="text-align: center; margin-top: 2rem;">
+            <button class="btn btn-primary" onclick="saveAllSettings()" style="padding: 0.75rem 2rem; font-size: 1rem;">
+                <i class='bx bx-save' style="margin-right: 0.5rem;"></i> Save All Settings
+            </button>
+        </div>
+    </main>
+</div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (sidebar.classList.contains('active')) {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    } else {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    }
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+// Close sidebar when clicking on navigation links on mobile
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                closeSidebar();
+            }
+        });
+    });
+    
+    // Close sidebar on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSidebar();
+        }
+    });
+    
+    // Handle window resize
+    window.addEventListener('resize', function() {
+        if (window.innerWidth > 768) {
+            closeSidebar();
+        }
+    });
+});
+
+function saveAllSettings() {
+    // In a real implementation, this would collect all form data and send to server
+    if (confirm('Are you sure you want to save all settings? This may affect platform functionality.')) {
+        // Show loading state
+        const button = event.target;
+        const originalText = button.innerHTML;
+        button.innerHTML = '<i class="bx bx-loader-alt" style="animation: spin 1s linear infinite;"></i> Saving...';
+        button.disabled = true;
+        
+        // Simulate saving
+        setTimeout(() => {
+            button.innerHTML = originalText;
+            button.disabled = false;
+            alert('All settings saved successfully!');
+        }, 2000);
+    }
+}
+
+function exportSettings() {
+    // In a real implementation, this would generate and download a settings file
+    alert('Export settings functionality would be implemented here');
+}
+
+// Smooth scroll for navigation links
+document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+    anchor.addEventListener('click', function (e) {
+        e.preventDefault();
+        const target = document.querySelector(this.getAttribute('href'));
+        if (target) {
+            target.scrollIntoView({
+                behavior: 'smooth',
+                block: 'start'
+            });
+            
+            // Update active state
+            document.querySelectorAll('nav a').forEach(link => {
+                link.style.background = '';
+                link.style.fontWeight = '';
+                link.style.color = '';
+            });
+            this.style.background = 'white';
+            this.style.fontWeight = '700';
+            this.style.color = 'var(--primary-color)';
+        }
+    });
+});
+</script>
+
+<style>
+/* Admin Dashboard Layout Styles */
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: var(--white);
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 100;
+    overflow-y: auto;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sidebar-user-info h4 {
+    font-size: 0.9rem !important;
+    margin: 0;
+}
+
+.sidebar-user-info p {
+    font-size: 0.7rem !important;
+    margin: 0;
+    opacity: 0.8;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0;
+    overflow-y: auto;
+}
+
+.nav-section {
+    margin-bottom: 2rem;
+}
+
+.nav-section h6 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.nav-link:hover {
+    background: var(--gray-50);
+    color: var(--primary-color);
+}
+
+.nav-link.active {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--primary-color);
+}
+
+.nav-link i {
+    font-size: 1.125rem;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 260px;
+    padding: 2rem;
+    background: var(--gray-50);
+    min-height: 100vh;
+    overflow-y: auto;
+}
+
+/* Mobile Menu Button */
+.mobile-menu-btn {
+    display: none;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1002;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    cursor: pointer;
+    font-size: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Dashboard Header */
+.dashboard-header {
+    margin-bottom: 2rem;
+}
+
+/* Card Styles */
+.card {
+    background: var(--white);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+    margin-bottom: 2rem;
+}
+
+.card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+/* Settings Grid */
+.settings-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2rem;
+}
+
+/* Form Controls */
+.form-control {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+    background: var(--white);
+}
+
+.form-control:focus {
+    outline: none;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+/* Button Styles */
+.btn {
+    padding: 0.5rem 1rem;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-color-dark);
+}
+
+.btn-outline {
+    background: var(--white);
+    border: 1px solid var(--border-color);
+    color: var(--text-primary);
+}
+
+.btn-outline:hover {
+    background: var(--gray-50);
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+/* Checkbox and Radio Styles */
+input[type="checkbox"], input[type="radio"] {
+    width: 1.25rem;
+    height: 1.25rem;
+    cursor: pointer;
+    accent-color: var(--primary-color);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        top: 0;
+        height: 100vh;
+        z-index: 1001;
+        transition: left 0.3s ease;
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+    }
+    
+    .mobile-menu-btn {
+        display: block;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+        padding-top: 80px;
+    }
+    
+    .settings-grid {
+        grid-template-columns: 1fr;
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 480px) {
+    .card {
+        padding: 1rem;
+    }
+    
+    .dashboard-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .dashboard-header {
+        flex-direction: column;
+        gap: 1rem;
+        align-items: flex-start !important;
+    }
+    
+    .dashboard-header > div {
+        width: 100%;
+    }
+    
+    .dashboard-header > div:last-child {
+        justify-content: flex-start;
+    }
+}
+
+/* Hide mobile menu button on desktop */
+@media (min-width: 769px) {
+    .mobile-menu-btn {
+        display: none;
+    }
+    
+    .sidebar-overlay {
+        display: none !important;
+    }
+    
+    .sidebar {
+        position: fixed;
+        left: 0 !important;
+    }
+}
+
+/* Animation */
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+</style>
+{% endblock %}

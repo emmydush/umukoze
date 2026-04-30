@@ -1,0 +1,298 @@
+{% extends "base.html" %}
+
+{% block title %}Find Jobs - Umukozi{% endblock %}
+
+{% block content %}
+<!-- Mobile Sidebar Toggle -->
+<button class="mobile-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div style="padding: 1.5rem 1.5rem 0.5rem 1.5rem; display: flex; justify-content: center;">
+            <a href="{{ url_for('index') }}" style="text-decoration: none;">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Umukozi Logo" style="height: 60px; width: auto; object-fit: contain;">
+            </a>
+        </div>
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar {% if worker.profile_picture %}has-profile-picture{% else %}sidebar-avatar-gradient{% endif %}">
+                    {% if worker.profile_picture %}
+                        <img src="{{ url_for('static', filename='uploads/' + worker.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
+                    {% else %}
+                        {{ current_user.full_name[0].upper() }}
+                    {% endif %}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name }}</h4>
+                    <p style="font-size: 0.75rem; opacity: 0.8;">Worker Account</p>
+                </div>
+            </div>
+            {% if worker.is_verified %}
+                <div class="badge badge-success" style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2);">
+                    ✓ Verified Worker
+                </div>
+            {% else %}
+                <div class="badge badge-warning" style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2);">
+                    ⏳ Verification Pending
+                </div>
+            {% endif %}
+        </div>
+        
+        <nav class="sidebar-menu">
+            <div class="sidebar-section">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-dashboard'></i></span>
+                    Overview
+                </a>
+                <a href="{{ url_for('worker_find_jobs') }}" class="sidebar-item active">
+                    <span class="sidebar-item-icon"><i class='bx bx-search-alt'></i></span>
+                    Find Jobs
+                </a>
+                <a href="{{ url_for('worker_applications') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-file-doc'></i></span>
+                    Applications
+                    <span class="sidebar-badge">{{ worker.applications|length }}</span>
+                </a>
+                <a href="#" onclick="showMessages()" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-message-dots'></i></span>
+                    Messages
+                    <span class="sidebar-badge">2</span>
+                </a>
+                <a href="{{ url_for('worker_activity') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bx-line-chart'></i></span>
+                    Activity
+                </a>
+                <a href="{{ url_for('worker_complete_profile') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-user-circle'></i></span>
+                    My Profile
+                </a>
+                <a href="{{ url_for('worker_settings') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-cog'></i></span>
+                    Settings
+                </a>
+                <a href="javascript:void(0)" onclick="confirmLogout(event)" data-logout-url="{{ url_for('logout') }}" class="sidebar-item" style="color: var(--danger-color); margin-top: 2rem;">
+                    <span class="sidebar-item-icon"><i class='bx bx-log-out'></i></span>
+                    Logout
+                </a>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header Section -->
+        <header style="margin-bottom: 2.5rem;">
+            <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em;">Find Opportunities</h1>
+            <p style="color: var(--text-secondary);">Browse and apply for the latest job openings in your area.</p>
+        </header>
+
+        <!-- Search Bar & Quick Filters -->
+        <div class="card" style="border-radius: 1.5rem; padding: 1rem; margin-bottom: 2.5rem; background: var(--white); box-shadow: var(--shadow-md);">
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <div style="flex-grow: 1; position: relative;">
+                    <span style="position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"><i class='bx bx-search'></i></span>
+                    <input type="text" class="form-control" placeholder="Search by job title, skills, or location..." style="padding-left: 3rem; border-radius: 1rem; border: 1px solid var(--border-color); width: 100%;">
+                </div>
+                <div style="display: flex; gap: 0.75rem;">
+                    <button class="btn btn-outline" style="border-radius: 1rem; padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 0.5rem;" onclick="toggleFilters()">
+                        <i class='bx bx-filter-alt'></i> Filters
+                    </button>
+                    <button class="btn btn-primary" style="border-radius: 1rem; padding: 0.75rem 2rem;">Search</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filter Panel (Hidden by default) -->
+        <div id="filtersPanel" class="card" style="display: none; border-radius: 1.5rem; padding: 2rem; margin-bottom: 2.5rem; border: 1px solid var(--primary-color);">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3 style="font-size: 1.125rem; font-weight: 700;">Refine your search</h3>
+                <button onclick="toggleFilters()" style="background: none; border: none; cursor: pointer; color: var(--text-secondary);">✕</button>
+            </div>
+            <div class="grid grid-3" style="gap: 1.5rem;">
+                <div class="form-group">
+                    <label class="form-label">Location</label>
+                    <select class="form-control" style="border-radius: 0.75rem;">
+                        <option value="">All Locations</option>
+                        <option value="kigali">Kigali</option>
+                        <option value="northern">Northern Province</option>
+                        <option value="southern">Southern Province</option>
+                        <option value="eastern">Eastern Province</option>
+                        <option value="western">Western Province</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Job Type</label>
+                    <select class="form-control" style="border-radius: 0.75rem;">
+                        <option value="">All Types</option>
+                        <option value="full_time">Full Time</option>
+                        <option value="part_time">Part Time</option>
+                        <option value="live_in">Live In</option>
+                        <option value="temporary">Temporary</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Price Range</label>
+                    <select class="form-control" style="border-radius: 0.75rem;">
+                        <option value="">Any Price</option>
+                        <option value="0-50000">Below 50k RWF</option>
+                        <option value="50000-100000">50k - 100k RWF</option>
+                        <option value="100000+">100k+ RWF</option>
+                    </select>
+                </div>
+            </div>
+            <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
+                <button class="btn btn-outline btn-sm" onclick="clearFilters()">Reset All</button>
+                <button class="btn btn-primary btn-sm" onclick="toggleFilters()">Apply Changes</button>
+            </div>
+        </div>
+
+        <!-- Job Grid -->
+        <div style="display: flex; flex-direction: column; gap: 1.5rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h2 style="font-size: 1.25rem; font-weight: 700;">Available Jobs ({{ jobs|length }})</h2>
+                <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
+                    <span>Sort by:</span>
+                    <select style="background: none; border: none; font-weight: 600; color: var(--primary-color); cursor: pointer; outline: none;">
+                        <option>Newest First</option>
+                        <option>Highest Paid</option>
+                        <option>Urgent</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="grid grid-2" style="gap: 1.5rem;">
+                {% if jobs %}
+                    {% for job in jobs %}
+                    <div class="job-card-modern" style="border-radius: 1.5rem;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem;">
+                            <div style="display: flex; gap: 1rem; align-items: center;">
+                                <div style="width: 48px; height: 48px; background: #f8fafc; border-radius: 1rem; display: flex; align-items: center; justify-content: center; font-size: 1.5rem;">
+                                    {% if 'house' in job.title|lower %}🏠{% elif 'child' in job.title|lower %}👶{% elif 'clean' in job.title|lower %}✨{% else %}💼{% endif %}
+                                </div>
+                                <div>
+                                    <h4 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 0.25rem;">{{ job.title }}</h4>
+                                    <p style="color: var(--text-secondary); font-size: 0.8125rem;">{{ job.employer.company_name or 'Private Household' }}</p>
+                                </div>
+                            </div>
+                            {% if job.is_urgent %}
+                            <span class="badge" style="background: #fef2f2; color: #ef4444; font-size: 0.65rem; text-transform: uppercase; font-weight: 800; border: 1px solid #fee2e2;">Urgent</span>
+                            {% endif %}
+                        </div>
+                        
+                        <p style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.6; margin-bottom: 2rem; flex-grow: 1;">
+                            {{ job.description[:120] }}{% if job.description|length > 120 %}...{% endif %}
+                        </p>
+                        
+                        <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; padding: 1rem; background: #f8fafc; border-radius: 1rem;">
+                            <div style="display: flex; flex-direction: column;">
+                                <span style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; letter-spacing: 0.05em;">Salary</span>
+                                <span style="font-size: 1rem; font-weight: 700; color: var(--secondary-color);">{{ job.salary_amount }} RWF</span>
+                            </div>
+                            <div style="width: 1px; height: 24px; background: var(--border-color);"></div>
+                            <div style="display: flex; flex-direction: column;">
+                                <span style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; letter-spacing: 0.05em;">Location</span>
+                                <span style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">{{ job.district }}</span>
+                            </div>
+                        </div>
+                        
+                        <div style="display: flex; gap: 0.75rem;">
+                            <a href="{{ url_for('worker_job_details', job_id=job.id) }}" class="btn btn-outline" style="flex: 1; border-radius: 0.75rem; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center;">Details</a>
+                            <form action="{{ url_for('worker_apply_job', job_id=job.id) }}" method="POST" style="flex: 2;">
+                                <button type="submit" class="btn btn-primary" style="width: 100%; border-radius: 0.75rem; border: none; font-weight: 600; cursor: pointer;">Apply Now</button>
+                            </form>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% else %}
+                    <div style="grid-column: span 2; text-align: center; padding: 5rem 2rem;">
+                        <div style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.2;">🔍</div>
+                        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">No matching jobs found</h3>
+                        <p style="color: var(--text-secondary); max-width: 400px; margin: 0 auto 2rem;">Try adjusting your filters or location to see more opportunities available in your region.</p>
+                        <button class="btn btn-primary" onclick="clearFilters()" style="border-radius: 1rem; padding: 0.75rem 2rem;">Clear All Filters</button>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Pagination -->
+        {% if jobs %}
+        <div style="display: flex; justify-content: center; margin-top: 4rem;">
+            <div style="display: flex; gap: 0.5rem; background: var(--white); padding: 0.5rem; border-radius: 1rem; border: 1px solid var(--border-color);">
+                <button class="btn btn-outline btn-sm" disabled style="border: none;">←</button>
+                <button class="btn btn-primary btn-sm" style="border-radius: 0.5rem;">1</button>
+                <button class="btn btn-outline btn-sm" style="border: none; border-radius: 0.5rem;">2</button>
+                <button class="btn btn-outline btn-sm" style="border: none; border-radius: 0.5rem;">3</button>
+                <button class="btn btn-outline btn-sm" style="border: none;">→</button>
+            </div>
+        </div>
+        {% endif %}
+    </main>
+</div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+function toggleFilters() {
+    const panel = document.getElementById('filtersPanel');
+    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+    if(panel.style.display === 'block') {
+        panel.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+}
+
+function clearFilters() {
+    const selects = document.querySelectorAll('#filtersPanel select');
+    selects.forEach(s => s.selectedIndex = 0);
+    const inputs = document.querySelectorAll('.card input');
+    inputs.forEach(i => i.value = '');
+}
+
+function confirmLogout(event) {
+    event.preventDefault();
+    const logoutUrl = document.querySelector('[data-logout-url]').getAttribute('data-logout-url');
+    if (confirm('Are you sure you want to logout?')) {
+        window.location.href = logoutUrl;
+    }
+}
+
+function viewJobDetails(jobId) {
+    // Implement job details view
+    alert('Viewing details for job: ' + jobId);
+}
+
+function applyForJob(jobId) {
+    if (confirm('Ready to apply for this position? Your profile will be shared with the employer.')) {
+        // Implement application logic
+        alert('Application submitted successfully!');
+    }
+}
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.querySelector('.mobile-sidebar-toggle');
+    
+    if (window.innerWidth <= 768 && 
+        !sidebar.contains(event.target) && 
+        !toggle.contains(event.target) &&
+        sidebar.classList.contains('active')) {
+        closeSidebar();
+    }
+});
+</script>
+{% endblock %}
+

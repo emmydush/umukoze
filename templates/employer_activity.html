@@ -1,0 +1,306 @@
+{% extends "base.html" %}
+
+{% block title %}Activity - Umukozi{% endblock %}
+
+{% block content %}
+<!-- Mobile Sidebar Toggle -->
+<button class="mobile-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar {% if employer.profile_picture %}has-profile-picture{% endif %}">
+                    {% if employer.profile_picture %}
+                        <img src="{{ url_for('static', filename='uploads/' + employer.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
+                    {% else %}
+                        {{ current_user.full_name[0].upper() }}
+                    {% endif %}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name }}</h4>
+                    <p>Employer Account</p>
+                </div>
+            </div>
+            {% if employer.is_verified %}
+                <div style="font-size: 0.75rem; opacity: 0.9;">✓ Verified Employer</div>
+            {% else %}
+                <div style="font-size: 0.75rem; opacity: 0.9;">⚠ Verification Pending</div>
+            {% endif %}
+        </div>
+        
+        <nav class="sidebar-menu">
+            <div class="sidebar-section">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-dashboard'></i></span>
+                    Overview
+                </a>
+                <a href="{{ url_for('employer_my_jobs') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-briefcase'></i></span>
+                    My Jobs
+                    <span class="sidebar-badge">{{ employer.jobs|length }}</span>
+                </a>
+                <a href="{{ url_for('employer_find_workers') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bx-search-alt'></i></span>
+                    Find Workers
+                </a>
+                <a href="{{ url_for('employer_applications') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-file-doc'></i></span>
+                    Applications
+                    <span class="sidebar-badge">
+                        {% set total_applications = 0 %}
+                        {% for job in employer.jobs %}
+                            {% set total_applications = total_applications + job.applications|length %}
+                        {% endfor %}
+                        {{ total_applications }}
+                    </span>
+                </a>
+                <a href="{{ url_for('employer_activity') }}" class="sidebar-item active">
+                    <span class="sidebar-item-icon"><i class='bx bx-line-chart'></i></span>
+                    Activity
+                </a>
+                <a href="{{ url_for('employer_settings') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-cog'></i></span>
+                    Settings
+                </a>
+                <a href="{{ url_for('logout') }}" class="sidebar-item" style="color: var(--danger-color);">
+                    <span class="sidebar-item-icon"><i class='bx bx-log-out'></i></span>
+                    Logout
+                </a>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <div class="card" style="margin-bottom: 2rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
+                <div>
+                    <h1 style="margin-bottom: 0.5rem;">Activity</h1>
+                    <p style="color: var(--text-secondary); margin: 0;">
+                        Track your recent activities and stay updated on your job postings.
+                    </p>
+                </div>
+                <div>
+                    <button class="btn btn-outline" onclick="refreshActivity()">
+                        <span style="margin-right: 0.5rem;">🔄</span> Refresh
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Stats -->
+        <div class="grid grid-4" style="margin-bottom: 2rem;">
+            <div class="card text-center">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">{{ activities|length }}</div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Total Activities</p>
+            </div>
+            <div class="card text-center">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--success-color);">{{ employer.jobs|length }}</div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Jobs Posted</p>
+            </div>
+            <div class="card text-center">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--warning-color);">
+                    {% set total_apps = 0 %}
+                    {% for job in employer.jobs %}
+                        {% set total_apps = total_apps + job.applications|length %}
+                    {% endfor %}
+                    {{ total_apps }}
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Applications Received</p>
+            </div>
+            <div class="card text-center">
+                <div style="font-size: 2rem; font-weight: bold; color: var(--accent-color);">
+                    {% set filled_jobs = employer.jobs|selectattr('status', 'equalto', 'filled')|list|length %}
+                    {{ filled_jobs }}
+                </div>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">Positions Filled</p>
+            </div>
+        </div>
+
+        <!-- Activity Timeline -->
+        <div class="card">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
+                <h3>Recent Activity</h3>
+                <div style="display: flex; gap: 0.5rem;">
+                    <select class="form-control" style="width: auto;" onchange="filterActivities(this.value)">
+                        <option value="all">All Activities</option>
+                        <option value="jobs">Jobs</option>
+                        <option value="applications">Applications</option>
+                        <option value="messages">Messages</option>
+                    </select>
+                </div>
+            </div>
+            
+            {% if activities %}
+                <div style="position: relative;">
+                    <!-- Timeline Line -->
+                    <div style="position: absolute; left: 20px; top: 0; bottom: 0; width: 2px; background: var(--border-color);"></div>
+                    
+                    {% for activity in activities %}
+                    <div style="display: flex; margin-bottom: 2rem; position: relative;">
+                        <!-- Timeline Dot -->
+                        <div style="width: 40px; height: 40px; border-radius: 50%; background: var(--primary-color); color: white; display: flex; align-items: center; justify-content: center; font-size: 1.25rem; z-index: 1; flex-shrink: 0;">
+                            {{ activity.icon }}
+                        </div>
+                        
+                        <!-- Activity Content -->
+                        <div style="margin-left: 1rem; flex: 1;">
+                            <div class="card">
+                                <div style="padding: 1rem;">
+                                    <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 0.5rem;">
+                                        <h4 style="margin: 0; font-size: 1rem;">
+                                            {% if activity.type == 'job_posted' %}
+                                                Job Posted
+                                            {% elif activity.type == 'welcome' %}
+                                                Welcome to Umukozi
+                                            {% elif activity.type == 'application_received' %}
+                                                Application Received
+                                            {% elif activity.type == 'message_sent' %}
+                                                Message Sent
+                                            {% else %}
+                                                Activity
+                                            {% endif %}
+                                        </h4>
+                                        <span style="font-size: 0.75rem; color: var(--text-secondary);">
+                                            {{ activity.date }}
+                                        </span>
+                                    </div>
+                                    <p style="color: var(--text-secondary); font-size: 0.875rem; margin: 0;">
+                                        {{ activity.message }}
+                                    </p>
+                                    
+                                    {% if activity.type == 'job_posted' %}
+                                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color);">
+                                        <button class="btn btn-outline btn-sm" onclick="viewJobDetails({{ activity.job_id }})">
+                                            View Job
+                                        </button>
+                                    </div>
+                                    {% elif activity.type == 'application_received' %}
+                                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color);">
+                                        <button class="btn btn-primary btn-sm" onclick="viewApplication({{ activity.application_id }})">
+                                            Review Application
+                                        </button>
+                                    </div>
+                                    {% elif activity.type == 'message_sent' %}
+                                    <div style="margin-top: 0.75rem; padding-top: 0.75rem; border-top: 1px solid var(--border-color);">
+                                        <button class="btn btn-outline btn-sm" onclick="viewMessage({{ activity.message_id }})">
+                                            View Message
+                                        </button>
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            {% else %}
+                <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
+                    <div style="font-size: 3rem; margin-bottom: 1rem;">📈</div>
+                    <h3>No Recent Activity</h3>
+                    <p>Start posting jobs and interacting with workers to see your activity here!</p>
+                    <a href="{{ url_for('employer_my_jobs') }}" class="btn btn-primary" style="margin-top: 1rem;">
+                        <span style="margin-right: 0.5rem;">📋</span> Post a Job
+                    </a>
+                </div>
+            {% endif %}
+        </div>
+
+        <!-- Quick Actions -->
+        <div class="card" style="margin-top: 2rem;">
+            <h3 style="margin-bottom: 1rem;">Quick Actions</h3>
+            <div class="grid grid-4">
+                <button class="btn btn-outline" onclick="window.location.href='{{ url_for('employer_my_jobs') }}'">
+                    <span style="display: block; font-size: 1.5rem; margin-bottom: 0.5rem;">📋</span>
+                    Post New Job
+                </button>
+                <button class="btn btn-outline" onclick="window.location.href='{{ url_for('employer_applications') }}'">
+                    <span style="display: block; font-size: 1.5rem; margin-bottom: 0.5rem;">📄</span>
+                    Review Applications
+                </button>
+                <button class="btn btn-outline" onclick="window.location.href='{{ url_for('employer_find_workers') }}'">
+                    <span style="display: block; font-size: 1.5rem; margin-bottom: 0.5rem;">🔍</span>
+                    Find Workers
+                </button>
+                <button class="btn btn-outline" onclick="viewMessages()">
+                    <span style="display: block; font-size: 1.5rem; margin-bottom: 0.5rem;">💬</span>
+                    Messages
+                </button>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+function refreshActivity() {
+    alert('Activity refreshed!');
+    location.reload();
+}
+
+function filterActivities(filter) {
+    alert('Filtering activities by: ' + filter);
+}
+
+function viewJobDetails(jobId) {
+    alert('Viewing job details for ID: ' + jobId);
+}
+
+function viewApplication(applicationId) {
+    window.location.href = '{{ url_for("employer_applications") }}';
+}
+
+function viewMessage(messageId) {
+    alert('Viewing message ID: ' + messageId);
+}
+
+function viewMessages() {
+    alert('No new messages');
+}
+
+// Handle sidebar item clicks
+document.querySelectorAll('.sidebar-item').forEach(item => {
+    item.addEventListener('click', function(e) {
+        if (this.getAttribute('href') === '#') {
+            e.preventDefault();
+            // Remove active class from all items
+            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
+            // Add active class to clicked item
+            this.classList.add('active');
+            // Close mobile sidebar
+            closeSidebar();
+        }
+    });
+});
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.querySelector('.mobile-sidebar-toggle');
+    
+    if (window.innerWidth <= 768 && 
+        !sidebar.contains(event.target) && 
+        !toggle.contains(event.target) &&
+        sidebar.classList.contains('active')) {
+        closeSidebar();
+    }
+});
+</script>
+{% endblock %}

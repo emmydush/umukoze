@@ -1,0 +1,789 @@
+{% extends "base.html" %}
+
+{% block title %}User Verification - Admin Dashboard{% endblock %}
+
+{% block content %}
+<!-- Mobile Menu Button -->
+<button class="mobile-menu-btn" onclick="toggleSidebar()">
+    <i class='bx bx-menu'></i>
+</button>
+
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Admin Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                    {{ current_user.full_name[0].upper() }}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name }}</h4>
+                    <p style="font-size: 0.7rem; opacity: 0.8;">System Administrator</p>
+                </div>
+            </div>
+            <div style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2); background: var(--success-color); color: white; padding: 0.5rem; border-radius: 0.5rem; text-align: center;">
+                ✓ Admin Access
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h6>Dashboard</h6>
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-link">
+                    <i class='bx bx-home-alt'></i>
+                    <span>Overview</span>
+                </a>
+                <a href="{{ url_for('admin_users') }}" class="nav-link">
+                    <i class='bx bx-user'></i>
+                    <span>Users</span>
+                </a>
+                <a href="{{ url_for('admin_workers') }}" class="nav-link">
+                    <i class='bx bxs-group'></i>
+                    <span>Workers</span>
+                </a>
+                <a href="{{ url_for('admin_employers') }}" class="nav-link">
+                    <i class='bx bxs-business'></i>
+                    <span>Employers</span>
+                </a>
+                <a href="{{ url_for('admin_jobs') }}" class="nav-link">
+                    <i class='bx bx-briefcase'></i>
+                    <span>Jobs</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h6>Management</h6>
+                <a href="{{ url_for('admin_verification') }}" class="nav-link active">
+                    <i class='bx bx-shield-check'></i>
+                    <span>Verification</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class='bx bx-message-dots'></i>
+                    <span>Messages</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class='bx bx-bell'></i>
+                    <span>Notifications</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h6>System</h6>
+                <a href="{{ url_for('admin_settings') }}" class="nav-link">
+                    <i class='bx bx-cog'></i>
+                    <span>Settings</span>
+                </a>
+                <a href="{{ url_for('admin_reports') }}" class="nav-link">
+                    <i class='bx bx-chart-line'></i>
+                    <span>Reports</span>
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-link" style="color: var(--danger-color);">
+                    <i class='bx bx-log-out'></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div>
+                    <h1 style="font-size: 1.875rem; font-weight: 800; margin-bottom: 0.5rem;">User Verification</h1>
+                    <p style="color: var(--text-secondary); margin: 0;">Review and approve user identity documents</p>
+                </div>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <button class="btn btn-outline" onclick="exportVerificationData()" style="border-radius: 0.75rem;">
+                        <i class='bx bx-download' style="margin-right: 0.5rem;"></i> Export
+                    </button>
+                    <div class="admin-badge">
+                        <i class='bx bxs-check-shield' style="color: #dc2626;"></i>
+                        <span>Verification Admin</span>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <!-- Verification Stats -->
+        <div class="dashboard-grid" style="margin-bottom: 2rem;">
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+                    <i class='bx bxs-time-five'></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ pending_verifications|length if pending_verifications else 0 }}</div>
+                    <div class="stat-label">Pending Review</div>
+                    <div class="stat-change" style="color: var(--warning-color);">
+                        <i class='bx bx-time'></i> Requires action
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);">
+                    <i class='bx bxs-check-circle'></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ verified_today|length if verified_today else 0 }}</div>
+                    <div class="stat-label">Verified Today</div>
+                    <div class="stat-change positive">
+                        <i class='bx bx-up-arrow-alt'></i> Good progress
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color);">
+                    <i class='bx bxs-x-circle'></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ rejected_today|length if rejected_today else 0 }}</div>
+                    <div class="stat-label">Rejected Today</div>
+                    <div class="stat-change" style="color: var(--text-secondary);">
+                        <i class='bx bx-info-circle'></i> Review needed
+                    </div>
+                </div>
+            </div>
+
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-color);">
+                    <i class='bx bxs-chart'></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ verification_rate if verification_rate else 0 }}%</div>
+                    <div class="stat-label">Approval Rate</div>
+                    <div class="stat-change positive">
+                        <i class='bx bx-up-arrow-alt'></i> Healthy rate
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Verification Queue -->
+        <div class="card" style="margin-bottom: 2rem; padding: 1.5rem; border-radius: 1.5rem; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border: 1px solid #f59e0b;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div style="display: flex; align-items: center; gap: 1rem;">
+                    <div style="font-size: 2rem;">⚠️</div>
+                    <div>
+                        <h3 style="margin: 0; color: #92400e;">Pending Verifications</h3>
+                        <p style="margin: 0; color: #92400e; font-size: 0.875rem;">There are {{ pending_verifications|length if pending_verifications else 0 }} users waiting for identity verification</p>
+                    </div>
+                </div>
+                <button class="btn btn-warning" onclick="scrollToFirstPending()" style="border-radius: 0.75rem; background: #f59e0b; color: white;">
+                    <i class='bx bx-find' style="margin-right: 0.5rem;"></i> Review Now
+                </button>
+            </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="card" style="margin-bottom: 2rem; padding: 1.5rem; border-radius: 1.5rem;">
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <div style="flex-grow: 1; position: relative;">
+                    <span style="position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);">
+                        <i class='bx bx-search'></i>
+                    </span>
+                    <input type="text" id="verificationSearch" class="form-control" placeholder="Search by name, email, ID number..." style="padding-left: 3rem; border-radius: 1rem; border: 1px solid var(--border-color); width: 100%;" onkeyup="filterVerifications()">
+                </div>
+                <select id="statusFilter" class="form-control" style="border-radius: 1rem; border: 1px solid var(--border-color); min-width: 150px;" onchange="filterVerifications()">
+                    <option value="">All Status</option>
+                    <option value="pending">Pending</option>
+                    <option value="verified">Verified</option>
+                    <option value="rejected">Rejected</option>
+                </select>
+                <select id="userTypeFilter" class="form-control" style="border-radius: 1rem; border: 1px solid var(--border-color); min-width: 150px;" onchange="filterVerifications()">
+                    <option value="">All Users</option>
+                    <option value="worker">Workers</option>
+                    <option value="employer">Employers</option>
+                </select>
+                <button class="btn btn-outline" onclick="clearFilters()" style="border-radius: 1rem;">
+                    <i class='bx bx-x'></i> Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Verification List -->
+        <div class="card" style="border-radius: 1.5rem; overflow: hidden;">
+            {% if pending_verifications %}
+                {% for user in pending_verifications %}
+                <div class="verification-item" data-user-id="{{ user.id }}">
+                    <div style="padding: 2rem; border-bottom: 1px solid var(--border-color);">
+                        <div style="display: flex; gap: 2rem; align-items: start;">
+                            <!-- User Info -->
+                            <div style="flex: 1;">
+                                <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1.5rem;">
+                                    <div class="user-avatar {% if user.profile_picture %}has-profile-picture{% else %}default-avatar{% endif %}" style="width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: bold; flex-shrink: 0; overflow: hidden; color: white;">
+                                        {% if user.profile_picture %}
+                                            <img src="{{ url_for('static', filename='uploads/' + user.profile_picture) }}" style="width: 100%; height: 100%; object-fit: cover;" alt="{{ user.user.full_name }}">
+                                        {% else %}
+                                            {{ user.user.full_name[0].upper() }}
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <h3 style="margin: 0 0 0.25rem 0; font-size: 1.125rem; font-weight: 700;">{{ user.user.full_name }}</h3>
+                                        <p style="margin: 0; color: var(--text-secondary); font-size: 0.875rem;">
+                                            {% if user.__class__.__name__ == 'Worker' %}
+                                                <i class='bx bxs-group'></i> Worker
+                                            {% else %}
+                                                <i class='bx bxs-business'></i> Employer
+                                            {% endif %}
+                                            • ID: {{ user.id }}
+                                        </p>
+                                        <p style="margin: 0.25rem 0 0 0; color: var(--text-secondary); font-size: 0.875rem;">
+                                            📧 {{ user.user.email }} • 📞 {{ user.user.phone }}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <!-- ID Information -->
+                                <div style="background: var(--light-bg); padding: 1rem; border-radius: 0.75rem; margin-bottom: 1.5rem;">
+                                    <h4 style="margin: 0 0 0.75rem 0; font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">
+                                        <i class='bx bxs-id-card'></i> Identity Information
+                                    </h4>
+                                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
+                                        <div>
+                                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">National ID Number</div>
+                                            <div style="font-weight: 600; font-family: monospace;">{{ user.national_id_number or 'Not provided' }}</div>
+                                        </div>
+                                        <div>
+                                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Submitted</div>
+                                            <div style="font-weight: 600;">{{ user.user.created_at.strftime('%d %b %Y, %H:%M') if user.user.created_at else 'Unknown' }}</div>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <!-- Verification Actions -->
+                                <div style="display: flex; gap: 1rem; align-items: center;">
+                                    <button class="btn btn-success" onclick="approveVerification({{ user.id }}, '{{ user.__class__.__name__|lower }}')" style="border-radius: 0.75rem;">
+                                        <i class='bx bxs-check-circle'></i> Approve
+                                    </button>
+                                    <button class="btn btn-danger" onclick="rejectVerification({{ user.id }}, '{{ user.__class__.__name__|lower }}')" style="border-radius: 0.75rem;">
+                                        <i class='bx bxs-x-circle'></i> Reject
+                                    </button>
+                                    <button class="btn btn-outline" onclick="viewFullDocuments({{ user.id }}, '{{ user.__class__.__name__|lower }}')" style="border-radius: 0.75rem;">
+                                        <i class='bx bx-show'></i> View Documents
+                                    </button>
+                                </div>
+                            </div>
+
+                            <!-- Document Preview -->
+                            <div style="width: 300px; flex-shrink: 0;">
+                                <h4 style="margin: 0 0 1rem 0; font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">
+                                    ID Document Preview
+                                </h4>
+                                {% if user.id_photo %}
+                                    <div style="position: relative; border-radius: 0.75rem; overflow: hidden; border: 2px solid var(--border-color); cursor: pointer;" onclick="openIdPhotoModal('{{ user.id_photo }}')">
+                                        <img src="{{ url_for('static', filename='uploads/' + user.id_photo) }}" style="width: 100%; height: 200px; object-fit: cover;" alt="ID Document">
+                                        <div style="position: absolute; bottom: 0; right: 0; background: rgba(0, 0, 0, 0.7); color: white; padding: 0.5rem; font-size: 0.75rem;">
+                                            <i class='bx bx-search-alt'></i> Click to enlarge
+                                        </div>
+                                    </div>
+                                {% else %}
+                                    <div style="border: 2px dashed var(--border-color); border-radius: 0.75rem; height: 200px; display: flex; align-items: center; justify-content: center; color: var(--text-secondary);">
+                                        <div style="text-align: center;">
+                                            <i class='bx bxs-image' style="font-size: 2rem; margin-bottom: 0.5rem;"></i>
+                                            <div style="font-size: 0.75rem;">No ID document</div>
+                                        </div>
+                                    </div>
+                                {% endif %}
+                                
+                                {% if user.profile_picture %}
+                                    <h4 style="margin: 1.5rem 0 1rem 0; font-size: 0.875rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">
+                                        Profile Photo
+                                    </h4>
+                                    <div style="border-radius: 0.75rem; overflow: hidden; border: 2px solid var(--border-color);">
+                                        <img src="{{ url_for('static', filename='uploads/' + user.profile_picture) }}" style="width: 100%; height: 150px; object-fit: cover;" alt="Profile Photo">
+                                    </div>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            {% else %}
+                <div style="text-align: center; padding: 4rem; color: var(--text-secondary);">
+                    <i class='bx bxs-check-shield' style="font-size: 3rem; margin-bottom: 1rem;"></i>
+                    <h3 style="margin: 0 0 0.5rem 0;">No Pending Verifications</h3>
+                    <p style="margin: 0;">All users are currently verified or no documents have been submitted.</p>
+                </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+
+<!-- ID Photo Full Size Modal -->
+<div id="idPhotoModal" class="modal-overlay" style="display: none;" onclick="closeIdPhotoModal(event)">
+    <div class="modal-content" style="max-width: 90%; max-height: 90vh; background: transparent; box-shadow: none; border-radius: 0;" onclick="event.stopPropagation()">
+        <div style="position: relative; display: flex; align-items: center; justify-content: center; height: 90vh;">
+            <img id="idPhotoFullSize" src="" alt="ID Document Full Size" style="max-width: 100%; max-height: 100%; object-fit: contain; border-radius: 0.5rem; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);">
+            <button onclick="closeIdPhotoModal()" style="position: absolute; top: 1rem; right: 1rem; background: rgba(0, 0, 0, 0.8); color: white; border: none; font-size: 1.5rem; cursor: pointer; padding: 0.75rem; border-radius: 50%; width: 3rem; height: 3rem; display: flex; align-items: center; justify-content: center; backdrop-filter: blur(4px);">
+                <i class='bx bx-x'></i>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Verification Details Modal -->
+<div id="verificationModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 900px; max-height: 90vh; overflow-y: auto; border-radius: 1.5rem;">
+        <div class="modal-header" style="padding: 2rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0;">Verification Details</h3>
+            <button onclick="closeVerificationModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">
+                <i class='bx bx-x'></i>
+            </button>
+        </div>
+        <div id="verificationModalContent" style="padding: 2rem;">
+            <!-- Verification details will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<script>
+// Verification data for filtering
+const verificationData = [
+    {% for user in pending_verifications %}
+    {
+        id: {{ user.id }},
+        name: "{{ user.user.full_name|lower }}",
+        email: "{{ user.user.email|lower }}",
+        status: "pending",
+        type: "{{ 'worker' if user.__class__.__name__ == 'Worker' else 'employer' }}"
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (sidebar.classList.contains('active')) {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    } else {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    }
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+// Close sidebar when clicking on navigation links on mobile
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                closeSidebar();
+            }
+        });
+    });
+    
+    // Close sidebar on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSidebar();
+        }
+    });
+});
+
+// Handle window resize
+window.addEventListener('resize', function() {
+    if (window.innerWidth > 768) {
+        closeSidebar();
+    }
+});
+
+function filterVerifications() {
+    const searchTerm = document.getElementById('verificationSearch').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const userTypeFilter = document.getElementById('userTypeFilter').value;
+    const items = document.querySelectorAll('.verification-item');
+
+    items.forEach(item => {
+        const userId = parseInt(item.dataset.userId);
+        const user = verificationData.find(u => u.id === userId);
+        
+        if (!user) {
+            item.style.display = 'none';
+            return;
+        }
+
+        const matchesSearch = user.name.includes(searchTerm) || user.email.includes(searchTerm);
+        const matchesStatus = !statusFilter || user.status === statusFilter;
+        const matchesType = !userTypeFilter || user.type === userTypeFilter;
+
+        item.style.display = matchesSearch && matchesStatus && matchesType ? '' : 'none';
+    });
+}
+
+function clearFilters() {
+    document.getElementById('verificationSearch').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('userTypeFilter').value = '';
+    filterVerifications();
+}
+
+function scrollToFirstPending() {
+    const firstPending = document.querySelector('.verification-item');
+    if (firstPending) {
+        firstPending.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        firstPending.style.animation = 'pulse 2s ease-in-out';
+    }
+}
+
+function approveVerification(userId, userType) {
+    showActionModal(
+        `Approve ${userType.charAt(0).toUpperCase() + userType.slice(1)}`, 
+        `Are you sure you want to approve this ${userType}?`, 
+        'success', 
+        function() {
+            const form = document.createElement('form');
+            form.method = 'POST';
+            form.action = `/admin/verify/${userType}/${userId}/approve`;
+            document.body.appendChild(form);
+            form.submit();
+        }
+    );
+}
+
+function rejectVerification(userId, userType) {
+    const reason = prompt(`Reason for rejecting this ${userType}:`, "Documents did not meet requirements.");
+    if (reason !== null) {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/verify/${userType}/${userId}/reject`;
+        
+        const reasonInput = document.createElement('input');
+        reasonInput.type = 'hidden';
+        reasonInput.name = 'reason';
+        reasonInput.value = reason;
+        
+        form.appendChild(reasonInput);
+        document.body.appendChild(form);
+        form.submit();
+    }
+}
+
+function viewFullDocuments(userId, userType) {
+    const modal = document.getElementById('verificationModal');
+    const content = document.getElementById('verificationModalContent');
+    
+    content.innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+            <i class='bx bx-loader-alt' style="font-size: 2rem; animation: spin 1s linear infinite;"></i>
+            <p style="margin-top: 1rem;">Loading verification documents...</p>
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+    
+    // Simulate loading documents
+    setTimeout(() => {
+        content.innerHTML = `
+            <div>
+                <h4 style="margin-bottom: 1.5rem;">Complete Verification Documents</h4>
+                <p>Full documents and verification details would be displayed here for user ${userId} (${userType}).</p>
+            </div>
+        `;
+    }, 1000);
+}
+
+function closeVerificationModal() {
+    document.getElementById('verificationModal').style.display = 'none';
+}
+
+function openIdPhotoModal(idPhoto) {
+    if (!idPhoto) return;
+    
+    const modal = document.getElementById('idPhotoModal');
+    const fullSizeImg = document.getElementById('idPhotoFullSize');
+    fullSizeImg.src = '/static/uploads/' + idPhoto;
+    modal.style.display = 'flex';
+}
+
+function closeIdPhotoModal(event) {
+    if (event && event.target !== event.currentTarget) {
+        return; // Don't close if clicking inside the modal content
+    }
+    document.getElementById('idPhotoModal').style.display = 'none';
+}
+
+function exportVerificationData() {
+    // In a real implementation, this would generate and download a CSV/Excel file
+    alert('Export verification data functionality would be implemented here');
+}
+
+// Add CSS animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+    
+    @keyframes pulse {
+        0%, 100% { background-color: transparent; }
+        50% { background-color: rgba(245, 158, 11, 0.1); }
+    }
+    
+    .verification-item:hover {
+        background: var(--light-bg);
+    }
+    
+    .user-avatar.has-profile-picture {
+        background: none;
+        border: 2px solid var(--border-color);
+    }
+    
+    .user-avatar.default-avatar {
+        background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    }
+`;
+document.head.appendChild(style);
+</script>
+
+<style>
+/* Admin Dashboard Layout Styles */
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: var(--white);
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 100;
+    overflow-y: auto;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sidebar-user-info h4 {
+    font-size: 0.9rem !important;
+    margin: 0;
+}
+
+.sidebar-user-info p {
+    font-size: 0.7rem !important;
+    margin: 0;
+    opacity: 0.8;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0;
+    overflow-y: auto;
+}
+
+.nav-section {
+    margin-bottom: 2rem;
+}
+
+.nav-section h6 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.nav-link:hover {
+    background: var(--gray-50);
+    color: var(--primary-color);
+}
+
+.nav-link.active {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--primary-color);
+}
+
+.nav-link i {
+    font-size: 1.125rem;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 260px;
+    padding: 2rem;
+    background: var(--gray-50);
+    min-height: 100vh;
+    overflow-y: auto;
+}
+
+/* Mobile Menu Button */
+.mobile-menu-btn {
+    display: none;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1002;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    cursor: pointer;
+    font-size: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Admin Badge */
+.admin-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #dc2626;
+}
+
+.sidebar-section-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Verification specific styles */
+.verification-item:hover {
+    background: var(--light-bg);
+}
+
+.user-avatar.has-profile-picture {
+    background: none;
+    border: 2px solid var(--border-color);
+}
+
+.user-avatar.default-avatar {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        top: 0;
+        height: 100vh;
+        z-index: 1001;
+        transition: left 0.3s ease;
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+    }
+    
+    .mobile-menu-btn {
+        display: block;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+        padding-top: 80px;
+    }
+}
+
+@media (max-width: 480px) {
+    .verification-item {
+        padding: 1rem;
+    }
+    
+    .verification-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+/* Hide mobile menu button on desktop */
+@media (min-width: 769px) {
+    .mobile-menu-btn {
+        display: none;
+    }
+    
+    .sidebar-overlay {
+        display: none !important;
+    }
+    
+    .sidebar {
+        position: fixed;
+        left: 0 !important;
+    }
+}
+</style>
+{% endblock %}

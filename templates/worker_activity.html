@@ -1,0 +1,230 @@
+{% extends "base.html" %}
+
+{% block title %}Activity - Umukozi{% endblock %}
+
+{% block content %}
+<!-- Mobile Sidebar Toggle -->
+<button class="mobile-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar {% if worker.profile_picture %}has-profile-picture{% else %}sidebar-avatar-gradient{% endif %}">
+                    {% if worker.profile_picture %}
+                        <img src="{{ url_for('static', filename='uploads/' + worker.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
+                    {% else %}
+                        {{ current_user.full_name[0].upper() }}
+                    {% endif %}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name }}</h4>
+                    <p style="font-size: 0.75rem; opacity: 0.8;">Worker Account</p>
+                </div>
+            </div>
+            {% if worker.is_verified %}
+                <div class="badge badge-success" style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2);">
+                    ✓ Verified Worker
+                </div>
+            {% else %}
+                <div class="badge badge-warning" style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2);">
+                    ⏳ Verification Pending
+                </div>
+            {% endif %}
+        </div>
+        
+        <nav class="sidebar-menu">
+            <div class="sidebar-section">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-dashboard'></i></span>
+                    Overview
+                </a>
+                <a href="{{ url_for('worker_find_jobs') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bx-search-alt'></i></span>
+                    Find Jobs
+                </a>
+                <a href="{{ url_for('worker_applications') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-file-doc'></i></span>
+                    Applications
+                    <span class="sidebar-badge">{{ (worker.applications or [])|length }}</span>
+                </a>
+                <a href="{{ url_for('worker_activity') }}" class="sidebar-item active">
+                    <span class="sidebar-item-icon"><i class='bx bx-line-chart'></i></span>
+                    Activity
+                </a>
+                <a href="{{ url_for('worker_complete_profile') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-user-circle'></i></span>
+                    My Profile
+                </a>
+                <a href="{{ url_for('worker_settings') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-cog'></i></span>
+                    Settings
+                </a>
+                <a href="javascript:void(0)" onclick="confirmLogout(event)" data-logout-url="{{ url_for('logout') }}" class="sidebar-item" style="color: var(--danger-color); margin-top: 2rem;">
+                    <span class="sidebar-item-icon"><i class='bx bx-log-out'></i></span>
+                    Logout
+                </a>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header style="margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+            <div>
+                <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em;">Activity Log</h1>
+                <p style="color: var(--text-secondary);">Keep track of all your interactions, applications, and profile updates.</p>
+            </div>
+            <button class="btn btn-outline" style="border-radius: 0.75rem; padding: 0.75rem 1.25rem;" onclick="location.reload()">
+                <i class='bx bx-refresh'></i> Refresh Activity
+            </button>
+        </header>
+
+        <!-- Activity Stats -->
+        <div class="dashboard-grid" style="margin-bottom: 2.5rem;">
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-color);"><i class='bx bx-line-chart'></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ activities|length }}</div>
+                    <div class="stat-label">Total Events</div>
+                </div>
+            </div>
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);"><i class='bx bxs-zap'></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ worker.total_jobs_completed or 0 }}</div>
+                    <div class="stat-label">Tasks Done</div>
+                </div>
+            </div>
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color);"><i class='bx bxs-paper-plane'></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ (worker.applications or [])|length }}</div>
+                    <div class="stat-label">Proposals Sent</div>
+                </div>
+            </div>
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(139, 92, 246, 0.1); color: #8b5cf6;"><i class='bx bxs-star'></i></div>
+                <div class="stat-info">
+                    <div class="stat-value">{% if worker.average_rating %}{{ "%.1f"|format(worker.average_rating) }}{% else %}5.0{% endif %}</div>
+                    <div class="stat-label">Current Rating</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Activity Timeline -->
+        <div style="background: var(--white); border-radius: 1.5rem; border: 1px solid var(--border-color); overflow: hidden;">
+            <div style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
+                <h3 style="font-size: 1.125rem; font-weight: 700;">Recent Interactions</h3>
+                <select class="form-control" style="width: auto; border: none; background: transparent; font-size: 0.8125rem; font-weight: 600; color: var(--primary-color);">
+                    <option>All Events</option>
+                    <option>Applications</option>
+                    <option>Messages</option>
+                    <option>Profile Updates</option>
+                </select>
+            </div>
+            
+            <div style="padding: 2rem;">
+                {% if activities %}
+                    <div style="position: relative; padding-left: 3rem;">
+                        <!-- Vertical Timeline Line -->
+                        <div style="position: absolute; left: 1rem; top: 0; bottom: 0; width: 2px; background: #f1f5f9; border-radius: 9999px;"></div>
+                        
+                        {% for activity in activities %}
+                        <div style="position: relative; margin-bottom: 2.5rem;">
+                            <!-- Activity Dot/Icon -->
+                            <div style="position: absolute; left: -2.75rem; top: 0.25rem; width: 32px; height: 32px; border-radius: 50%; background: var(--white); border: 2px solid var(--primary-color); color: var(--primary-color); display: flex; align-items: center; justify-content: center; font-size: 1rem; z-index: 2; box-shadow: 0 0 0 4px var(--white);">
+                                {% if 'apply' in activity.type|lower %}<i class='bx bxs-edit'></i>{% elif 'message' in activity.type|lower %}<i class='bx bxs-message-dots'></i>{% elif 'profile' in activity.type|lower %}<i class='bx bxs-user-circle'></i>{% else %}<i class='bx bxs-zap'></i>{% endif %}
+                            </div>
+                            
+                            <div style="background: #f8fafc; border-radius: 1.25rem; padding: 1.5rem; border: 1px solid #f1f5f9; transition: all 0.2s;" onmouseover="this.style.transform='translateX(4px)'; this.style.borderColor='var(--primary-color)'" onmouseout="this.style.transform='none'; this.style.borderColor='#f1f5f9'">
+                                <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 0.75rem;">
+                                    <div>
+                                        <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--text-primary);">
+                                            {% if activity.type == 'profile_updated' %}Profile Information Updated
+                                            {% elif activity.type == 'welcome' %}Welcome to Umukozi
+                                            {% elif activity.type == 'application_submitted' %}Job Application Submitted
+                                            {% elif activity.type == 'job_viewed' %}Job Posting Viewed
+                                            {% elif activity.type == 'message_received' %}New Message from Employer
+                                            {% else %}{{ activity.type|replace('_', ' ')|title }}{% endif %}
+                                        </h4>
+                                        <span style="font-size: 0.75rem; font-weight: 600; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 0.05em;">{{ activity.date }}</span>
+                                    </div>
+                                    <div style="background: var(--white); padding: 0.25rem 0.75rem; border-radius: 0.5rem; font-size: 0.7rem; font-weight: 800; color: var(--text-secondary); border: 1px solid #e2e8f0; text-transform: uppercase;">{{ activity.type.split('_')[0] }}</div>
+                                </div>
+                                <p style="color: var(--text-secondary); font-size: 0.875rem; line-height: 1.6;">{{ activity.message }}</p>
+                                
+                                {% if activity.type == 'application_submitted' %}
+                                    <button class="btn btn-outline btn-sm" style="margin-top: 1rem; border-radius: 0.5rem;" onclick="alert('Viewing application: {{ activity.application_id }}')">View Details</button>
+                                {% elif activity.type == 'message_received' %}
+                                    <button class="btn btn-primary btn-sm" style="margin-top: 1rem; border-radius: 0.5rem;" onclick="alert('Opening chat...')">Open Message</button>
+                                {% endif %}
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                {% else %}
+                    <div style="text-align: center; padding: 4rem 1rem;">
+                        <div style="font-size: 4rem; opacity: 0.1; margin-bottom: 1.5rem;">📈</div>
+                        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">No recent activities</h3>
+                        <p style="color: var(--text-secondary); max-width: 320px; margin: 0 auto 2rem;">Start interacting with the platform to see your history logged here in real-time.</p>
+                        <a href="{{ url_for('worker_find_jobs') }}" class="btn btn-primary" style="padding: 0.75rem 2rem; border-radius: 0.75rem;">Get Started</a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+
+        <!-- Quick Tips -->
+        <div class="card" style="margin-top: 2.5rem; background: linear-gradient(to right, #f8fafc, var(--white)); border-left: 4px solid var(--primary-color);">
+            <div style="display: flex; gap: 1.5rem; align-items: center;">
+                <div style="font-size: 2rem;">💡</div>
+                <div>
+                    <h4 style="font-size: 1rem; font-weight: 700; margin-bottom: 0.25rem;">Pro Tip</h4>
+                    <p style="font-size: 0.875rem; color: var(--text-secondary); margin: 0;">Regularly updating your profile and responding to messages quickly improves your ranking and visibility to top employers.</p>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+function confirmLogout(event) {
+    event.preventDefault();
+    const logoutUrl = document.querySelector('[data-logout-url]').getAttribute('data-logout-url');
+    if (confirm('Are you sure you want to logout?')) {
+        window.location.href = logoutUrl;
+    }
+}
+
+// Close sidebar when clicking outside on mobile
+document.addEventListener('click', function(event) {
+    const sidebar = document.getElementById('sidebar');
+    const toggle = document.querySelector('.mobile-sidebar-toggle');
+    
+    if (window.innerWidth <= 768 && 
+        !sidebar.contains(event.target) && 
+        !toggle.contains(event.target) &&
+        sidebar.classList.contains('active')) {
+        closeSidebar();
+    }
+});
+</script>
+{% endblock %}
+

@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Job Details - {{ job.title }} - Umukozi{% endblock %}
+
+{% block content %}
+<!-- Mobile Sidebar Toggle -->
+<button class="mobile-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div style="padding: 1.5rem 1.5rem 0.5rem 1.5rem; display: flex; justify-content: center;">
+            <a href="{{ url_for('index') }}" style="text-decoration: none;">
+                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Umukozi Logo" style="height: 60px; width: auto; object-fit: contain;">
+            </a>
+        </div>
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div class="sidebar-avatar {% if worker.profile_picture %}has-profile-picture{% else %}sidebar-avatar-gradient{% endif %}">
+                    {% if worker.profile_picture %}
+                        <img src="{{ url_for('static', filename='uploads/' + worker.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
+                    {% else %}
+                        {{ current_user.full_name[0].upper() }}
+                    {% endif %}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name }}</h4>
+                    <p style="font-size: 0.75rem; opacity: 0.8;">Worker Account</p>
+                </div>
+            </div>
+        </div>
+        
+        <nav class="sidebar-menu">
+            <div class="sidebar-section">
+                <a href="{{ url_for('dashboard') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-dashboard'></i></span>
+                    Overview
+                </a>
+                <a href="{{ url_for('worker_find_jobs') }}" class="sidebar-item active">
+                    <span class="sidebar-item-icon"><i class='bx bx-search-alt'></i></span>
+                    Find Jobs
+                </a>
+                <a href="{{ url_for('worker_applications') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-file-doc'></i></span>
+                    Applications
+                </a>
+                <a href="{{ url_for('worker_activity') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bx-line-chart'></i></span>
+                    Activity
+                </a>
+                <a href="{{ url_for('worker_complete_profile') }}" class="sidebar-item">
+                    <span class="sidebar-item-icon"><i class='bx bxs-user-circle'></i></span>
+                    My Profile
+                </a>
+                <a href="javascript:void(0)" onclick="confirmLogout(event)" data-logout-url="{{ url_for('logout') }}" class="sidebar-item" style="color: var(--danger-color); margin-top: 2rem;">
+                    <span class="sidebar-item-icon"><i class='bx bx-log-out'></i></span>
+                    Logout
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Back Button -->
+        <a href="{{ url_for('worker_find_jobs') }}" style="display: inline-flex; align-items: center; gap: 0.5rem; color: var(--text-secondary); text-decoration: none; margin-bottom: 2rem; font-weight: 600; transition: color 0.2s;">
+            <i class='bx bx-arrow-back'></i> Back to Job List
+        </a>
+
+        <div class="grid grid-3" style="gap: 2rem;">
+            <!-- Left Column: Job Details -->
+            <div style="grid-column: span 2;">
+                <div class="card" style="border-radius: 1.5rem; padding: 2.5rem; margin-bottom: 2rem;">
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem;">
+                        <div style="display: flex; gap: 1.5rem; align-items: center;">
+                            <div style="width: 64px; height: 64px; background: #f8fafc; border-radius: 1.25rem; display: flex; align-items: center; justify-content: center; font-size: 2rem;">
+                                {% if 'house' in job.title|lower %}🏠{% elif 'child' in job.title|lower %}👶{% elif 'clean' in job.title|lower %}✨{% else %}💼{% endif %}
+                            </div>
+                            <div>
+                                <h1 style="font-size: 1.75rem; font-weight: 800; margin-bottom: 0.5rem;">{{ job.title }}</h1>
+                                <div style="display: flex; align-items: center; gap: 1rem; color: var(--text-secondary); font-size: 0.875rem;">
+                                    <span><i class='bx bx-buildings'></i> {{ job.employer.company_name or 'Private Household' }}</span>
+                                    <span>•</span>
+                                    <span><i class='bx bx-map'></i> {{ job.district }}, {{ job.province }}</span>
+                                    <span>•</span>
+                                    <span><i class='bx bx-time'></i> Posted {{ job.created_at.strftime('%b %d, %Y') }}</span>
+                                </div>
+                            </div>
+                        </div>
+                        {% if job.is_urgent %}
+                        <span class="badge" style="background: #fef2f2; color: #ef4444; font-size: 0.75rem; padding: 0.5rem 1rem; border-radius: 2rem; font-weight: 700; border: 1px solid #fee2e2;">Urgent</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="divider" style="margin: 2rem 0;"></div>
+
+                    <section style="margin-bottom: 2.5rem;">
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1rem;">Job Description</h3>
+                        <p style="color: var(--text-secondary); line-height: 1.8; font-size: 1rem; white-space: pre-wrap;">{{ job.description }}</p>
+                    </section>
+
+                    <section style="margin-bottom: 2.5rem;">
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1rem;">Requirements</h3>
+                        <div style="display: flex; flex-wrap: wrap; gap: 0.75rem;">
+                            {% if job.skills_required %}
+                                {% for skill in job.skills_required.split(',') %}
+                                <span style="background: #f1f5f9; color: #475569; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.875rem; font-weight: 500;">{{ skill.strip() }}</span>
+                                {% endfor %}
+                            {% endif %}
+                            <span style="background: #f1f5f9; color: #475569; padding: 0.5rem 1rem; border-radius: 2rem; font-size: 0.875rem; font-weight: 500;">Experience: {{ job.experience_required or 'Not specified' }}</span>
+                        </div>
+                    </section>
+
+                    <section>
+                        <h3 style="font-size: 1.125rem; font-weight: 700; margin-bottom: 1rem;">Schedule & Compensation</h3>
+                        <div class="grid grid-2" style="gap: 1.5rem;">
+                            <div style="padding: 1.25rem; background: #f8fafc; border-radius: 1rem;">
+                                <div style="color: var(--text-secondary); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem;">Working Days</div>
+                                <div style="font-weight: 600;">{{ job.working_days or 'Flexible' }}</div>
+                            </div>
+                            <div style="padding: 1.25rem; background: #f8fafc; border-radius: 1rem;">
+                                <div style="color: var(--text-secondary); font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 0.5rem;">Working Hours</div>
+                                <div style="font-weight: 600;">{{ job.working_hours or 'Flexible' }}</div>
+                            </div>
+                        </div>
+                    </section>
+                </div>
+            </div>
+
+            <!-- Right Column: Sidebar Action -->
+            <div>
+                <div class="card" style="border-radius: 1.5rem; padding: 2rem; position: sticky; top: 2rem;">
+                    <div style="margin-bottom: 2rem;">
+                        <span style="display: block; color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem; font-weight: 600;">Salary Range</span>
+                        <div style="font-size: 1.5rem; font-weight: 800; color: var(--secondary-color);">
+                            {{ job.salary_amount }} RWF <small style="font-size: 0.875rem; opacity: 0.7; font-weight: 500;">/ {{ job.salary_type or 'month' }}</small>
+                        </div>
+                        {% if job.negotiable %}
+                        <span style="font-size: 0.75rem; color: var(--text-secondary); font-style: italic;">* Salary is negotiable</span>
+                        {% endif %}
+                    </div>
+
+                    {% if has_applied %}
+                    <div style="background: #f0fdf4; border: 1px solid #dcfce7; padding: 1.25rem; border-radius: 1rem; text-align: center; margin-bottom: 1.5rem;">
+                        <span style="color: var(--success-color); font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                            <i class='bx bxs-check-circle'></i> Application Submitted
+                        </span>
+                        <p style="font-size: 0.75rem; color: #166534; margin-top: 0.5rem;">The employer will review your profile soon.</p>
+                    </div>
+                    <a href="{{ url_for('worker_applications') }}" class="btn btn-outline" style="width: 100%; border-radius: 1rem;">View My Application</a>
+                    {% else %}
+                    <form action="{{ url_for('worker_apply_job', job_id=job.id) }}" method="POST">
+                        <button type="submit" class="btn btn-primary" style="width: 100%; border-radius: 1rem; padding: 1rem; font-size: 1rem; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: var(--primary-color); border: none; color: white; cursor: pointer;">
+                            <i class='bx bxs-paper-plane'></i> Apply for this Job
+                        </button>
+                    </form>
+                    <p style="font-size: 0.75rem; color: var(--text-secondary); text-align: center; margin-top: 1rem;">
+                        By clicking apply, your Umukozi profile will be shared with the employer.
+                    </p>
+                    {% endif %}
+
+                    <div class="divider" style="margin: 2rem 0;"></div>
+
+                    <div style="display: flex; flex-direction: column; gap: 1rem;">
+                        <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
+                            <span style="color: var(--text-secondary);">Job Type</span>
+                            <span style="font-weight: 600;">{{ job.job_type|replace('_', ' ')|title }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
+                            <span style="color: var(--text-secondary);">Role</span>
+                            <span style="font-weight: 600;">{{ job.title }}</span>
+                        </div>
+                        <div style="display: flex; justify-content: space-between; font-size: 0.875rem;">
+                            <span style="color: var(--text-secondary);">Required Skills</span>
+                            <span style="font-weight: 600;">{{ job.skills_required or 'General' }}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+function confirmLogout(event) {
+    event.preventDefault();
+    const logoutUrl = document.querySelector('[data-logout-url]').getAttribute('data-logout-url');
+    if (confirm('Are you sure you want to logout?')) {
+        window.location.href = logoutUrl;
+    }
+}
+</script>
+{% endblock %}

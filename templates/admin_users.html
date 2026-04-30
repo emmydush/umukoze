@@ -1,0 +1,1222 @@
+{% extends "base.html" %}
+
+{% block title %}User Management - Admin Dashboard{% endblock %}
+
+{% block content %}
+<!-- Mobile Menu Button -->
+<button class="mobile-menu-btn" onclick="toggleSidebar()">
+    <i class='bx bx-menu'></i>
+</button>
+
+<!-- Top Navigation Bar -->
+<div class="top-nav-bar" style="position: fixed; top: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-color); padding: 0.75rem 1.5rem; z-index: 1000; display: flex; justify-content: space-between; align-items: center;">
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <a href="{{ url_for('admin_dashboard') }}" style="text-decoration: none;">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Umukozi Logo" style="height: 65px; width: auto; object-fit: contain;">
+        </a>
+    </div>
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <button onclick="showProfileMenu()" style="display: flex; align-items: center; gap: 0.75rem; background: var(--white); padding: 0.4rem 0.75rem; border-radius: 9999px; border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s; height: 45px;">
+            <div style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: bold; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                {{ current_user.full_name[0].upper() }}
+            </div>
+            <div style="text-align: left;">
+                <div style="font-weight: 600; font-size: 0.875rem; line-height: 1.2; color: var(--text-primary);">{{ current_user.full_name }}</div>
+                <div style="font-size: 0.625rem; color: var(--success-color); line-height: 1;">Administrator</div>
+            </div>
+            <i class='bx bx-chevron-down' style="font-size: 1rem; color: var(--text-secondary);"></i>
+        </button>
+    </div>
+</div>
+
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                    {{ current_user.full_name[0].upper() }}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name }}</h4>
+                    <p style="font-size: 0.7rem; opacity: 0.8;">System Administrator</p>
+                </div>
+            </div>
+            <div style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2); background: var(--success-color); color: white; padding: 0.5rem; border-radius: 0.5rem; text-align: center;">
+                ✓ Admin Access
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h6>Dashboard</h6>
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-link">
+                    <i class='bx bx-home-alt'></i>
+                    <span>Overview</span>
+                </a>
+                <a href="{{ url_for('admin_users') }}" class="nav-link active">
+                    <i class='bx bx-user'></i>
+                    <span>Users</span>
+                </a>
+                <a href="{{ url_for('admin_workers') }}" class="nav-link">
+                    <i class='bx bxs-group'></i>
+                    <span>Workers</span>
+                </a>
+                <a href="{{ url_for('admin_employers') }}" class="nav-link">
+                    <i class='bx bxs-business'></i>
+                    <span>Employers</span>
+                </a>
+                <a href="{{ url_for('admin_jobs') }}" class="nav-link">
+                    <i class='bx bx-briefcase'></i>
+                    <span>Jobs</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h6>Management</h6>
+                <a href="{{ url_for('admin_verification') }}" class="nav-link">
+                    <i class='bx bx-shield-check'></i>
+                    <span>Verification</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class='bx bx-message-dots'></i>
+                    <span>Messages</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class='bx bx-bell'></i>
+                    <span>Notifications</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h6>System</h6>
+                <a href="{{ url_for('admin_settings') }}" class="nav-link">
+                    <i class='bx bx-cog'></i>
+                    <span>Settings</span>
+                </a>
+                <a href="{{ url_for('admin_reports') }}" class="nav-link">
+                    <i class='bx bx-chart-line'></i>
+                    <span>Reports</span>
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-link" style="color: var(--danger-color);">
+                    <i class='bx bx-log-out'></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header style="margin-bottom: 2rem; padding-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div>
+                    <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">User Management</h1>
+                    <p style="color: var(--text-secondary);">Manage platform users - approve, block, or delete accounts</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <span style="padding: 0.5rem 1rem; background: rgba(245, 158, 11, 0.1); color: var(--warning-color); border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600;">
+                        Pending: {{ users.items | selectattr('is_approved', 'equalto', false) | selectattr('is_blocked', 'equalto', false) | list | length }}
+                    </span>
+                    <span style="padding: 0.5rem 1rem; background: rgba(16, 185, 129, 0.1); color: var(--secondary-color); border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600;">
+                        Approved: {{ users.items | selectattr('is_approved', 'equalto', true) | selectattr('is_blocked', 'equalto', false) | list | length }}
+                    </span>
+                    <span style="padding: 0.5rem 1rem; background: rgba(239, 68, 68, 0.1); color: var(--danger-color); border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600;">
+                        Blocked: {{ users.items | selectattr('is_blocked', 'equalto', true) | list | length }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Filters and Search -->
+            <div style="background: var(--white); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+                <form method="GET" style="display: flex; gap: 1rem; align-items: end; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">Search Users</label>
+                        <input type="text" name="search" value="{{ search }}" placeholder="Search by name or email..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; font-size: 0.875rem;">
+                    </div>
+                    <div style="min-width: 150px;">
+                        <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">User Type</label>
+                        <select name="type" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; font-size: 0.875rem;">
+                            <option value="">All Types</option>
+                            <option value="worker" {% if type_filter == 'worker' %}selected{% endif %}>Workers</option>
+                            <option value="employer" {% if type_filter == 'employer' %}selected{% endif %}>Employers</option>
+                        </select>
+                    </div>
+                    <div style="min-width: 150px;">
+                        <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">Status</label>
+                        <select name="status" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; font-size: 0.875rem;">
+                            <option value="">All Status</option>
+                            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="approved" {% if status_filter == 'approved' %}selected{% endif %}>Approved</option>
+                            <option value="blocked" {% if status_filter == 'blocked' %}selected{% endif %}>Blocked</option>
+                        </select>
+                    </div>
+                    <button type="submit" style="padding: 0.75rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer;">
+                        <i class='bx bx-search' style="margin-right: 0.5rem;"></i>Search
+                    </button>
+                    <a href="{{ url_for('admin_users') }}" style="padding: 0.75rem 1.5rem; background: var(--text-secondary); color: white; border: none; border-radius: 0.5rem; font-weight: 600; text-decoration: none; display: inline-block;">
+                        <i class='bx bx-refresh' style="margin-right: 0.5rem;"></i>Reset
+                    </a>
+                </form>
+            </div>
+        </header>
+
+        <!-- Users Table -->
+        <div style="background: var(--white); border-radius: 1rem; border: 1px solid var(--border-color); overflow: hidden;">
+            <!-- Desktop Table View -->
+            <div class="table-container" style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="background: var(--gray-50); border-bottom: 1px solid var(--border-color);">
+                        <tr>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">User</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Type</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Status</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Joined</th>
+                            <th style="padding: 1rem; text-align: center; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users.items %}
+                        {% if user.is_blocked %}
+                        <tr style="border-bottom: 1px solid var(--border-color); background: rgba(239, 68, 68, 0.05);">
+                        {% else %}
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                        {% endif %}
+                            <td style="padding: 1rem;">
+                                <div style="display: flex; align-items: center; gap: 0.75rem;">
+                                    {% set profile_pic = None %}
+                                    {% if user.worker and user.worker.profile_picture %}
+                                        {% set profile_pic = url_for('static', filename='uploads/' + user.worker.profile_picture) %}
+                                    {% elif user.employer and user.employer.profile_picture %}
+                                        {% set profile_pic = url_for('static', filename='uploads/' + user.employer.profile_picture) %}
+                                    {% endif %}
+                                    
+                                    {% if profile_pic %}
+                                    <img src="{{ profile_pic }}" alt="{{ user.full_name }}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);">
+                                    {% else %}
+                                    <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                                        {{ user.full_name[0].upper() }}
+                                    </div>
+                                    {% endif %}
+                                    
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem; color: var(--text-primary);">{{ user.full_name }}</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">{{ user.email }}</div>
+                                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">📱 {{ user.phone }}</div>
+                                        
+                                        <!-- Worker Full Profile -->
+                                        {% if user.worker %}
+                                        <div style="background: rgba(37, 99, 235, 0.05); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border-left: 3px solid var(--primary-color);">
+                                            <div style="font-size: 0.7rem; font-weight: 600; color: var(--primary-color); margin-bottom: 0.5rem;">
+                                                <i class='bx bx-user-detail'></i> Complete Worker Profile
+                                            </div>
+                                            
+                                            <!-- ID and Photos -->
+                                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; flex-wrap: wrap;">
+                                                <div style="font-size: 0.7rem; color: var(--text-secondary);">
+                                                    <strong>Worker ID:</strong> #{{ user.worker.id }}
+                                                </div>
+                                                {% if user.worker.national_id %}
+                                                <div style="font-size: 0.7rem; color: var(--text-secondary);">
+                                                    <strong>National ID:</strong> {{ user.worker.national_id }}
+                                                </div>
+                                                {% endif %}
+                                                {% if user.worker.date_of_birth %}
+                                                <div style="font-size: 0.7rem; color: var(--text-secondary);">
+                                                    <strong>DOB:</strong> {{ user.worker.date_of_birth.strftime('%d/%m/%Y') }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <!-- Photos -->
+                                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                                {% if user.worker.profile_picture %}
+                                                <div style="text-align: center;">
+                                                    <div style="font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Profile Photo</div>
+                                                    <img src="{{ url_for('static', filename='uploads/' + user.worker.profile_picture) }}" alt="Profile" style="width: 50px; height: 50px; border-radius: 0.375rem; object-fit: cover; border: 1px solid var(--border-color);">
+                                                </div>
+                                                {% endif %}
+                                                {% if user.worker.id_photo %}
+                                                <div style="text-align: center;">
+                                                    <div style="font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 0.25rem;">ID Photo</div>
+                                                    <img src="{{ url_for('static', filename='uploads/' + user.worker.id_photo) }}" alt="ID" style="width: 50px; height: 50px; border-radius: 0.375rem; object-fit: cover; border: 1px solid var(--border-color);">
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <!-- Bio -->
+                                            {% if user.worker.bio %}
+                                            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                                                <strong>Bio:</strong> {{ user.worker.bio[:80] }}{% if user.worker.bio|length > 80 %}...{% endif %}
+                                            </div>
+                                            {% endif %}
+                                            
+                                            <!-- Skills and Services -->
+                                            {% if user.worker.skills %}
+                                            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                                <strong>Skills:</strong> {{ user.worker.skills[:60] }}{% if user.worker.skills|length > 60 %}...{% endif %}
+                                            </div>
+                                            {% endif %}
+                                            {% if user.worker.services_offered %}
+                                            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                                <strong>Services:</strong> {{ user.worker.services_offered[:60] }}{% if user.worker.services_offered|length > 60 %}...{% endif %}
+                                            </div>
+                                            {% endif %}
+                                            
+                                            <!-- Professional Info -->
+                                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
+                                                {% if user.worker.experience_years %}
+                                                <div style="font-size: 0.7rem; color: var(--text-secondary);">
+                                                    <strong>Experience:</strong> {{ user.worker.experience_years }} years
+                                                </div>
+                                                {% endif %}
+                                                {% if user.worker.availability_status %}
+                                                <div style="font-size: 0.7rem; color: var(--text-secondary);">
+                                                    <strong>Status:</strong> {{ user.worker.availability_status.title() }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <!-- Rates -->
+                                            <div style="display: flex; gap: 0.5rem; margin-bottom: 0.25rem; flex-wrap: wrap;">
+                                                {% if user.worker.hourly_rate %}
+                                                <div style="font-size: 0.7rem; color: var(--text-secondary);">
+                                                    <strong>Hourly:</strong> RWF {{ user.worker.hourly_rate }}
+                                                </div>
+                                                {% endif %}
+                                                {% if user.worker.monthly_rate %}
+                                                <div style="font-size: 0.7rem; color: var(--text-secondary);">
+                                                    <strong>Monthly:</strong> RWF {{ user.worker.monthly_rate }}
+                                                </div>
+                                                {% endif %}
+                                            </div>
+                                            
+                                            <!-- Complete Location -->
+                                            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                                <strong>Full Location:</strong> 
+                                                {% if user.worker.village %}{{ user.worker.village }}, {% endif %}
+                                                {% if user.worker.cell %}{{ user.worker.cell }}, {% endif %}
+                                                {% if user.worker.sector %}{{ user.worker.sector }}, {% endif %}
+                                                {% if user.worker.district %}{{ user.worker.district }}, {% endif %}
+                                                {% if user.worker.province %}{{ user.worker.province }}{% endif %}
+                                            </div>
+                                            
+                                            <!-- Experience Details -->
+                                            {% if user.worker.experience_details %}
+                                            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                                <strong>Exp. Details:</strong> {{ user.worker.experience_details[:60] }}{% if user.worker.experience_details|length > 60 %}...{% endif %}
+                                            </div>
+                                            {% endif %}
+                                            
+                                            <!-- Reference -->
+                                            {% if user.worker.reference_name %}
+                                            <div style="font-size: 0.7rem; color: var(--text-secondary);">
+                                                <strong>Reference:</strong> {{ user.worker.reference_name }}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Employer Details -->
+                                        {% elif user.employer %}
+                                        <div style="background: rgba(16, 185, 129, 0.05); padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border-left: 3px solid var(--secondary-color);">
+                                            <div style="font-size: 0.7rem; font-weight: 600; color: var(--secondary-color); margin-bottom: 0.25rem;">
+                                                <i class='bx bxs-business'></i> Employer Details
+                                            </div>
+                                            {% if user.employer.company_name %}
+                                            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                                <strong>Company:</strong> {{ user.employer.company_name }}
+                                            </div>
+                                            {% endif %}
+                                            {% if user.employer.household_type %}
+                                            <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                                <strong>Type:</strong> {{ user.employer.household_type.title() }}
+                                            </div>
+                                            {% endif %}
+                                            {% if user.employer.district %}
+                                            <div style="font-size: 0.7rem; color: var(--text-secondary);">
+                                                <strong>Location:</strong> 
+                                                {% if user.employer.province %}{{ user.employer.province }}, {% endif %}
+                                                {{ user.employer.district }}
+                                                {% if user.employer.sector %}, {{ user.employer.sector }}{% endif %}
+                                            </div>
+                                            {% endif %}
+                                        </div>
+                                        {% endif %}
+                                        
+                                        <!-- Status and Verification -->
+                                        <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
+                                            <span style="font-size: 0.7rem; color: var(--text-secondary);">
+                                                <i class='bx bx-calendar'></i> Joined {{ user.created_at.strftime('%b %Y') }}
+                                            </span>
+                                            {% if user.worker and user.worker.is_verified %}
+                                            <span style="font-size: 0.7rem; color: var(--success-color);">
+                                                <i class='bx bx-check-circle'></i> Verified Worker
+                                            </span>
+                                            {% elif user.employer and user.employer.is_verified %}
+                                            <span style="font-size: 0.7rem; color: var(--success-color);">
+                                                <i class='bx bx-check-circle'></i> Verified Employer
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        
+                                        <!-- Additional Stats -->
+                                        {% if user.worker %}
+                                        {% set stats = user_stats.get(user.id, {}) %}
+                                        <div style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
+                                            <span style="font-size: 0.7rem; color: var(--text-secondary);">
+                                                <i class='bx bx-file'></i> {{ stats.applications or 0 }} Applications
+                                            </span>
+                                            {% if stats.review_count and stats.review_count > 0 %}
+                                            <span style="font-size: 0.7rem; color: var(--warning-color);">
+                                                <i class='bx bx-star'></i> {{ stats.avg_rating }} ({{ stats.review_count }} reviews)
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                        {% elif user.employer %}
+                                        {% set stats = user_stats.get(user.id, {}) %}
+                                        <div style="display: flex; gap: 1rem; margin-bottom: 0.5rem;">
+                                            <span style="font-size: 0.7rem; color: var(--text-secondary);">
+                                                <i class='bx bx-briefcase'></i> {{ stats.jobs or 0 }} Jobs Posted
+                                            </span>
+                                        </div>
+                                        {% endif %}
+                                        
+                                        {% if user.rejection_reason %}
+                                        <div style="font-size: 0.75rem; color: var(--danger-color); margin-top: 0.25rem; background: rgba(239, 68, 68, 0.05); padding: 0.25rem 0.5rem; border-radius: 0.25rem;">
+                                            <i class='bx bx-info-circle'></i> {{ user.rejection_reason[:60] }}{% if user.rejection_reason|length > 60 %}...{% endif %}
+                                        </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="padding: 1rem;">
+                                {% if user.user_type == 'worker' %}
+                                <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: rgba(37, 99, 235, 0.1); color: var(--primary-color);">
+                                {% else %}
+                                <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);">
+                                {% endif %}
+                                    {{ user.user_type.title() }}
+                                </span>
+                            </td>
+                            <td style="padding: 1rem;">
+                                {% if user.is_blocked %}
+                                <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: rgba(239, 68, 68, 0.1); color: var(--danger-color);">
+                                    <i class='bx bx-block'></i> Blocked
+                                </span>
+                                {% elif user.is_approved %}
+                                <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);">
+                                    <i class='bx bx-check-circle'></i> Approved
+                                </span>
+                                {% else %}
+                                <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+                                    <i class='bx bx-time-five'></i> Pending
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 1rem; font-size: 0.875rem; color: var(--text-secondary);">
+                                {{ user.created_at.strftime('%b %d, %Y') }}
+                            </td>
+                            <td style="padding: 1rem;">
+                                <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                                    {% if not user.is_approved and not user.is_blocked %}
+                                    <form method="POST" action="{{ url_for('admin_approve_user', user_id=user.id) }}" style="display: inline;">
+                                        <button type="submit" onclick="return confirm('Approve {{ user.full_name | e }}?')" style="padding: 0.5rem 0.75rem; background: var(--secondary-color); color: white; border: none; border-radius: 0.375rem; font-size: 0.75rem; cursor: pointer; font-weight: 600;">
+                                            <i class='bx bx-check'></i> Approve
+                                        </button>
+                                    </form>
+                                    <button onclick="showRejectModal({{ user.id }}, '{{ user.full_name | e }}')" style="padding: 0.5rem 0.75rem; background: var(--warning-color); color: white; border: none; border-radius: 0.375rem; font-size: 0.75rem; cursor: pointer; font-weight: 600;">
+                                        <i class='bx bx-x'></i> Reject
+                                    </button>
+                                    {% endif %}
+                                    
+                                    {% if not user.is_blocked %}
+                                    <form method="POST" action="{{ url_for('admin_block_user', user_id=user.id) }}" style="display: inline;">
+                                        <button type="submit" onclick="return confirm('Block {{ user.full_name | e }}? They will not be able to access the platform.')" style="padding: 0.5rem 0.75rem; background: var(--danger-color); color: white; border: none; border-radius: 0.375rem; font-size: 0.75rem; cursor: pointer; font-weight: 600;">
+                                            <i class='bx bx-block'></i> Block
+                                        </button>
+                                    </form>
+                                    {% else %}
+                                    <form method="POST" action="{{ url_for('admin_unblock_user', user_id=user.id) }}" style="display: inline;">
+                                        <button type="submit" onclick="return confirm('Unblock {{ user.full_name | e }}?')" style="padding: 0.5rem 0.75rem; background: var(--primary-color); color: white; border: none; border-radius: 0.375rem; font-size: 0.75rem; cursor: pointer; font-weight: 600;">
+                                            <i class='bx bx-unlock'></i> Unblock
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                    
+                                    <button onclick="showDeleteModal({{ user.id }}, '{{ user.full_name | e }}')" style="padding: 0.5rem 0.75rem; background: var(--text-secondary); color: white; border: none; border-radius: 0.375rem; font-size: 0.75rem; cursor: pointer; font-weight: 600;">
+                                        <i class='bx bx-trash'></i> Delete
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if users.pages > 1 %}
+            <div style="padding: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: center; gap: 0.5rem;">
+                {% if users.has_prev %}
+                <a href="{{ url_for('admin_users', page=users.prev_num, search=search, type=type_filter, status=status_filter) }}" style="padding: 0.5rem 0.75rem; background: var(--white); border: 1px solid var(--border-color); border-radius: 0.375rem; text-decoration: none; color: var(--text-primary);">
+                    <i class='bx bx-chevron-left'></i>
+                </a>
+                {% endif %}
+                
+                {% for page_num in users.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != users.page %}
+                        <a href="{{ url_for('admin_users', page=page_num, search=search, type=type_filter, status=status_filter) }}" style="padding: 0.5rem 0.75rem; background: var(--white); border: 1px solid var(--border-color); border-radius: 0.375rem; text-decoration: none; color: var(--text-primary);">
+                            {{ page_num }}
+                        </a>
+                        {% else %}
+                        <span style="padding: 0.5rem 0.75rem; background: var(--primary-color); color: white; border-radius: 0.375rem;">
+                            {{ page_num }}
+                        </span>
+                        {% endif %}
+                    {% else %}
+                    <span style="padding: 0.5rem 0.75rem;">...</span>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if users.has_next %}
+                <a href="{{ url_for('admin_users', page=users.next_num, search=search, type=type_filter, status=status_filter) }}" style="padding: 0.5rem 0.75rem; background: var(--white); border: 1px solid var(--border-color); border-radius: 0.375rem; text-decoration: none; color: var(--text-primary);">
+                    <i class='bx bx-chevron-right'></i>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+            
+            <!-- Mobile Card View -->
+            <div class="mobile-user-cards" style="display: none;">
+                {% for user in users.items %}
+                <div class="mobile-user-card {% if user.is_blocked %}blocked{% endif %}">
+                    <!-- User Info -->
+                    <div style="display: flex; align-items: center; gap: 0.75rem; margin-bottom: 1rem;">
+                        {% set profile_pic = None %}
+                        {% if user.worker and user.worker.profile_picture %}
+                            {% set profile_pic = url_for('static', filename='uploads/' + user.worker.profile_picture) %}
+                        {% elif user.employer and user.employer.profile_picture %}
+                            {% set profile_pic = url_for('static', filename='uploads/' + user.employer.profile_picture) %}
+                        {% endif %}
+                        
+                        {% if profile_pic %}
+                        <img src="{{ profile_pic }}" alt="{{ user.full_name }}" style="width: 40px; height: 40px; border-radius: 50%; object-fit: cover; border: 2px solid var(--border-color);">
+                        {% else %}
+                        <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                            {{ user.full_name[0].upper() }}
+                        </div>
+                        {% endif %}
+                        
+                        <div style="flex: 1;">
+                            <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem; color: var(--text-primary);">{{ user.full_name }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">{{ user.email }}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.5rem;">📱 {{ user.phone }}</div>
+                            
+                            <!-- Worker Full Profile Mobile -->
+                            {% if user.worker %}
+                            <div style="background: rgba(37, 99, 235, 0.05); padding: 0.75rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border-left: 3px solid var(--primary-color);">
+                                <div style="font-size: 0.7rem; font-weight: 600; color: var(--primary-color); margin-bottom: 0.5rem;">
+                                    <i class='bx bx-user-detail'></i> Complete Worker Profile
+                                </div>
+                                
+                                <!-- ID and Basic Info -->
+                                <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                                    <strong>Worker ID:</strong> #{{ user.worker.id }}
+                                    {% if user.worker.national_id %} | <strong>National ID:</strong> {{ user.worker.national_id }}{% endif %}
+                                    {% if user.worker.date_of_birth %} | <strong>DOB:</strong> {{ user.worker.date_of_birth.strftime('%d/%m/%Y') }}{% endif %}
+                                </div>
+                                
+                                <!-- Photos Mobile -->
+                                <div style="display: flex; gap: 0.5rem; margin-bottom: 0.5rem; justify-content: center;">
+                                    {% if user.worker.profile_picture %}
+                                    <div style="text-align: center;">
+                                        <div style="font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 0.25rem;">Profile</div>
+                                        <img src="{{ url_for('static', filename='uploads/' + user.worker.profile_picture) }}" alt="Profile" style="width: 60px; height: 60px; border-radius: 0.375rem; object-fit: cover; border: 1px solid var(--border-color);">
+                                    </div>
+                                    {% endif %}
+                                    {% if user.worker.id_photo %}
+                                    <div style="text-align: center;">
+                                        <div style="font-size: 0.65rem; color: var(--text-secondary); margin-bottom: 0.25rem;">ID Photo</div>
+                                        <img src="{{ url_for('static', filename='uploads/' + user.worker.id_photo) }}" alt="ID" style="width: 60px; height: 60px; border-radius: 0.375rem; object-fit: cover; border: 1px solid var(--border-color);">
+                                    </div>
+                                    {% endif %}
+                                </div>
+                                
+                                <!-- Bio -->
+                                {% if user.worker.bio %}
+                                <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.5rem;">
+                                    <strong>Bio:</strong> {{ user.worker.bio[:60] }}{% if user.worker.bio|length > 60 %}...{% endif %}
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Skills and Services -->
+                                {% if user.worker.skills %}
+                                <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                    <strong>Skills:</strong> {{ user.worker.skills[:50] }}{% if user.worker.skills|length > 50 %}...{% endif %}
+                                </div>
+                                {% endif %}
+                                {% if user.worker.services_offered %}
+                                <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                    <strong>Services:</strong> {{ user.worker.services_offered[:50] }}{% if user.worker.services_offered|length > 50 %}...{% endif %}
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Professional Info -->
+                                <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                    <strong>Experience:</strong> {{ user.worker.experience_years if user.worker.experience_years else 0 }} years
+                                    {% if user.worker.availability_status %} | <strong>Status:</strong> {{ user.worker.availability_status.title() }}{% endif %}
+                                </div>
+                                
+                                <!-- Rates -->
+                                {% if user.worker.hourly_rate or user.worker.monthly_rate %}
+                                <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                    {% if user.worker.hourly_rate %}<strong>Hourly:</strong> RWF {{ user.worker.hourly_rate }}{% endif %}
+                                    {% if user.worker.monthly_rate %}{% if user.worker.hourly_rate %} | {% endif %}<strong>Monthly:</strong> RWF {{ user.worker.monthly_rate }}{% endif %}
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Location -->
+                                {% if user.worker.district %}
+                                <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                    <strong>Location:</strong> 
+                                    {% if user.worker.province %}{{ user.worker.province }}, {% endif %}
+                                    {{ user.worker.district }}
+                                    {% if user.worker.sector %}, {{ user.worker.sector }}{% endif %}
+                                </div>
+                                {% endif %}
+                                
+                                <!-- Reference -->
+                                {% if user.worker.reference_name %}
+                                <div style="font-size: 0.7rem; color: var(--text-secondary);">
+                                    <strong>Reference:</strong> {{ user.worker.reference_name }}
+                                </div>
+                                {% endif %}
+                            </div>
+                            
+                            <!-- Employer Details Mobile -->
+                            {% elif user.employer %}
+                            <div style="background: rgba(16, 185, 129, 0.05); padding: 0.5rem; border-radius: 0.5rem; margin-bottom: 0.5rem; border-left: 3px solid var(--secondary-color);">
+                                <div style="font-size: 0.7rem; font-weight: 600; color: var(--secondary-color); margin-bottom: 0.25rem;">
+                                    <i class='bx bxs-business'></i> Employer Details
+                                </div>
+                                {% if user.employer.company_name %}
+                                <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                    <strong>Company:</strong> {{ user.employer.company_name }}
+                                </div>
+                                {% endif %}
+                                {% if user.employer.household_type %}
+                                <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                    <strong>Type:</strong> {{ user.employer.household_type.title() }}
+                                </div>
+                                {% endif %}
+                                {% if user.employer.district %}
+                                <div style="font-size: 0.7rem; color: var(--text-secondary);">
+                                    <strong>Location:</strong> 
+                                    {% if user.employer.province %}{{ user.employer.province }}, {% endif %}
+                                    {{ user.employer.district }}
+                                    {% if user.employer.sector %}, {{ user.employer.sector }}{% endif %}
+                                </div>
+                                {% endif %}
+                            </div>
+                            {% endif %}
+                            
+                            <div style="font-size: 0.7rem; color: var(--text-secondary);">
+                                <i class='bx bx-calendar'></i> Joined {{ user.created_at.strftime('%b %Y') }}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Status Badges -->
+                    <div style="display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap;">
+                        {% if user.user_type == 'worker' %}
+                        <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: rgba(37, 99, 235, 0.1); color: var(--primary-color);">
+                            {{ user.user_type.title() }}
+                        </span>
+                        {% else %}
+                        <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);">
+                            {{ user.user_type.title() }}
+                        </span>
+                        {% endif %}
+                        
+                        {% if user.is_blocked %}
+                        <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: rgba(239, 68, 68, 0.1); color: var(--danger-color);">
+                            <i class='bx bx-block'></i> Blocked
+                        </span>
+                        {% elif user.is_approved %}
+                        <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);">
+                            <i class='bx bx-check-circle'></i> Approved
+                        </span>
+                        {% else %}
+                        <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+                            <i class='bx bx-time-five'></i> Pending
+                        </span>
+                        {% endif %}
+                        
+                        {% if user.worker and user.worker.is_verified %}
+                        <span style="font-size: 0.7rem; color: var(--success-color);">
+                            <i class='bx bx-check-circle'></i> Verified
+                        </span>
+                        {% elif user.employer and user.employer.is_verified %}
+                        <span style="font-size: 0.7rem; color: var(--success-color);">
+                            <i class='bx bx-check-circle'></i> Verified
+                        </span>
+                        {% endif %}
+                    </div>
+                    
+                    <!-- Additional Stats Mobile -->
+                    {% if user.worker %}
+                    {% set stats = user_stats.get(user.id, {}) %}
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                        <span style="font-size: 0.7rem; color: var(--text-secondary);">
+                            <i class='bx bx-file'></i> {{ stats.applications or 0 }} Applications
+                        </span>
+                        {% if stats.review_count and stats.review_count > 0 %}
+                        <span style="font-size: 0.7rem; color: var(--warning-color);">
+                            <i class='bx bx-star'></i> {{ stats.avg_rating }} ({{ stats.review_count }} reviews)
+                        </span>
+                        {% endif %}
+                    </div>
+                    {% elif user.employer %}
+                    {% set stats = user_stats.get(user.id, {}) %}
+                    <div style="display: flex; gap: 1rem; margin-bottom: 1rem;">
+                        <span style="font-size: 0.7rem; color: var(--text-secondary);">
+                            <i class='bx bx-briefcase'></i> {{ stats.jobs or 0 }} Jobs Posted
+                        </span>
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Rejection Reason -->
+                    {% if user.rejection_reason %}
+                    <div style="font-size: 0.75rem; color: var(--danger-color); margin-bottom: 1rem; background: rgba(239, 68, 68, 0.05); padding: 0.5rem; border-radius: 0.5rem;">
+                        <i class='bx bx-info-circle'></i> {{ user.rejection_reason[:80] }}{% if user.rejection_reason|length > 80 %}...{% endif %}
+                    </div>
+                    {% endif %}
+                    
+                    <!-- Action Buttons -->
+                    <div class="action-buttons" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                        {% if not user.is_approved and not user.is_blocked %}
+                        <form method="POST" action="{{ url_for('admin_approve_user', user_id=user.id) }}" style="display: inline;">
+                            <button type="submit" onclick="return confirm('Approve {{ user.full_name | e }}?')" style="padding: 0.5rem 0.75rem; background: var(--secondary-color); color: white; border: none; border-radius: 0.375rem; font-size: 0.75rem; cursor: pointer; font-weight: 600;">
+                                <i class='bx bx-check'></i> Approve
+                            </button>
+                        </form>
+                        <button onclick="showRejectModal({{ user.id }}, '{{ user.full_name | e }}')" style="padding: 0.5rem 0.75rem; background: var(--warning-color); color: white; border: none; border-radius: 0.375rem; font-size: 0.75rem; cursor: pointer; font-weight: 600;">
+                            <i class='bx bx-x'></i> Reject
+                        </button>
+                        {% endif %}
+                        
+                        {% if not user.is_blocked %}
+                        <form method="POST" action="{{ url_for('admin_block_user', user_id=user.id) }}" style="display: inline;">
+                            <button type="submit" onclick="return confirm('Block {{ user.full_name | e }}? They will not be able to access the platform.')" style="padding: 0.5rem 0.75rem; background: var(--danger-color); color: white; border: none; border-radius: 0.375rem; font-size: 0.75rem; cursor: pointer; font-weight: 600;">
+                                <i class='bx bx-block'></i> Block
+                            </button>
+                        </form>
+                        {% else %}
+                        <form method="POST" action="{{ url_for('admin_unblock_user', user_id=user.id) }}" style="display: inline;">
+                            <button type="submit" onclick="return confirm('Unblock {{ user.full_name | e }}?')" style="padding: 0.5rem 0.75rem; background: var(--primary-color); color: white; border: none; border-radius: 0.375rem; font-size: 0.75rem; cursor: pointer; font-weight: 600;">
+                                <i class='bx bx-unlock'></i> Unblock
+                            </button>
+                        </form>
+                        {% endif %}
+                        
+                        <button onclick="showDeleteModal({{ user.id }}, '{{ user.full_name | e }}')" style="padding: 0.5rem 0.75rem; background: var(--text-secondary); color: white; border: none; border-radius: 0.375rem; font-size: 0.75rem; cursor: pointer; font-weight: 600;">
+                            <i class='bx bx-trash'></i> Delete
+                        </button>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Reject Modal -->
+<div id="rejectModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: var(--white); padding: 2rem; border-radius: 1rem; max-width: 500px; width: 90%;">
+        <h3 style="margin-bottom: 1rem; font-size: 1.25rem; font-weight: 700;">Reject User</h3>
+        <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Please provide a reason for rejecting <strong id="rejectUserName"></strong>:</p>
+        <form method="POST" id="rejectForm">
+            <textarea name="reason" rows="4" placeholder="Enter rejection reason..." required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; margin-bottom: 1.5rem; resize: vertical;"></textarea>
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="button" onclick="hideRejectModal()" style="padding: 0.75rem 1.5rem; background: var(--text-secondary); color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
+                    Cancel
+                </button>
+                <button type="submit" style="padding: 0.75rem 1.5rem; background: var(--warning-color); color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
+                    Reject User
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Delete Modal -->
+<div id="deleteModal" style="display: none; position: fixed; top: 0; left: 0; right: 0; bottom: 0; background: rgba(0, 0, 0, 0.5); z-index: 1000; align-items: center; justify-content: center;">
+    <div style="background: var(--white); padding: 2rem; border-radius: 1rem; max-width: 500px; width: 90%;">
+        <h3 style="margin-bottom: 1rem; font-size: 1.25rem; font-weight: 700; color: var(--danger-color);">Delete User</h3>
+        <p style="margin-bottom: 1.5rem; color: var(--text-secondary);">Are you sure you want to permanently delete <strong id="deleteUserName"></strong>? This action cannot be undone and will remove all associated data including:</p>
+        <ul style="margin-bottom: 1.5rem; padding-left: 1.5rem; color: var(--text-secondary);">
+            <li>User profile and account</li>
+            <li>All job postings (for employers)</li>
+            <li>All applications (for workers)</li>
+            <li>Messages and notifications</li>
+        </ul>
+        <form method="POST" id="deleteForm">
+            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                <button type="button" onclick="hideDeleteModal()" style="padding: 0.75rem 1.5rem; background: var(--text-secondary); color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
+                    Cancel
+                </button>
+                <button type="submit" style="padding: 0.75rem 1.5rem; background: var(--danger-color); color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
+                    Delete Permanently
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+function showProfileMenu() {
+    alert('Profile menu coming soon!');
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (sidebar.classList.contains('active')) {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    } else {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    }
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+function showRejectModal(userId, userName) {
+    document.getElementById('rejectUserName').textContent = userName;
+    document.getElementById('rejectForm').action = '/admin/user/' + userId + '/reject';
+    document.getElementById('rejectModal').style.display = 'flex';
+}
+
+function hideRejectModal() {
+    document.getElementById('rejectModal').style.display = 'none';
+}
+
+function showDeleteModal(userId, userName) {
+    document.getElementById('deleteUserName').textContent = userName;
+    document.getElementById('deleteForm').action = '/admin/user/' + userId + '/delete';
+    document.getElementById('deleteModal').style.display = 'flex';
+}
+
+function hideDeleteModal() {
+    document.getElementById('deleteModal').style.display = 'none';
+}
+
+// Close sidebar when clicking on navigation links on mobile
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                closeSidebar();
+            }
+        });
+    });
+    
+    // Close sidebar on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSidebar();
+            hideRejectModal();
+            hideDeleteModal();
+        }
+    });
+    
+    // Close modals when clicking overlay
+    document.getElementById('rejectModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            hideRejectModal();
+        }
+    });
+    
+    document.getElementById('deleteModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            hideDeleteModal();
+        }
+    });
+});
+
+// Handle window resize
+window.addEventListener('resize', function() {
+    if (window.innerWidth > 768) {
+        closeSidebar();
+    }
+});
+</script>
+
+<style>
+/* Sidebar Navigation Styles */
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0;
+    overflow-y: auto;
+}
+
+.nav-section {
+    margin-bottom: 2rem;
+}
+
+.nav-section h6 {
+    font-size: 0.7rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin: 0 0 0.8rem 1.2rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 1.2rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-radius: 0;
+    margin-bottom: 0.25rem;
+    position: relative;
+    font-weight: 500;
+}
+
+.nav-link:hover {
+    background: rgba(37, 99, 235, 0.05);
+    color: var(--primary-color);
+    text-decoration: none;
+}
+
+.nav-link.active {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--primary-color);
+    border-radius: 0 3px 3px 0;
+}
+
+.nav-link i {
+    font-size: 1.1rem;
+    width: 18px;
+    text-align: center;
+}
+
+.nav-link span {
+    font-size: 0.8rem;
+}
+
+/* Sidebar User Info */
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 0.8rem;
+    padding: 0.8rem;
+}
+
+.sidebar-user-info h4 {
+    font-size: 0.9rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.sidebar-user-info p {
+    font-size: 0.7rem;
+    margin: 0;
+    color: var(--text-secondary);
+}
+
+/* Sidebar Size */
+.sidebar {
+    width: 260px !important;
+    min-width: 260px !important;
+}
+
+/* Responsive adjustments */
+@media (max-width: 1024px) {
+    .header-stats {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+    }
+    
+    .header-stats span {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+    }
+}
+
+@media (max-width: 768px) {
+    /* Mobile Sidebar */
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        top: 0;
+        height: 100vh;
+        z-index: 1001;
+        transition: left 0.3s ease;
+        box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+    }
+    
+    /* Mobile Menu Button */
+    .mobile-menu-btn {
+        display: block;
+        position: fixed;
+        top: 1rem;
+        left: 1rem;
+        z-index: 1002;
+        background: var(--primary-color);
+        color: white;
+        border: none;
+        border-radius: 0.5rem;
+        padding: 0.75rem;
+        cursor: pointer;
+        font-size: 1.25rem;
+    }
+    
+    .main-content {
+        padding-top: 70px;
+        margin-left: 0 !important;
+    }
+    
+    /* Header */
+    .header-stats {
+        flex-wrap: wrap;
+        gap: 0.5rem;
+        justify-content: center;
+    }
+    
+    /* Filters */
+    form[style*="flex"] {
+        flex-direction: column;
+        gap: 1rem;
+    }
+    
+    form[style*="flex"] > div {
+        width: 100%;
+    }
+    
+    /* Table Responsive */
+    .table-container {
+        overflow-x: auto;
+        -webkit-overflow-scrolling: touch;
+    }
+    
+    table {
+        min-width: 800px;
+    }
+    
+    /* Action Buttons */
+    .action-buttons {
+        flex-direction: column;
+        gap: 0.25rem;
+        min-width: 120px;
+    }
+    
+    .action-buttons button,
+    .action-buttons form {
+        width: 100%;
+    }
+    
+    /* Top Navigation */
+    .top-nav-bar {
+        padding: 0.5rem 1rem;
+    }
+    
+    .top-nav-bar img {
+        height: 50px !important;
+    }
+}
+
+@media (max-width: 480px) {
+    /* Mobile Specific */
+    .header-stats {
+        flex-direction: column;
+        gap: 0.5rem;
+        align-items: stretch;
+    }
+    
+    .header-stats span {
+        text-align: center;
+        font-size: 0.7rem;
+        padding: 0.5rem;
+    }
+    
+    /* Filters */
+    form[style*="flex"] {
+        padding: 1rem;
+    }
+    
+    /* Table - Mobile Card View */
+    .table-container {
+        overflow-x: visible;
+    }
+    
+    table {
+        min-width: auto;
+        display: none;
+    }
+    
+    /* Mobile User Cards */
+    .mobile-user-cards {
+        display: block !important;
+    }
+    
+    .mobile-user-card {
+        background: var(--white);
+        border: 1px solid var(--border-color);
+        border-radius: 1rem;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    
+    .mobile-user-card.blocked {
+        background: rgba(239, 68, 68, 0.05);
+    }
+    
+    /* Typography */
+    h1 {
+        font-size: 1.5rem !important;
+    }
+    
+    h2 {
+        font-size: 1.125rem !important;
+    }
+    
+    /* Profile Pictures */
+    img[style*="width: 40px"] {
+        width: 35px !important;
+        height: 35px !important;
+    }
+    
+    div[style*="width: 40px"] {
+        width: 35px !important;
+        height: 35px !important;
+        font-size: 0.875rem !important;
+    }
+    
+    /* Navigation */
+    .top-nav-bar {
+        padding: 0.5rem;
+    }
+    
+    .top-nav-bar img {
+        height: 40px !important;
+    }
+    
+    /* Badges */
+    span[style*="font-size: 0.75rem"] {
+        font-size: 0.625rem !important;
+        padding: 0.2rem 0.5rem !important;
+    }
+    
+    /* Action Buttons */
+    .action-buttons button,
+    .action-buttons form button {
+        font-size: 0.7rem;
+        padding: 0.4rem 0.6rem;
+    }
+}
+
+/* Landscape Mobile */
+@media (max-width: 768px) and (orientation: landscape) {
+    .sidebar {
+        top: 0;
+        height: 100vh;
+    }
+    
+    .main-content {
+        padding-top: 60px;
+    }
+}
+
+/* Tablet Styles */
+@media (min-width: 769px) and (max-width: 1024px) {
+    .sidebar {
+        width: 240px !important;
+        min-width: 240px !important;
+    }
+    
+    .main-content {
+        margin-left: 240px;
+    }
+    
+    .table-container {
+        overflow-x: auto;
+    }
+    
+    table {
+        min-width: 700px;
+    }
+}
+
+/* Hide mobile menu button on desktop */
+@media (min-width: 769px) {
+    .mobile-menu-btn {
+        display: none;
+    }
+    
+    .sidebar-overlay {
+        display: none !important;
+    }
+    
+    .sidebar {
+        position: relative;
+        left: 0 !important;
+    }
+    
+    .mobile-user-cards {
+        display: none !important;
+    }
+    
+    table {
+        display: table !important;
+    }
+}
+</style>
+{% endblock %}

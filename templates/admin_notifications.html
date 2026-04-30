@@ -1,0 +1,1364 @@
+{% extends "base.html" %}
+
+{% block title %}Notifications - Admin Dashboard{% endblock %}
+
+{% block content %}
+<!-- Mobile Menu Button -->
+<button class="mobile-menu-btn" onclick="toggleSidebar()">
+    <i class='bx bx-menu'></i>
+</button>
+
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Admin Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                    {{ current_user.full_name[0].upper() }}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name }}</h4>
+                    <p style="font-size: 0.7rem; opacity: 0.8;">System Administrator</p>
+                </div>
+            </div>
+            <div style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2); background: var(--success-color); color: white; padding: 0.5rem; border-radius: 0.5rem; text-align: center;">
+                ✓ Admin Access
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h6>Dashboard</h6>
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-link">
+                    <i class='bx bx-home-alt'></i>
+                    <span>Overview</span>
+                </a>
+                <a href="{{ url_for('admin_users') }}" class="nav-link">
+                    <i class='bx bx-user'></i>
+                    <span>Users</span>
+                </a>
+                <a href="{{ url_for('admin_workers') }}" class="nav-link">
+                    <i class='bx bxs-group'></i>
+                    <span>Workers</span>
+                </a>
+                <a href="{{ url_for('admin_employers') }}" class="nav-link">
+                    <i class='bx bxs-business'></i>
+                    <span>Employers</span>
+                </a>
+                <a href="{{ url_for('admin_jobs') }}" class="nav-link">
+                    <i class='bx bx-briefcase'></i>
+                    <span>Jobs</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h6>Management</h6>
+                <a href="{{ url_for('admin_verification') }}" class="nav-link">
+                    <i class='bx bx-shield-check'></i>
+                    <span>Verification</span>
+                </a>
+                <a href="{{ url_for('admin_messages') }}" class="nav-link">
+                    <i class='bx bx-message-dots'></i>
+                    <span>Messages</span>
+                </a>
+                <a href="{{ url_for('admin_notifications') }}" class="nav-link active">
+                    <i class='bx bx-bell'></i>
+                    <span>Notifications</span>
+                    {% if unread_count > 0 %}
+                    <span class="notification-badge">{{ unread_count }}</span>
+                    {% endif %}
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h6>System</h6>
+                <a href="{{ url_for('admin_settings') }}" class="nav-link">
+                    <i class='bx bx-cog'></i>
+                    <span>Settings</span>
+                </a>
+                <a href="{{ url_for('admin_reports') }}" class="nav-link">
+                    <i class='bx bx-chart-line'></i>
+                    <span>Reports</span>
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-link" style="color: var(--danger-color);">
+                    <i class='bx bx-log-out'></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header style="margin-bottom: 2rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <div>
+                    <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">Notifications</h1>
+                    <p style="color: var(--text-secondary);">Manage system alerts and user notifications</p>
+                </div>
+                <div style="display: flex; gap: 1rem;">
+                    <button onclick="markAllAsRead()" style="padding: 0.75rem 1.5rem; background: var(--secondary-color); color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer;">
+                        <i class='bx bx-check-double'></i>
+                        Mark All Read
+                    </button>
+                    <button onclick="showNotificationSettings()" style="padding: 0.75rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer;">
+                        <i class='bx bx-cog'></i>
+                        Settings
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Cards -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-icon" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-color);">
+                        <i class='bx bx-bell'></i>
+                    </div>
+                </div>
+                <div class="stat-value">{{ total_notifications }}</div>
+                <div class="stat-label">Total Notifications</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-icon" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+                        <i class='bx bx-time-five'></i>
+                    </div>
+                </div>
+                <div class="stat-value">{{ unread_count }}</div>
+                <div class="stat-label">Unread</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-icon" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);">
+                        <i class='bx bx-send'></i>
+                    </div>
+                </div>
+                <div class="stat-value">{{ sent_today }}</div>
+                <div class="stat-label">Sent Today</div>
+            </div>
+            
+            <div class="stat-card">
+                <div class="stat-card-header">
+                    <div class="stat-icon" style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color);">
+                        <i class='bx bx-error'></i>
+                    </div>
+                </div>
+                <div class="stat-value">{{ critical_count }}</div>
+                <div class="stat-label">Critical Alerts</div>
+            </div>
+        </div>
+
+        <!-- Notifications Tabs -->
+        <div class="notifications-container">
+            <div class="notifications-tabs">
+                <button class="tab-btn active" onclick="switchTab('all')">
+                    <i class='bx bx-list-ul'></i>
+                    All Notifications
+                    <span class="tab-count">{{ total_notifications }}</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('unread')">
+                    <i class='bx bx-envelope'></i>
+                    Unread
+                    <span class="tab-count">{{ unread_count }}</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('critical')">
+                    <i class='bx bx-error'></i>
+                    Critical
+                    <span class="tab-count">{{ critical_count }}</span>
+                </button>
+                <button class="tab-btn" onclick="switchTab('system')">
+                    <i class='bx bx-server'></i>
+                    System
+                    <span class="tab-count">{{ system_count }}</span>
+                </button>
+            </div>
+
+            <!-- Notifications List -->
+            <div class="notifications-list" id="notificationsList">
+                {% for notification in notifications %}
+                <div class="notification-item {% if not notification.is_read %}unread{% endif %} {{ notification.priority }}" 
+                     data-notification-id="{{ notification.id }}">
+                    <div class="notification-icon">
+                        {% if notification.type == 'user_registration' %}
+                        <i class='bx bx-user-plus' style="color: var(--primary-color);"></i>
+                        {% elif notification.type == 'job_application' %}
+                        <i class='bx bx-briefcase' style="color: var(--secondary-color);"></i>
+                        {% elif notification.type == 'verification_request' %}
+                        <i class='bx bx-shield-check' style="color: var(--warning-color);"></i>
+                        {% elif notification.type == 'system_alert' %}
+                        <i class='bx bx-error' style="color: var(--danger-color);"></i>
+                        {% else %}
+                        <i class='bx bx-info-circle' style="color: var(--text-secondary);"></i>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="notification-content">
+                        <div class="notification-header">
+                            <h4>{{ notification.title }}</h4>
+                            <div class="notification-actions">
+                                {% if not notification.is_read %}
+                                <button onclick="markAsRead({{ notification.id }})" class="action-btn" title="Mark as read">
+                                    <i class='bx bx-check'></i>
+                                </button>
+                                {% endif %}
+                                <button onclick="deleteNotification({{ notification.id }})" class="action-btn danger" title="Delete">
+                                    <i class='bx bx-trash'></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <p class="notification-message">{{ notification.message }}</p>
+                        
+                        <div class="notification-meta">
+                            <span class="notification-time">{{ notification.created_at.strftime('%b %d, %Y at %I:%M %p') }}</span>
+                            <span class="notification-type">{{ notification.type.replace('_', ' ').title() }}</span>
+                            {% if notification.priority == 'critical' %}
+                            <span class="priority-badge critical">Critical</span>
+                            {% elif notification.priority == 'high' %}
+                            <span class="priority-badge high">High</span>
+                            {% endif %}
+                        </div>
+                        
+                        {% if notification.action_url %}
+                        <div class="notification-action">
+                            <a href="{{ notification.action_url }}" class="action-link">
+                                {{ notification.action_text or 'View Details' }}
+                                <i class='bx bx-right-arrow-alt'></i>
+                            </a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Real-time Updates Status -->
+        <div class="real-time-status">
+            <div class="status-indicator online">
+                <i class='bx bx-circle'></i>
+                Real-time updates active
+            </div>
+            <div class="last-update">
+                Last updated: <span id="lastUpdate">Just now</span>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Notification Settings Modal -->
+<div id="settingsModal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h3>Notification Settings</h3>
+            <button onclick="hideNotificationSettings()" class="close-btn">
+                <i class='bx bx-x'></i>
+            </button>
+        </div>
+        
+        <form id="settingsForm">
+            <div class="settings-section">
+                <h4>Email Notifications</h4>
+                <div class="setting-item">
+                    <label class="toggle-label">
+                        <input type="checkbox" name="email_new_user" checked>
+                        <span class="toggle-slider"></span>
+                        New user registrations
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label class="toggle-label">
+                        <input type="checkbox" name="email_job_applications" checked>
+                        <span class="toggle-slider"></span>
+                        Job applications
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label class="toggle-label">
+                        <input type="checkbox" name="email_verifications" checked>
+                        <span class="toggle-slider"></span>
+                        Verification requests
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label class="toggle-label">
+                        <input type="checkbox" name="email_system_alerts" checked>
+                        <span class="toggle-slider"></span>
+                        System alerts
+                    </label>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h4>Push Notifications</h4>
+                <div class="setting-item">
+                    <label class="toggle-label">
+                        <input type="checkbox" name="push_critical" checked>
+                        <span class="toggle-slider"></span>
+                        Critical alerts only
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label class="toggle-label">
+                        <input type="checkbox" name="push_high_priority">
+                        <span class="toggle-slider"></span>
+                        High priority notifications
+                    </label>
+                </div>
+                <div class="setting-item">
+                    <label class="toggle-label">
+                        <input type="checkbox" name="push_all">
+                        <span class="toggle-slider"></span>
+                        All notifications
+                    </label>
+                </div>
+            </div>
+            
+            <div class="settings-section">
+                <h4>Notification Frequency</h4>
+                <div class="setting-item">
+                    <label for="frequency">Batch notifications</label>
+                    <select id="frequency" name="frequency">
+                        <option value="immediate">Immediate</option>
+                        <option value="hourly">Hourly</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="form-actions">
+                <button type="button" onclick="hideNotificationSettings()" class="btn-secondary">Cancel</button>
+                <button type="submit" class="btn-primary">Save Settings</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+// Real-time notifications simulation
+let notificationSocket = null;
+let lastUpdateTime = new Date();
+
+function initializeRealTimeUpdates() {
+    // Simulate real-time updates (in production, this would use WebSocket)
+    setInterval(() => {
+        checkForNewNotifications();
+    }, 30000); // Check every 30 seconds
+    
+    // Update last update time every minute
+    setInterval(() => {
+        updateLastUpdateTime();
+    }, 60000);
+}
+
+function checkForNewNotifications() {
+    // Simulate checking for new notifications
+    // In production, this would make an API call or receive WebSocket messages
+    const randomChance = Math.random();
+    if (randomChance < 0.1) { // 10% chance of new notification
+        simulateNewNotification();
+    }
+}
+
+function simulateNewNotification() {
+    const types = ['user_registration', 'job_application', 'verification_request', 'system_alert'];
+    const type = types[Math.floor(Math.random() * types.length)];
+    
+    const notification = {
+        id: Date.now(),
+        type: type,
+        title: `New ${type.replace('_', ' ')}`,
+        message: `A new ${type.replace('_', ' ')} requires your attention.`,
+        priority: Math.random() < 0.2 ? 'critical' : 'normal',
+        created_at: new Date(),
+        is_read: false
+    };
+    
+    addNotificationToList(notification);
+    updateNotificationCount();
+    showDesktopNotification(notification);
+}
+
+function addNotificationToList(notification) {
+    const notificationsList = document.getElementById('notificationsList');
+    const notificationElement = createNotificationElement(notification);
+    notificationsList.insertBefore(notificationElement, notificationsList.firstChild);
+    
+    // Animate new notification
+    notificationElement.style.animation = 'slideInRight 0.3s ease-out';
+}
+
+function createNotificationElement(notification) {
+    const div = document.createElement('div');
+    div.className = `notification-item unread ${notification.priority}`;
+    div.dataset.notificationId = notification.id;
+    
+    const iconMap = {
+        'user_registration': 'bx-user-plus',
+        'job_application': 'bx-briefcase',
+        'verification_request': 'bx-shield-check',
+        'system_alert': 'bx-error'
+    };
+    
+    const colorMap = {
+        'user_registration': 'var(--primary-color)',
+        'job_application': 'var(--secondary-color)',
+        'verification_request': 'var(--warning-color)',
+        'system_alert': 'var(--danger-color)'
+    };
+    
+    div.innerHTML = `
+        <div class="notification-icon">
+            <i class='bx ${iconMap[notification.type]}' style="color: ${colorMap[notification.type]};"></i>
+        </div>
+        
+        <div class="notification-content">
+            <div class="notification-header">
+                <h4>${notification.title}</h4>
+                <div class="notification-actions">
+                    <button onclick="markAsRead(${notification.id})" class="action-btn" title="Mark as read">
+                        <i class='bx bx-check'></i>
+                    </button>
+                    <button onclick="deleteNotification(${notification.id})" class="action-btn danger" title="Delete">
+                        <i class='bx bx-trash'></i>
+                    </button>
+                </div>
+            </div>
+            
+            <p class="notification-message">${notification.message}</p>
+            
+            <div class="notification-meta">
+                <span class="notification-time">Just now</span>
+                <span class="notification-type">${notification.type.replace('_', ' ').title()}</span>
+                ${notification.priority === 'critical' ? '<span class="priority-badge critical">Critical</span>' : ''}
+            </div>
+        </div>
+    `;
+    
+    return div;
+}
+
+function showDesktopNotification(notification) {
+    if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification(notification.title, {
+            body: notification.message,
+            icon: '/static/images/logo.png',
+            tag: notification.id
+        });
+    }
+}
+
+function updateNotificationCount() {
+    const unreadCount = document.querySelectorAll('.notification-item.unread').length;
+    // Update badge in navigation if needed
+    const badge = document.querySelector('.notification-badge');
+    if (badge) {
+        badge.textContent = unreadCount;
+        badge.style.display = unreadCount > 0 ? 'inline-block' : 'none';
+    }
+}
+
+function updateLastUpdateTime() {
+    const now = new Date();
+    const diff = Math.floor((now - lastUpdateTime) / 1000);
+    
+    let timeText;
+    if (diff < 60) {
+        timeText = 'Just now';
+    } else if (diff < 3600) {
+        timeText = `${Math.floor(diff / 60)} minutes ago`;
+    } else {
+        timeText = `${Math.floor(diff / 3600)} hours ago`;
+    }
+    
+    document.getElementById('lastUpdate').textContent = timeText;
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (sidebar.classList.contains('active')) {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    } else {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    }
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+function switchTab(tab) {
+    const buttons = document.querySelectorAll('.tab-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    event.target.classList.add('active');
+    
+    const notifications = document.querySelectorAll('.notification-item');
+    notifications.forEach(notification => {
+        if (tab === 'all') {
+            notification.style.display = 'flex';
+        } else if (tab === 'unread') {
+            notification.style.display = notification.classList.contains('unread') ? 'flex' : 'none';
+        } else if (tab === 'critical') {
+            notification.style.display = notification.classList.contains('critical') ? 'flex' : 'none';
+        } else if (tab === 'system') {
+            const isSystem = notification.querySelector('.notification-type')?.textContent?.includes('System');
+            notification.style.display = isSystem ? 'flex' : 'none';
+        }
+    });
+}
+
+function markAsRead(notificationId) {
+    const notification = document.querySelector(`[data-notification-id="${notificationId}"]`);
+    if (notification) {
+        notification.classList.remove('unread');
+        const actionBtn = notification.querySelector('.action-btn');
+        if (actionBtn) {
+            actionBtn.style.display = 'none';
+        }
+        updateNotificationCount();
+        
+        // In production, this would make an API call
+        console.log(`Marked notification ${notificationId} as read`);
+    }
+}
+
+function markAllAsRead() {
+    const unreadNotifications = document.querySelectorAll('.notification-item.unread');
+    unreadNotifications.forEach(notification => {
+        notification.classList.remove('unread');
+        const actionBtn = notification.querySelector('.action-btn');
+        if (actionBtn) {
+            actionBtn.style.display = 'none';
+        }
+    });
+    updateNotificationCount();
+    
+    // In production, this would make an API call
+    console.log('Marked all notifications as read');
+}
+
+function deleteNotification(notificationId) {
+    if (confirm('Are you sure you want to delete this notification?')) {
+        const notification = document.querySelector(`[data-notification-id="${notificationId}"]`);
+        if (notification) {
+            notification.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(() => {
+                notification.remove();
+                updateNotificationCount();
+            }, 300);
+        }
+        
+        // In production, this would make an API call
+        console.log(`Deleted notification ${notificationId}`);
+    }
+}
+
+function showNotificationSettings() {
+    document.getElementById('settingsModal').style.display = 'flex';
+    
+    // Request notification permission if not granted
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+}
+
+function hideNotificationSettings() {
+    document.getElementById('settingsModal').style.display = 'none';
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', function() {
+    initializeRealTimeUpdates();
+    
+    // Request notification permission
+    if ('Notification' in window && Notification.permission === 'default') {
+        Notification.requestPermission();
+    }
+    
+    // Close sidebar on navigation clicks
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                closeSidebar();
+            }
+        });
+    });
+    
+    // Close sidebar on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSidebar();
+            hideNotificationSettings();
+        }
+    });
+    
+    // Close modal when clicking outside
+    document.getElementById('settingsModal').addEventListener('click', function(e) {
+        if (e.target === this) {
+            hideNotificationSettings();
+        }
+    });
+    
+    // Handle settings form submission
+    document.getElementById('settingsForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+        // In production, this would save settings to server
+        console.log('Notification settings saved');
+        hideNotificationSettings();
+    });
+});
+
+// Handle window resize
+window.addEventListener('resize', function() {
+    if (window.innerWidth > 768) {
+        closeSidebar();
+    }
+});
+
+// Add CSS animations
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes slideInRight {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOutRight {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+`;
+document.head.appendChild(style);
+</script>
+
+<style>
+/* Admin Dashboard Layout Styles */
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: var(--white);
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 100;
+    overflow-y: auto;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sidebar-user-info h4 {
+    font-size: 0.9rem !important;
+    margin: 0;
+}
+
+.sidebar-user-info p {
+    font-size: 0.7rem !important;
+    margin: 0;
+    opacity: 0.8;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0;
+    overflow-y: auto;
+}
+
+.nav-section {
+    margin-bottom: 2rem;
+}
+
+.nav-section h6 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.nav-link:hover {
+    background: var(--gray-50);
+    color: var(--primary-color);
+}
+
+.nav-link.active {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--primary-color);
+}
+
+.nav-link i {
+    font-size: 1.125rem;
+}
+
+.notification-badge {
+    background: var(--danger-color);
+    color: white;
+    font-size: 0.625rem;
+    padding: 0.125rem 0.375rem;
+    border-radius: 9999px;
+    margin-left: auto;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 260px;
+    padding: 2rem;
+    background: var(--gray-50);
+    min-height: 100vh;
+    overflow-y: auto;
+}
+
+/* Mobile Menu Button */
+.mobile-menu-btn {
+    display: none;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1002;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    cursor: pointer;
+    font-size: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Stats Cards */
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+}
+
+.stat-card {
+    background: var(--white);
+    border-radius: 1rem;
+    padding: 1.5rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
+    transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 15px -3px rgba(0, 0, 0, 0.1);
+}
+
+.stat-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 1rem;
+}
+
+.stat-icon {
+    width: 50px;
+    height: 50px;
+    border-radius: 0.75rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+}
+
+.stat-value {
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-primary);
+    margin-bottom: 0.25rem;
+}
+
+.stat-label {
+    font-size: 0.875rem;
+    color: var(--text-secondary);
+}
+
+/* Notifications Container */
+.notifications-container {
+    background: var(--white);
+    border-radius: 1rem;
+    border: 1px solid var(--border-color);
+    overflow: hidden;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.notifications-tabs {
+    display: flex;
+    background: var(--gray-50);
+    border-bottom: 1px solid var(--border-color);
+}
+
+.tab-btn {
+    flex: 1;
+    padding: 1rem;
+    background: none;
+    border: none;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    transition: all 0.2s;
+    position: relative;
+}
+
+.tab-btn:hover {
+    background: rgba(37, 99, 235, 0.05);
+}
+
+.tab-btn.active {
+    background: var(--white);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--primary-color);
+}
+
+.tab-count {
+    background: var(--gray-200);
+    color: var(--text-secondary);
+    font-size: 0.75rem;
+    padding: 0.125rem 0.5rem;
+    border-radius: 9999px;
+    font-weight: 600;
+}
+
+.tab-btn.active .tab-count {
+    background: var(--primary-color);
+    color: white;
+}
+
+.notifications-list {
+    max-height: 600px;
+    overflow-y: auto;
+}
+
+.notification-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    transition: all 0.2s;
+}
+
+.notification-item:hover {
+    background: var(--gray-50);
+}
+
+.notification-item.unread {
+    background: rgba(37, 99, 235, 0.05);
+    border-left: 3px solid var(--primary-color);
+}
+
+.notification-item.critical {
+    border-left: 3px solid var(--danger-color);
+}
+
+.notification-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--gray-100);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+}
+
+.notification-icon i {
+    font-size: 1.25rem;
+}
+
+.notification-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.notification-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.5rem;
+}
+
+.notification-header h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin: 0;
+    color: var(--text-primary);
+}
+
+.notification-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.action-btn {
+    width: 32px;
+    height: 32px;
+    border: 1px solid var(--border-color);
+    background: var(--white);
+    border-radius: 0.375rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+
+.action-btn:hover {
+    background: var(--gray-50);
+}
+
+.action-btn.danger {
+    color: var(--danger-color);
+    border-color: var(--danger-color);
+}
+
+.action-btn.danger:hover {
+    background: rgba(239, 68, 68, 0.1);
+}
+
+.notification-message {
+    font-size: 0.875rem;
+    color: var(--text-primary);
+    margin: 0 0 0.75rem 0;
+    line-height: 1.5;
+}
+
+.notification-meta {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 0.75rem;
+}
+
+.notification-time {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.notification-type {
+    font-size: 0.75rem;
+    padding: 0.25rem 0.5rem;
+    background: var(--gray-100);
+    border-radius: 0.25rem;
+    color: var(--text-secondary);
+}
+
+.priority-badge {
+    font-size: 0.625rem;
+    padding: 0.25rem 0.5rem;
+    border-radius: 0.25rem;
+    font-weight: 600;
+}
+
+.priority-badge.critical {
+    background: rgba(239, 68, 68, 0.1);
+    color: var(--danger-color);
+}
+
+.priority-badge.high {
+    background: rgba(245, 158, 11, 0.1);
+    color: var(--warning-color);
+}
+
+.notification-action {
+    margin-top: 0.75rem;
+}
+
+.action-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--primary-color);
+    text-decoration: none;
+    font-size: 0.875rem;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+
+.action-link:hover {
+    gap: 0.75rem;
+}
+
+/* Real-time Status */
+.real-time-status {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem;
+    background: var(--white);
+    border-radius: 1rem;
+    border: 1px solid var(--border-color);
+    margin-top: 2rem;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+}
+
+.status-indicator {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    font-weight: 500;
+}
+
+.status-indicator.online {
+    color: var(--secondary-color);
+}
+
+.status-indicator.online i {
+    font-size: 0.5rem;
+    color: var(--secondary-color);
+}
+
+.last-update {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+/* Modal Styles */
+.modal {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background: var(--white);
+    border-radius: 1rem;
+    width: 90%;
+    max-width: 600px;
+    max-height: 90vh;
+    overflow-y: auto;
+}
+
+.modal-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.modal-header h3 {
+    font-size: 1.25rem;
+    font-weight: 700;
+    margin: 0;
+}
+
+.close-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    cursor: pointer;
+    color: var(--text-secondary);
+    padding: 0.25rem;
+}
+
+.settings-section {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+}
+
+.settings-section h4 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.setting-item {
+    margin-bottom: 1rem;
+}
+
+.setting-item:last-child {
+    margin-bottom: 0;
+}
+
+.toggle-label {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    cursor: pointer;
+    font-size: 0.875rem;
+    color: var(--text-primary);
+}
+
+.toggle-label input[type="checkbox"] {
+    display: none;
+}
+
+.toggle-slider {
+    width: 44px;
+    height: 24px;
+    background: var(--gray-300);
+    border-radius: 24px;
+    position: relative;
+    transition: all 0.3s;
+}
+
+.toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 18px;
+    height: 18px;
+    background: white;
+    border-radius: 50%;
+    top: 3px;
+    left: 3px;
+    transition: all 0.3s;
+}
+
+.toggle-label input[type="checkbox"]:checked + .toggle-slider {
+    background: var(--primary-color);
+}
+
+.toggle-label input[type="checkbox"]:checked + .toggle-slider::before {
+    transform: translateX(20px);
+}
+
+.setting-item select {
+    width: 100%;
+    padding: 0.75rem;
+    border: 1px solid var(--border-color);
+    border-radius: 0.5rem;
+    font-size: 0.875rem;
+    background: var(--white);
+}
+
+.form-actions {
+    padding: 1.5rem;
+    display: flex;
+    gap: 1rem;
+    justify-content: flex-end;
+}
+
+.btn-primary,
+.btn-secondary {
+    padding: 0.75rem 1.5rem;
+    border-radius: 0.5rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    border: none;
+}
+
+.btn-primary {
+    background: var(--primary-color);
+    color: white;
+}
+
+.btn-primary:hover {
+    background: var(--primary-color-dark);
+}
+
+.btn-secondary {
+    background: var(--gray-100);
+    color: var(--text-primary);
+    border: 1px solid var(--border-color);
+}
+
+.btn-secondary:hover {
+    background: var(--gray-200);
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        top: 0;
+        height: 100vh;
+        z-index: 1001;
+        transition: left 0.3s ease;
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+    }
+    
+    .mobile-menu-btn {
+        display: block;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+        padding-top: 80px;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr 1fr;
+        gap: 1rem;
+    }
+    
+    .notifications-tabs {
+        flex-wrap: wrap;
+    }
+    
+    .tab-btn {
+        flex: 1;
+        min-width: 0;
+        font-size: 0.75rem;
+        padding: 0.75rem 0.5rem;
+    }
+    
+    .tab-btn i {
+        display: none;
+    }
+    
+    .notification-item {
+        padding: 1rem;
+    }
+    
+    .notification-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+    
+    .real-time-status {
+        flex-direction: column;
+        gap: 0.5rem;
+        text-align: center;
+    }
+}
+
+@media (max-width: 480px) {
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .notification-actions {
+        align-self: flex-end;
+    }
+}
+
+/* Hide mobile menu button on desktop */
+@media (min-width: 769px) {
+    .mobile-menu-btn {
+        display: none;
+    }
+    
+    .sidebar-overlay {
+        display: none !important;
+    }
+    
+    .sidebar {
+        position: fixed;
+        left: 0 !important;
+    }
+}
+</style>
+{% endblock %}

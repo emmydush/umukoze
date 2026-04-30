@@ -1,0 +1,819 @@
+{% extends "base.html" %}
+
+{% block title %}Employer Management - Admin Dashboard{% endblock %}
+
+{% block content %}
+<!-- Mobile Menu Button -->
+<button class="mobile-menu-btn" onclick="toggleSidebar()">
+    <i class='bx bx-menu'></i>
+</button>
+
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Admin Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-user">
+                <div style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
+                    {{ current_user.full_name[0].upper() }}
+                </div>
+                <div class="sidebar-user-info">
+                    <h4>{{ current_user.full_name }}</h4>
+                    <p style="font-size: 0.7rem; opacity: 0.8;">System Administrator</p>
+                </div>
+            </div>
+            <div style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2); background: var(--success-color); color: white; padding: 0.5rem; border-radius: 0.5rem; text-align: center;">
+                ✓ Admin Access
+            </div>
+        </div>
+        
+        <nav class="sidebar-nav">
+            <div class="nav-section">
+                <h6>Dashboard</h6>
+                <a href="{{ url_for('admin_dashboard') }}" class="nav-link">
+                    <i class='bx bx-home-alt'></i>
+                    <span>Overview</span>
+                </a>
+                <a href="{{ url_for('admin_users') }}" class="nav-link">
+                    <i class='bx bx-user'></i>
+                    <span>Users</span>
+                </a>
+                <a href="{{ url_for('admin_workers') }}" class="nav-link">
+                    <i class='bx bxs-group'></i>
+                    <span>Workers</span>
+                </a>
+                <a href="{{ url_for('admin_employers') }}" class="nav-link active">
+                    <i class='bx bxs-business'></i>
+                    <span>Employers</span>
+                </a>
+                <a href="{{ url_for('admin_jobs') }}" class="nav-link">
+                    <i class='bx bx-briefcase'></i>
+                    <span>Jobs</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h6>Management</h6>
+                <a href="{{ url_for('admin_verification') }}" class="nav-link">
+                    <i class='bx bx-shield-check'></i>
+                    <span>Verification</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class='bx bx-message-dots'></i>
+                    <span>Messages</span>
+                </a>
+                <a href="#" class="nav-link">
+                    <i class='bx bx-bell'></i>
+                    <span>Notifications</span>
+                </a>
+            </div>
+            
+            <div class="nav-section">
+                <h6>System</h6>
+                <a href="{{ url_for('admin_settings') }}" class="nav-link">
+                    <i class='bx bx-cog'></i>
+                    <span>Settings</span>
+                </a>
+                <a href="{{ url_for('admin_reports') }}" class="nav-link">
+                    <i class='bx bx-chart-line'></i>
+                    <span>Reports</span>
+                </a>
+                <a href="{{ url_for('logout') }}" class="nav-link" style="color: var(--danger-color);">
+                    <i class='bx bx-log-out'></i>
+                    <span>Logout</span>
+                </a>
+            </div>
+        </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="dashboard-header">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+                <div>
+                    <h1 style="font-size: 1.875rem; font-weight: 800; margin-bottom: 0.5rem;">Employer Management</h1>
+                    <p style="color: var(--text-secondary); margin: 0;">Manage and regulate all employers in the system</p>
+                </div>
+                <div style="display: flex; gap: 1rem; align-items: center;">
+                    <button class="btn btn-outline" onclick="exportEmployers()" style="border-radius: 0.75rem;">
+                        <i class='bx bx-download' style="margin-right: 0.5rem;"></i> Export
+                    </button>
+                    <button class="btn btn-primary" onclick="showAddEmployerModal()" style="border-radius: 0.75rem;">
+                        <i class='bx bx-plus' style="margin-right: 0.5rem;"></i> Add Employer
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Stats Overview -->
+        <div class="dashboard-grid" style="margin-bottom: 2rem;">
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-color);">
+                    <i class='bx bxs-business'></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ employers|length if employers else 0 }}</div>
+                    <div class="stat-label">Total Employers</div>
+                </div>
+            </div>
+
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);">
+                    <i class='bx bxs-check-circle'></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ verified_employers|length if verified_employers else 0 }}</div>
+                    <div class="stat-label">Verified Employers</div>
+                </div>
+            </div>
+
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+                    <i class='bx bxs-briefcase-alt'></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ active_jobs|length if active_jobs else 0 }}</div>
+                    <div class="stat-label">Active Jobs</div>
+                </div>
+            </div>
+
+            <div class="stat-card-modern">
+                <div class="stat-icon-wrapper" style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color);">
+                    <i class='bx bxs-business'></i>
+                </div>
+                <div class="stat-info">
+                    <div class="stat-value">{{ suspended_employers|length if suspended_employers else 0 }}</div>
+                    <div class="stat-label">Suspended Employers</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Filters and Search -->
+        <div class="card" style="margin-bottom: 2rem; padding: 1.5rem; border-radius: 1.5rem;">
+            <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
+                <div style="flex-grow: 1; position: relative;">
+                    <span style="position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);">
+                        <i class='bx bx-search'></i>
+                    </span>
+                    <input type="text" id="employerSearch" class="form-control" placeholder="Search employers by name, email, company..." style="padding-left: 3rem; border-radius: 1rem; border: 1px solid var(--border-color); width: 100%;" onkeyup="filterEmployers()">
+                </div>
+                <select id="statusFilter" class="form-control" style="border-radius: 1rem; border: 1px solid var(--border-color); min-width: 150px;" onchange="filterEmployers()">
+                    <option value="">All Status</option>
+                    <option value="verified">Verified</option>
+                    <option value="suspended">Suspended</option>
+                </select>
+                <select id="jobFilter" class="form-control" style="border-radius: 1rem; border: 1px solid var(--border-color); min-width: 150px;" onchange="filterEmployers()">
+                    <option value="">All Employers</option>
+                    <option value="has_jobs">Has Jobs</option>
+                    <option value="no_jobs">No Jobs</option>
+                </select>
+                <button class="btn btn-outline" onclick="clearFilters()" style="border-radius: 1rem;">
+                    <i class='bx bx-x'></i> Clear
+                </button>
+            </div>
+        </div>
+
+        <!-- Employers Table -->
+        <div class="card" style="border-radius: 1.5rem; overflow: hidden;">
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="background: var(--light-bg);">
+                        <tr>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 0.875rem;">
+                                <input type="checkbox" id="selectAll" onchange="toggleSelectAll()" style="margin-right: 0.5rem;">
+                                Employer
+                            </th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 0.875rem;">Contact</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 0.875rem;">Company</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 0.875rem;">Jobs</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 0.875rem;">Status</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; color: var(--text-secondary); font-size: 0.875rem;">Joined</th>
+                            <th style="padding: 1rem; text-align: center; font-weight: 600; color: var(--text-secondary); font-size: 0.875rem;">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="employersTableBody">
+                        {% for employer in employers %}
+                        <tr class="employer-row" data-employer-id="{{ employer.id }}">
+                            <td style="padding: 1rem; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; align-items: center; gap: 1rem;">
+                                    <input type="checkbox" class="employer-checkbox" value="{{ employer.id }}" style="margin-right: 0.5rem;">
+                                    <div class="employer-avatar {% if employer.profile_picture %}has-profile-picture{% else %}default-avatar{% endif %}" style="width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1rem; font-weight: bold; flex-shrink: 0; overflow: hidden; color: white;">
+                                        {% if employer.profile_picture %}
+                                            <img src="{{ url_for('static', filename='uploads/' + employer.profile_picture) }}" style="width: 100%; height: 100%; object-fit: cover;" alt="{{ employer.user.full_name }}">
+                                        {% else %}
+                                            {{ employer.user.full_name[0].upper() }}
+                                        {% endif %}
+                                    </div>
+                                    <div>
+                                        <div style="font-weight: 600; margin-bottom: 0.25rem;">{{ employer.user.full_name }}</div>
+                                        <div style="font-size: 0.875rem; color: var(--text-secondary);">ID: {{ employer.id }}</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="padding: 1rem; border-bottom: 1px solid var(--border-color);">
+                                <div style="font-size: 0.875rem;">
+                                    <div style="margin-bottom: 0.25rem;">📧 {{ employer.user.email }}</div>
+                                    <div>📞 {{ employer.user.phone }}</div>
+                                </div>
+                            </td>
+                            <td style="padding: 1rem; border-bottom: 1px solid var(--border-color);">
+                                <div style="font-size: 0.875rem;">
+                                    <div style="font-weight: 600; margin-bottom: 0.25rem;">{{ employer.company_name or 'Not specified' }}</div>
+                                    <div style="color: var(--text-secondary);">{{ employer.company_type or '' }}</div>
+                                </div>
+                            </td>
+                            <td style="padding: 1rem; border-bottom: 1px solid var(--border-color);">
+                                <div style="font-size: 0.875rem;">
+                                    <div style="font-weight: 600; margin-bottom: 0.25rem;">{{ employer.jobs|length }}</div>
+                                    <div style="color: var(--text-secondary);">
+                                        {% if employer.jobs %}
+                                            {% set active_jobs = employer.jobs|selectattr('is_active', 'equalto', True)|list %}
+                                            {{ active_jobs|length }} active
+                                        {% else %}
+                                            No jobs
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </td>
+                            <td style="padding: 1rem; border-bottom: 1px solid var(--border-color);">
+                                {% if employer.is_suspended %}
+                                    <span class="badge" style="background: var(--danger-color); color: white; font-size: 0.75rem;">
+                                        <i class='bx bxs-business'></i> Suspended
+                                    </span>
+                                {% else %}
+                                    <span class="badge badge-success" style="font-size: 0.75rem;">
+                                        <i class='bx bxs-check-circle'></i> Active
+                                    </span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 1rem; border-bottom: 1px solid var(--border-color);">
+                                <div style="font-size: 0.875rem; color: var(--text-secondary);">
+                                    {{ employer.user.created_at.strftime('%d %b %Y') if employer.user.created_at else 'Unknown' }}
+                                </div>
+                            </td>
+                            <td style="padding: 1rem; border-bottom: 1px solid var(--border-color);">
+                                <div style="display: flex; gap: 0.5rem; justify-content: center;">
+                                    <button class="btn btn-outline btn-sm" onclick="viewEmployer({{ employer.id }})" style="padding: 0.4rem 0.6rem; border-radius: 0.5rem;" title="View Details">
+                                        <i class='bx bx-show'></i>
+                                    </button>
+                                    <button class="btn btn-outline btn-sm" onclick="viewEmployerJobs({{ employer.id }})" style="padding: 0.4rem 0.6rem; border-radius: 0.5rem;" title="View Jobs">
+                                        <i class='bx bxs-briefcase'></i>
+                                    </button>
+                                    {% if not employer.is_suspended %}
+                                        <button class="btn btn-warning btn-sm" onclick="suspendEmployer({{ employer.id }})" style="padding: 0.4rem 0.6rem; border-radius: 0.5rem;" title="Suspend Employer">
+                                            <i class='bx bxs-business'></i>
+                                        </button>
+                                    {% else %}
+                                        <button class="btn btn-success btn-sm" onclick="unsuspendEmployer({{ employer.id }})" style="padding: 0.4rem 0.6rem; border-radius: 0.5rem;" title="Unsuspend Employer">
+                                            <i class='bx bxs-check-circle'></i>
+                                        </button>
+                                    {% endif %}
+                                    <button class="btn btn-danger btn-sm" onclick="deleteEmployer({{ employer.id }})" style="padding: 0.4rem 0.6rem; border-radius: 0.5rem;" title="Delete Employer">
+                                        <i class='bx bxs-trash'></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Bulk Actions -->
+            <div id="bulkActions" style="display: none; padding: 1rem; background: var(--light-bg); border-top: 1px solid var(--border-color);">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="font-size: 0.875rem; color: var(--text-secondary);">
+                        <span id="selectedCount">0</span> employers selected
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button class="btn btn-success btn-sm" onclick="bulkVerify()" style="border-radius: 0.5rem;">
+                            <i class='bx bxs-check-circle'></i> Verify Selected
+                        </button>
+                        <button class="btn btn-warning btn-sm" onclick="bulkSuspend()" style="border-radius: 0.5rem;">
+                            <i class='bx bxs-business'></i> Suspend Selected
+                        </button>
+                        <button class="btn btn-danger btn-sm" onclick="bulkDelete()" style="border-radius: 0.5rem;">
+                            <i class='bx bxs-trash'></i> Delete Selected
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Employer Details Modal -->
+<div id="employerModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content" style="max-width: 800px; max-height: 90vh; overflow-y: auto; border-radius: 1.5rem;">
+        <div class="modal-header" style="padding: 2rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+            <h3 style="margin: 0;">Employer Details</h3>
+            <button onclick="closeEmployerModal()" style="background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary);">
+                <i class='bx bx-x'></i>
+            </button>
+        </div>
+        <div id="employerModalContent" style="padding: 2rem;">
+            <!-- Employer details will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Sidebar Overlay -->
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<script>
+// Employer data for filtering
+const employersData = [
+    {% for employer in employers %}
+    {
+        id: {{ employer.id }},
+        name: "{{ employer.user.full_name|lower }}",
+        email: "{{ employer.user.email|lower }}",
+        company: "{{ employer.company_name|lower if employer.company_name else '' }}",
+        status: "{{ 'suspended' if employer.is_suspended else 'verified' }}",
+        jobs: {{ employer.jobs|length }}
+    }{% if not loop.last %},{% endif %}
+    {% endfor %}
+];
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+function filterEmployers() {
+    const searchTerm = document.getElementById('employerSearch').value.toLowerCase();
+    const statusFilter = document.getElementById('statusFilter').value;
+    const jobFilter = document.getElementById('jobFilter').value;
+    const rows = document.querySelectorAll('.employer-row');
+
+    rows.forEach(row => {
+        const employerId = parseInt(row.dataset.employerId);
+        const employer = employersData.find(e => e.id === employerId);
+        
+        if (!employer) {
+            row.style.display = 'none';
+            return;
+        }
+
+        const matchesSearch = employer.name.includes(searchTerm) || employer.email.includes(searchTerm) || employer.company.includes(searchTerm);
+        const matchesStatus = !statusFilter || employer.status === statusFilter;
+        const matchesJobs = !jobFilter || 
+            (jobFilter === 'has_jobs' && employer.jobs > 0) || 
+            (jobFilter === 'no_jobs' && employer.jobs === 0);
+
+        row.style.display = matchesSearch && matchesStatus && matchesJobs ? '' : 'none';
+    });
+}
+
+function clearFilters() {
+    document.getElementById('employerSearch').value = '';
+    document.getElementById('statusFilter').value = '';
+    document.getElementById('jobFilter').value = '';
+    filterEmployers();
+}
+
+function toggleSelectAll() {
+    const selectAll = document.getElementById('selectAll');
+    const checkboxes = document.querySelectorAll('.employer-checkbox');
+    checkboxes.forEach(checkbox => {
+        checkbox.checked = selectAll.checked;
+    });
+    updateBulkActions();
+}
+
+function updateBulkActions() {
+    const checkboxes = document.querySelectorAll('.employer-checkbox:checked');
+    const bulkActions = document.getElementById('bulkActions');
+    const selectedCount = document.getElementById('selectedCount');
+    
+    if (checkboxes.length > 0) {
+        bulkActions.style.display = 'block';
+        selectedCount.textContent = checkboxes.length;
+    } else {
+        bulkActions.style.display = 'none';
+    }
+}
+
+// Add event listeners to checkboxes
+document.querySelectorAll('.employer-checkbox').forEach(checkbox => {
+    checkbox.addEventListener('change', updateBulkActions);
+});
+
+function viewEmployer(employerId) {
+    // In a real implementation, this would fetch employer details from the server
+    const modal = document.getElementById('employerModal');
+    const content = document.getElementById('employerModalContent');
+    
+    content.innerHTML = `
+        <div style="text-align: center; padding: 2rem;">
+            <i class='bx bx-loader-alt' style="font-size: 2rem; animation: spin 1s linear infinite;"></i>
+            <p style="margin-top: 1rem;">Loading employer details...</p>
+        </div>
+    `;
+    
+    modal.style.display = 'flex';
+    
+    // Simulate loading employer details
+    setTimeout(() => {
+        content.innerHTML = `
+            <div style="display: flex; gap: 2rem; margin-bottom: 2rem;">
+                <div style="width: 100px; height: 100px; border-radius: 50%; background: var(--secondary-color); display: flex; align-items: center; justify-content: center; color: white; font-size: 2rem; font-weight: bold;">
+                    E${employerId}
+                </div>
+                <div style="flex: 1;">
+                    <h3 style="margin: 0 0 0.5rem 0;">Employer Name</h3>
+                    <p style="color: var(--text-secondary); margin: 0;">ID: ${employerId}</p>
+                </div>
+            </div>
+            <p>Employer details would be loaded here from the server.</p>
+        `;
+    }, 1000);
+}
+
+function closeEmployerModal() {
+    document.getElementById('employerModal').style.display = 'none';
+}
+
+function viewEmployerJobs(employerId) {
+    // In a real implementation, this would navigate to employer's jobs
+    alert(`Viewing jobs for employer ${employerId}`);
+}
+
+function suspendEmployer(employerId) {
+    showActionModal('Suspend Employer', 'Are you sure you want to suspend this employer? All their jobs will be deactivated.', 'warning', function() {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/employer/${employerId}/suspend`;
+        document.body.appendChild(form);
+        form.submit();
+    });
+}
+
+function unsuspendEmployer(employerId) {
+    showActionModal('Unsuspend Employer', 'Are you sure you want to unsuspend this employer?', 'success', function() {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/employer/${employerId}/unsuspend`;
+        document.body.appendChild(form);
+        form.submit();
+    });
+}
+
+function deleteEmployer(employerId) {
+    showActionModal('Delete Employer', 'Are you sure you want to delete this employer? This action cannot be undone and will delete all their jobs and applications.', 'danger', function() {
+        const form = document.createElement('form');
+        form.method = 'POST';
+        form.action = `/admin/employer/${employerId}/delete`;
+        document.body.appendChild(form);
+        form.submit();
+    });
+}
+
+function bulkVerify() {
+    const checkboxes = document.querySelectorAll('.employer-checkbox:checked');
+    if (checkboxes.length === 0) return;
+    
+    showActionModal('Verify Employers', `Are you sure you want to verify ${checkboxes.length} employers?`, 'success', function() {
+        // In a real implementation, this would make an API call
+        alert(`${checkboxes.length} employers verified successfully!`);
+        location.reload();
+    });
+}
+
+function bulkSuspend() {
+    const checkboxes = document.querySelectorAll('.employer-checkbox:checked');
+    if (checkboxes.length === 0) return;
+    
+    showActionModal('Suspend Employers', `Are you sure you want to suspend ${checkboxes.length} employers? All their jobs will be deactivated.`, 'warning', function() {
+        // In a real implementation, this would make an API call
+        alert(`${checkboxes.length} employers suspended successfully!`);
+        location.reload();
+    });
+}
+
+function bulkDelete() {
+    const checkboxes = document.querySelectorAll('.employer-checkbox:checked');
+    if (checkboxes.length === 0) return;
+    
+    showActionModal('Delete Employers', `Are you sure you want to delete ${checkboxes.length} employers? This action cannot be undone and will delete all their jobs and applications.`, 'danger', function() {
+        // In a real implementation, this would make an API call
+        alert(`${checkboxes.length} employers deleted successfully!`);
+        location.reload();
+    });
+}
+
+function exportEmployers() {
+    // In a real implementation, this would generate and download a CSV/Excel file
+    alert('Export functionality would be implemented here');
+}
+
+function showAddEmployerModal() {
+    alert('Add employer functionality would be implemented here');
+}
+
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    
+    if (sidebar.classList.contains('active')) {
+        sidebar.classList.remove('active');
+        overlay.classList.remove('active');
+    } else {
+        sidebar.classList.add('active');
+        overlay.classList.add('active');
+    }
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+
+// Close sidebar when clicking on navigation links on mobile
+document.addEventListener('DOMContentLoaded', function() {
+    const navLinks = document.querySelectorAll('.nav-link');
+    navLinks.forEach(link => {
+        link.addEventListener('click', function() {
+            if (window.innerWidth <= 768) {
+                closeSidebar();
+            }
+        });
+    });
+    
+    // Close sidebar on escape key
+    document.addEventListener('keydown', function(e) {
+        if (e.key === 'Escape') {
+            closeSidebar();
+        }
+    });
+});
+
+// Handle window resize
+window.addEventListener('resize', function() {
+    if (window.innerWidth > 768) {
+        closeSidebar();
+    }
+});
+
+// Add CSS animation
+const style = document.createElement('style');
+style.textContent = `
+    @keyframes spin {
+        from { transform: rotate(0deg); }
+        to { transform: rotate(360deg); }
+    }
+`;
+document.head.appendChild(style);
+</script>
+
+<style>
+/* Admin Dashboard Layout Styles */
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.sidebar {
+    width: 260px;
+    min-width: 260px;
+    background: var(--white);
+    border-right: 1px solid var(--border-color);
+    position: fixed;
+    left: 0;
+    top: 0;
+    height: 100vh;
+    z-index: 100;
+    overflow-y: auto;
+    box-shadow: 2px 0 10px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-header {
+    padding: 1.5rem;
+    border-bottom: 1px solid var(--border-color);
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+    color: white;
+}
+
+.sidebar-user {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+}
+
+.sidebar-user-info h4 {
+    font-size: 0.9rem !important;
+    margin: 0;
+}
+
+.sidebar-user-info p {
+    font-size: 0.7rem !important;
+    margin: 0;
+    opacity: 0.8;
+}
+
+.sidebar-nav {
+    flex: 1;
+    padding: 1rem 0;
+    overflow-y: auto;
+}
+
+.nav-section {
+    margin-bottom: 2rem;
+}
+
+.nav-section h6 {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0 1.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 0.75rem 1.5rem;
+    color: var(--text-secondary);
+    text-decoration: none;
+    transition: all 0.2s;
+    position: relative;
+}
+
+.nav-link:hover {
+    background: var(--gray-50);
+    color: var(--primary-color);
+}
+
+.nav-link.active {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--primary-color);
+    font-weight: 600;
+}
+
+.nav-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+    background: var(--primary-color);
+}
+
+.nav-link i {
+    font-size: 1.125rem;
+}
+
+.main-content {
+    flex: 1;
+    margin-left: 260px;
+    padding: 2rem;
+    background: var(--gray-50);
+    min-height: 100vh;
+    overflow-y: auto;
+}
+
+/* Mobile Menu Button */
+.mobile-menu-btn {
+    display: none;
+    position: fixed;
+    top: 1rem;
+    left: 1rem;
+    z-index: 1002;
+    background: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    padding: 0.75rem;
+    cursor: pointer;
+    font-size: 1.25rem;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+}
+
+/* Admin Badge */
+.admin-badge {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+    background: rgba(220, 38, 38, 0.1);
+    border: 1px solid rgba(220, 38, 38, 0.2);
+    border-radius: 2rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #dc2626;
+}
+
+.sidebar-section-title {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    padding: 0.5rem 1rem;
+    margin-bottom: 0.5rem;
+}
+
+/* Employer specific styles */
+.employer-row:hover {
+    background: var(--light-bg);
+}
+
+.employer-avatar.has-profile-picture {
+    background: none;
+    border: 2px solid var(--border-color);
+}
+
+.employer-avatar.default-avatar {
+    background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        left: -260px;
+        top: 0;
+        height: 100vh;
+        z-index: 1001;
+        transition: left 0.3s ease;
+    }
+    
+    .sidebar.active {
+        left: 0;
+    }
+    
+    .sidebar-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        z-index: 1000;
+        display: none;
+    }
+    
+    .sidebar-overlay.active {
+        display: block;
+    }
+    
+    .mobile-menu-btn {
+        display: block;
+    }
+    
+    .main-content {
+        margin-left: 0;
+        padding: 1rem;
+        padding-top: 80px;
+    }
+}
+
+@media (max-width: 480px) {
+    .employer-row {
+        padding: 1rem;
+    }
+    
+    .employer-header {
+        flex-direction: column;
+        gap: 0.5rem;
+    }
+}
+
+/* Hide mobile menu button on desktop */
+@media (min-width: 769px) {
+    .mobile-menu-btn {
+        display: none;
+    }
+    
+    .sidebar-overlay {
+        display: none !important;
+    }
+    
+    .sidebar {
+        position: fixed;
+        left: 0 !important;
+    }
+}
+
+.employer-avatar.default-avatar {
+    background: linear-gradient(135deg, var(--secondary-color), var(--primary-color));
+}
+</style>
+{% endblock %}
