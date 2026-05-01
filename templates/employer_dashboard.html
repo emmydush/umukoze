@@ -214,9 +214,9 @@
                                     {{ job.applications|length }} applications
                                 </div>
                                 <div style="display: flex; gap: 0.25rem;">
-                                    <a href="#" class="btn btn-sm btn-outline">View</a>
+                                    <a href="{{ url_for('employer_my_jobs') }}" class="btn btn-sm btn-outline">View</a>
                                     {% if job.status == 'open' %}
-                                    <a href="#" class="btn btn-sm btn-outline">Edit</a>
+                                    <a href="{{ url_for('employer_edit_job', job_id=job.id) }}" class="btn btn-sm btn-outline">Edit</a>
                                     {% endif %}
                                 </div>
                             </div>

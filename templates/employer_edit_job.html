@@ -1,0 +1,194 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Job - Umukozi{% endblock %}
+
+{% block content %}
+<!-- Mobile Sidebar Toggle -->
+<button class="mobile-sidebar-toggle" onclick="toggleSidebar()">☰</button>
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    {% include 'includes/employer_sidebar.html' %}
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <div class="container" style="max-width: 900px; margin-top: 0;">
+            <!-- Header -->
+            <div class="card" style="margin-bottom: 2rem;">
+                <div style="padding: 1rem 2rem;">
+                    <h2 style="margin-bottom: 0.5rem; color: var(--primary-color);">
+                        ✏️ Edit Job Posting
+                    </h2>
+                    <p style="color: var(--text-secondary); margin: 0;">
+                        Update the details of your job {{ job.title }}
+                    </p>
+                </div>
+            </div>
+
+            <!-- Job Editing Form -->
+            <form method="POST" action="{{ url_for('employer_edit_job', job_id=job.id) }}">
+                <div class="card" style="padding: 2rem;">
+                    <!-- Job Details -->
+                    <div class="form-section">
+                        <h3 style="margin-bottom: 1.5rem;">Job Details</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Job Title *</label>
+                            <input type="text" name="title" class="form-control" 
+                                   value="{{ form_data.title if form_data else job.title }}"
+                                   placeholder="e.g., House Helper, Developer, Driver" required>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Job Type *</label>
+                            <select name="job_type" class="form-control" required>
+                                <option value="full_time" {% if (form_data.job_type if form_data else job.job_type) == 'full_time' %}selected{% endif %}>Full Time</option>
+                                <option value="part_time" {% if (form_data.job_type if form_data else job.job_type) == 'part_time' %}selected{% endif %}>Part Time</option>
+                                <option value="temporary" {% if (form_data.job_type if form_data else job.job_type) == 'temporary' %}selected{% endif %}>Temporary</option>
+                                <option value="live_in" {% if (form_data.job_type if form_data else job.job_type) == 'live_in' %}selected{% endif %}>Live-in</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Description *</label>
+                            <textarea name="description" class="form-control" rows="6" 
+                                      placeholder="Describe the job and responsibilities..." required>{{ form_data.description if form_data else job.description }}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Location -->
+                    <div class="form-section">
+                        <h3 style="margin-bottom: 1.5rem;">Location</h3>
+                        
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Province</label>
+                                <input type="text" name="province" class="form-control" value="{{ form_data.province if form_data else job.province or '' }}" placeholder="e.g. Kigali">
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">District *</label>
+                                <input type="text" name="district" class="form-control" value="{{ form_data.district if form_data else job.district or '' }}" placeholder="e.g. Gasabo" required>
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Address Details</label>
+                            <textarea name="address_details" class="form-control" rows="2" 
+                                      placeholder="Sector, Cell, closest landmark...">{{ form_data.address_details if form_data else job.address_details or '' }}</textarea>
+                        </div>
+                    </div>
+
+                    <!-- Salary -->
+                    <div class="form-section">
+                        <h3 style="margin-bottom: 1.5rem;">Salary (Optional)</h3>
+                        
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Salary Type</label>
+                                <select name="salary_type" class="form-control">
+                                    <option value="">Negotiable / Unspecified</option>
+                                    <option value="hourly" {% if (form_data.salary_type if form_data else job.salary_type) == 'hourly' %}selected{% endif %}>Hourly</option>
+                                    <option value="daily" {% if (form_data.salary_type if form_data else job.salary_type) == 'daily' %}selected{% endif %}>Daily</option>
+                                    <option value="weekly" {% if (form_data.salary_type if form_data else job.salary_type) == 'weekly' %}selected{% endif %}>Weekly</option>
+                                    <option value="monthly" {% if (form_data.salary_type if form_data else job.salary_type) == 'monthly' %}selected{% endif %}>Monthly</option>
+                                </select>
+                            </div>
+                            
+                            <div class="form-group">
+                                <label class="form-label">Salary Amount (RWF)</label>
+                                <input type="number" name="salary_amount" class="form-control" 
+                                       value="{{ form_data.salary_amount if form_data else (job.salary_amount|int if job.salary_amount else '') }}"
+                                       placeholder="e.g., 50000" min="0" step="500">
+                            </div>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label style="display: flex; align-items: center; gap: 0.5rem;">
+                                <input type="checkbox" name="negotiable" {% if form_data.negotiable if form_data else job.negotiable %}checked{% endif %}>
+                                <span>Salary is negotiable</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Requirements -->
+                    <div class="form-section">
+                        <h3 style="margin-bottom: 1.5rem;">Requirements (Optional)</h3>
+                        
+                        <div class="form-group">
+                            <label class="form-label">Skills Required</label>
+                            <textarea name="skills_required" class="form-control" rows="3" 
+                                      placeholder="e.g. Cooking, Cleaning, English, Driving...">{{ form_data.skills_required if form_data else job.skills_required or '' }}</textarea>
+                        </div>
+                        
+                        <div class="grid grid-2">
+                            <div class="form-group">
+                                <label class="form-label">Experience Required</label>
+                                <input type="text" name="experience_required" class="form-control" value="{{ form_data.experience_required if form_data else job.experience_required or '' }}" placeholder="e.g. 2 Years">
+                            </div>
+                            <div class="form-group mt-3">
+                                <label style="display: flex; align-items: center; gap: 0.5rem; color: var(--danger-color); font-weight: bold; background: #fee2e2; padding: 0.5rem; border-radius: 0.5rem; border: 1px solid #fecaca;">
+                                    <input type="checkbox" name="is_urgent" {% if form_data.is_urgent if form_data else job.is_urgent %}checked{% endif %}>
+                                    <span>🔥 Mark as URGENT</span>
+                                </label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <div style="text-align: center; margin-top: 2rem;">
+                        <button type="submit" class="btn btn-primary" style="padding: 1rem 3rem; font-size: 1.1rem; border-radius: 1rem;">
+                            ✅ Save Changes
+                        </button>
+                        <a href="{{ url_for('employer_my_jobs') }}" class="btn btn-outline" style="padding: 1rem 3rem; font-size: 1.1rem; border-radius: 1rem; margin-left: 1rem;">
+                            Cancel
+                        </a>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </main>
+</div>
+
+<style>
+.form-section {
+    margin-bottom: 2.5rem;
+    padding-bottom: 2rem;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.form-section:last-child {
+    border-bottom: none;
+    margin-bottom: 0;
+    padding-bottom: 0;
+}
+
+.grid.grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+    .grid.grid-2 {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.toggle('active');
+    overlay.classList.toggle('active');
+}
+
+function closeSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.querySelector('.sidebar-overlay');
+    sidebar.classList.remove('active');
+    overlay.classList.remove('active');
+}
+</script>
+{% endblock %}

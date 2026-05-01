@@ -162,12 +162,25 @@ function viewApplications(jobId) {
 }
 
 function editJob(jobId) {
-    alert('Edit job feature coming soon! Job ID: ' + jobId);
+    window.location.href = '/employer/job/' + jobId + '/edit';
 }
 
 function closeJob(jobId) {
-    if (confirm('Are you sure you want to close this job posting?')) {
-        alert('Job closed! Job ID: ' + jobId);
+    if (confirm('Are you sure you want to close this job posting? Workers will no longer be able to apply.')) {
+        fetch('/employer/job/' + jobId + '/close', {
+            method: 'POST',
+            headers: {
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.success) {
+                window.location.reload();
+            } else {
+                alert('Failed to close job.');
+            }
+        });
     }
 }
 

@@ -1364,6 +1364,58 @@ def employer_post_job():
     
     return render_template('employer_post_job.html', employer=employer)
 
+@app.route('/employer/job/<int:job_id>/edit', methods=['GET', 'POST'])
+@login_required
+def employer_edit_job(job_id):
+    if current_user.user_type != 'employer':
+        return redirect(url_for('dashboard'))
+    employer = Employer.query.filter_by(user_id=current_user.id).first()
+    job = Job.query.get_or_404(job_id)
+    
+    if job.employer_id != employer.id:
+        flash('Unauthorized to edit this job.', 'error')
+        return redirect(url_for('employer_my_jobs'))
+        
+    if request.method == 'POST':
+        job.title = request.form.get('title')
+        job.description = request.form.get('description')
+        job.job_type = request.form.get('job_type')
+        job.province = request.form.get('province')
+        job.district = request.form.get('district')
+        job.address_details = request.form.get('address_details')
+        job.salary_type = request.form.get('salary_type')
+        salary_amount = request.form.get('salary_amount')
+        job.salary_amount = float(salary_amount) if salary_amount else None
+        job.negotiable = request.form.get('negotiable') == 'on'
+        job.skills_required = request.form.get('skills_required')
+        job.experience_required = request.form.get('experience_required')
+        job.is_urgent = request.form.get('is_urgent') == 'on'
+        
+        if not job.title or not job.description or not job.job_type or not job.district:
+            flash('Please fill in all required fields.', 'error')
+            return render_template('employer_edit_job.html', employer=employer, job=job, form_data=request.form)
+            
+        db.session.commit()
+        flash('🎉 Job updated successfully!', 'success')
+        return redirect(url_for('employer_my_jobs'))
+        
+    return render_template('employer_edit_job.html', employer=employer, job=job)
+
+@app.route('/employer/job/<int:job_id>/close', methods=['POST'])
+@login_required
+def employer_close_job(job_id):
+    if current_user.user_type != 'employer':
+        return redirect(url_for('dashboard'))
+    employer = Employer.query.filter_by(user_id=current_user.id).first()
+    job = Job.query.get_or_404(job_id)
+    
+    if job.employer_id != employer.id:
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+        
+    job.status = 'closed'
+    db.session.commit()
+    return jsonify({'success': True})
+
 # Profile-specific actions for Workers/Employers templates
 @app.route('/admin/worker/<int:worker_id>/<string:action>', methods=['POST'])
 @login_required
