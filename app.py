@@ -318,6 +318,14 @@ def employer_worker_contact(worker_id):
     contact_info = get_worker_contact_info(employer.id, worker.id)
     return jsonify(contact_info)
 
+# Admin Index Route - Redirects to dashboard
+@app.route('/admin')
+@login_required
+def admin_index():
+    if current_user.user_type != 'admin':
+        return redirect(url_for('dashboard'))
+    return redirect(url_for('admin_dashboard'))
+
 # Admin Dashboard Route
 @app.route('/admin/dashboard')
 @login_required
