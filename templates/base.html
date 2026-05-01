@@ -58,125 +58,137 @@
                         filter: brightness(1.25);
                     }
                 }
+                @media (max-width: 768px) {
+                    .nav-auth-actions .profile-name, .nav-auth-actions .profile-arrow {
+                        display: none !important;
+                    }
+                    .nav-auth-actions {
+                        gap: 0.5rem !important;
+                    }
+                }
                 </style>
                 <a href="{{ url_for('index') }}" class="logo logo-animated">
                     <span style="--i:1; --c:#2563eb;">U</span><span style="--i:2; --c:#ef4444;">M</span><span style="--i:3; --c:#10b981;">U</span><span style="--i:4; --c:#f59e0b;">K</span><span style="--i:5; --c:#8b5cf6;">O</span><span style="--i:6; --c:#14b8a6;">Z</span><span style="--i:7; --c:#f43f5e;">I</span>
                 </a>
                 
+                {% if not current_user.is_authenticated %}
                 <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
                     <i class='bx bx-menu'></i>
                 </button>
+                {% endif %}
                 
+                {% if current_user.is_authenticated %}
+                <div class="nav-auth-actions" style="display: flex; align-items: center; gap: 1rem; margin-left: auto;">
+                    <button id="pwa-install-btn" onclick="installApp()" style="display: none; background: linear-gradient(135deg, #4F46E5, #7C3AED); color: white; border: none; padding: 6px 12px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 13px;">
+                        <i class='bx bxs-download'></i> Install
+                    </button>
+                    
+                    <div class="notification-dropdown" id="notificationDropdown" style="position: relative;">
+                        <button class="notification-toggle" onclick="toggleNotificationDropdown()" style="background: none; border: none; cursor: pointer; position: relative; padding: 0.25rem;">
+                            <span class="notification-icon" style="color: var(--text-primary);"><i class='bx bxs-bell' style="font-size: 1.5rem;"></i></span>
+                            <span class="notification-badge" id="notifBadge" style="position: absolute; top: 0; right: 0; background: var(--danger-color); color: white; border-radius: 50%; font-size: 0.65rem; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-weight: bold;">2</span>
+                        </button>
+                        
+                        <div class="notification-menu">
+                            <div class="notification-header">
+                                <span>Notifications</span>
+                                <button onclick="markAllAsRead()" style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; cursor: pointer; font-weight: 600;">Mark all as read</button>
+                            </div>
+                            
+                            <div class="notification-list" id="notificationList">
+                                <!-- Sample Notifications -->
+                                <div class="notification-item-new">
+                                    <div class="notif-icon-circle" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-color);">
+                                        <i class='bx bxs-check-circle'></i>
+                                    </div>
+                                    <div class="notif-content">
+                                        <div class="notif-title">Application Submitted</div>
+                                        <div class="notif-msg">Your application for "House Cleaner" was sent.</div>
+                                        <div class="notif-time">Just now</div>
+                                    </div>
+                                </div>
+                                
+                                <div class="notification-item-new">
+                                    <div class="notif-icon-circle" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);">
+                                        <i class='bx bxs-user-detail'></i>
+                                    </div>
+                                    <div class="notif-content">
+                                        <div class="notif-title">Profile Update</div>
+                                        <div class="notif-msg">Your profile completion is now at 80%.</div>
+                                        <div class="notif-time">2 hours ago</div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="notification-footer">
+                                <a href="#">See all notifications</a>
+                            </div>
+                        </div>
+                    </div>
+                                            
+                    <!-- Profile Dropdown -->
+                    <div class="profile-dropdown" id="profileDropdown" style="position: relative;">
+                        <button class="profile-toggle" onclick="toggleProfileDropdown()" style="background: none; border: none; cursor: pointer; display: flex; align-items: center; gap: 0.5rem; padding: 0;">
+                            <div class="profile-avatar" style="width: 36px; height: 36px; border-radius: 50%; overflow: hidden; background: var(--border-color); display: flex; align-items: center; justify-content: center; color: var(--text-secondary); font-weight: bold; border: 2px solid var(--primary-color);">
+                                {% if current_user.user_type == 'worker' and worker is defined and worker.profile_picture %}
+                                    <img src="{{ url_for('static', filename='uploads/' + worker.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
+                                {% elif current_user.user_type == 'employer' and employer is defined and employer.profile_picture %}
+                                    <img src="{{ url_for('static', filename='uploads/' + employer.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
+                                {% else %}
+                                    {{ current_user.full_name[0].upper() }}
+                                {% endif %}
+                            </div>
+                            <span class="profile-name" style="font-weight: 600; font-size: 0.9rem; color: var(--text-primary); display: var(--hide-mobile-name, inline);">{{ current_user.full_name }}</span>
+                            <span class="profile-arrow" style="color: var(--text-secondary); display: var(--hide-mobile-name, inline);"><i class='bx bxs-chevron-down'></i></span>
+                        </button>
+                        
+                        <div class="profile-menu">
+                            <div class="profile-menu-header">
+                                <div class="profile-menu-name">{{ current_user.full_name }}</div>
+                                <div class="profile-menu-email">{{ current_user.email }}</div>
+                                {% if current_user.user_type == 'worker' %}
+                                    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                                        Worker Account
+                                    </div>
+                                {% else %}
+                                    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
+                                        Employer Account
+                                    </div>
+                                {% endif %}
+                            </div>
+                            
+                            <a href="#" class="profile-menu-item">
+                                <i class='bx bxs-user-circle' style="margin-right: 0.8rem; font-size: 1.25rem;"></i> My Profile
+                            </a>
+                            <a href="#" class="profile-menu-item">
+                                <i class='bx bxs-cog' style="margin-right: 0.8rem; font-size: 1.25rem;"></i> Account Settings
+                            </a>
+                            <a href="#" class="profile-menu-item">
+                                <i class='bx bxs-lock-alt' style="margin-right: 0.8rem; font-size: 1.25rem;"></i> Privacy & Security
+                            </a>
+                            <div class="profile-menu-divider"></div>
+                            <a href="#" class="profile-menu-item">
+                                <i class='bx bxs-help-circle' style="margin-right: 0.8rem; font-size: 1.25rem;"></i> Help & Support
+                            </a>
+                            <a href="javascript:void(0)" onclick="confirmLogout(event, '{{ url_for('logout') }}')" class="profile-menu-item logout">
+                                <i class='bx bx-log-out' style="margin-right: 0.8rem; font-size: 1.25rem;"></i> Logout
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                {% else %}
                 <ul class="nav-links" id="navLinks">
                     <li>
                         <button id="pwa-install-btn" onclick="installApp()" style="display: none; background: linear-gradient(135deg, #4F46E5, #7C3AED); color: white; border: none; padding: 8px 16px; border-radius: 8px; font-weight: 600; cursor: pointer; font-size: 14px;">
                             <i class='bx bxs-download'></i> Install App
                         </button>
                     </li>
-                    {% if current_user.is_authenticated %}
-                        <li class="notification-dropdown" id="notificationDropdown">
-                            <button class="notification-toggle" onclick="toggleNotificationDropdown()">
-                                <span class="notification-icon"><i class='bx bxs-bell' style="font-size: 1.5rem;"></i></span>
-                                <span class="notification-badge" id="notifBadge">2</span>
-                            </button>
-                            
-                            <div class="notification-menu">
-                                <div class="notification-header">
-                                    <span>Notifications</span>
-                                    <button onclick="markAllAsRead()" style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; cursor: pointer; font-weight: 600;">Mark all as read</button>
-                                </div>
-                                
-                                <div class="notification-list" id="notificationList">
-                                    <!-- Sample Notifications -->
-                                    <div class="notification-item-new">
-                                        <div class="notif-icon-circle" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-color);">
-                                            <i class='bx bxs-check-circle'></i>
-                                        </div>
-                                        <div class="notif-content">
-                                            <div class="notif-title">Application Submitted</div>
-                                            <div class="notif-msg">Your application for "House Cleaner" was sent.</div>
-                                            <div class="notif-time">Just now</div>
-                                        </div>
-                                    </div>
-                                    
-                                    <div class="notification-item-new">
-                                        <div class="notif-icon-circle" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);">
-                                            <i class='bx bxs-user-detail'></i>
-                                        </div>
-                                        <div class="notif-content">
-                                            <div class="notif-title">Profile Update</div>
-                                            <div class="notif-msg">Your profile completion is now at 80%.</div>
-                                            <div class="notif-time">2 hours ago</div>
-                                        </div>
-                                    </div>
-                                </div>
-                                
-                                <div class="notification-footer">
-                                    <a href="#">See all notifications</a>
-                                </div>
-                            </div>
-                        </li>
-                                                
-                        <!-- Profile Dropdown -->
-                        <li class="profile-dropdown" id="profileDropdown">
-                            <button class="profile-toggle" onclick="toggleProfileDropdown()">
-                                <div class="profile-avatar">
-                                    {% if current_user.is_authenticated %}
-                                        {% if current_user.user_type == 'worker' and worker is defined and worker.profile_picture %}
-                                            <img src="{{ url_for('static', filename='uploads/' + worker.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
-                                        {% elif current_user.user_type == 'employer' and employer is defined and employer.profile_picture %}
-                                            <img src="{{ url_for('static', filename='uploads/' + employer.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
-                                        {% else %}
-                                            {{ current_user.full_name[0].upper() }}
-                                        {% endif %}
-                                    {% else %}
-                                        <i class='bx bx-user' style="font-size: 1.5rem; color: var(--text-secondary);"></i>
-                                    {% endif %}
-                                </div>
-                                <span class="profile-name">{{ current_user.full_name }}</span>
-                                <span class="profile-arrow"><i class='bx bxs-chevron-down'></i></span>
-                            </button>
-                            
-                            <div class="profile-menu">
-                                <div class="profile-menu-header">
-                                    <div class="profile-menu-name">{{ current_user.full_name }}</div>
-                                    <div class="profile-menu-email">{{ current_user.email }}</div>
-                                    {% if current_user.user_type == 'worker' %}
-                                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                                            Worker Account
-                                        </div>
-                                    {% else %}
-                                        <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.25rem;">
-                                            Employer Account
-                                        </div>
-                                    {% endif %}
-                                </div>
-                                
-                                <a href="#" class="profile-menu-item">
-                                    <i class='bx bxs-user-circle' style="margin-right: 0.8rem; font-size: 1.25rem;"></i> My Profile
-                                </a>
-                                <a href="#" class="profile-menu-item">
-                                    <i class='bx bxs-cog' style="margin-right: 0.8rem; font-size: 1.25rem;"></i> Account Settings
-                                </a>
-                                <a href="#" class="profile-menu-item">
-                                    <i class='bx bxs-lock-alt' style="margin-right: 0.8rem; font-size: 1.25rem;"></i> Privacy & Security
-                                </a>
-                                <div class="profile-menu-divider"></div>
-                                <a href="#" class="profile-menu-item">
-                                    <i class='bx bxs-help-circle' style="margin-right: 0.8rem; font-size: 1.25rem;"></i> Help & Support
-                                </a>
-                                <a href="javascript:void(0)" onclick="confirmLogout(event, '{{ url_for('logout') }}')" class="profile-menu-item logout">
-                                    <i class='bx bx-log-out' style="margin-right: 0.8rem; font-size: 1.25rem;"></i> Logout
-                                </a>
-                            </div>
-                        </li>
-                    {% else %}
-                        <li><a href="#how-it-works">How It Works</a></li>
-                        <li><a href="#features">Features</a></li>
-                        <li><a href="{{ url_for('login') }}" class="btn btn-primary btn-sm">Login</a></li>
-                        <li><a href="{{ url_for('register') }}" class="btn btn-outline btn-sm">Sign Up</a></li>
-                    {% endif %}
+                    <li><a href="#how-it-works">How It Works</a></li>
+                    <li><a href="#features">Features</a></li>
+                    <li><a href="{{ url_for('login') }}" class="btn btn-primary btn-sm">Login</a></li>
+                    <li><a href="{{ url_for('register') }}" class="btn btn-outline btn-sm">Sign Up</a></li>
                 </ul>
+                {% endif %}
             </div>
         </nav>
     </header>
