@@ -8,26 +8,6 @@
     <i class='bx bx-menu'></i>
 </button>
 
-<!-- Top Navigation Bar -->
-<div class="top-nav-bar" style="position: fixed; top: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-color); padding: 0.75rem 1.5rem; z-index: 1000; display: flex; justify-content: space-between; align-items: center;">
-    <div style="display: flex; align-items: center; gap: 1rem;">
-        <a href="{{ url_for('admin_dashboard') }}" style="text-decoration: none;">
-            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Umukozi Logo" style="height: 65px; width: auto; object-fit: contain;">
-        </a>
-    </div>
-    <div style="display: flex; align-items: center; gap: 1rem;">
-        <button onclick="showProfileMenu()" style="display: flex; align-items: center; gap: 0.75rem; background: var(--white); padding: 0.4rem 0.75rem; border-radius: 9999px; border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s; height: 45px;">
-            <div style="width: 32px; height: 32px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.875rem; font-weight: bold; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white;">
-                {{ current_user.full_name[0].upper() }}
-            </div>
-            <div style="text-align: left;">
-                <div style="font-weight: 600; font-size: 0.875rem; line-height: 1.2; color: var(--text-primary);">{{ current_user.full_name }}</div>
-                <div style="font-size: 0.625rem; color: var(--success-color); line-height: 1;">Administrator</div>
-            </div>
-            <i class='bx bx-chevron-down' style="font-size: 1rem; color: var(--text-secondary);"></i>
-        </button>
-    </div>
-</div>
 
 <div class="sidebar-overlay" onclick="closeSidebar()"></div>
 
