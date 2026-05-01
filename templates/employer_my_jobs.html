@@ -150,7 +150,7 @@ function closeSidebar() {
 }
 
 function postNewJob() {
-    alert('Post new job feature coming soon!');
+    window.location.href = '{{ url_for("employer_post_job") }}';
 }
 
 function viewJobDetails(jobId) {
