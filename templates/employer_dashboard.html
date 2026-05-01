@@ -3,6 +3,48 @@
 {% block title %}Employer Dashboard - Umukozi{% endblock %}
 
 {% block content %}
+<!-- Top Navigation Bar -->
+<div class="top-nav-bar" style="position: fixed; top: 0; left: 0; right: 0; background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border-color); padding: 0.5rem 1rem; z-index: 1000; display: flex; justify-content: space-between; align-items: center;">
+    <!-- Left Side: Logo and Menu -->
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <!-- Logo -->
+        <a href="{{ url_for('index') }}" style="text-decoration: none;">
+            <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Umukozi Logo" style="height: 45px; width: auto; object-fit: contain;">
+        </a>
+    </div>
+
+    <!-- Right Side: Navigation Items -->
+    <div style="display: flex; align-items: center; gap: 1rem;">
+        <!-- Notifications -->
+        <button onclick="showNotifications()" style="position: relative; background: var(--white); border: 1px solid var(--border-color); padding: 0.5rem; border-radius: 50%; cursor: pointer; display: flex; align-items: center; justify-content: center; transition: all 0.2s; width: 38px; height: 38px;">
+            <i class='bx bx-bell' style="font-size: 1.25rem; color: var(--text-secondary);"></i>
+            {% if unread_count > 0 %}
+            <span style="position: absolute; top: -2px; right: -2px; background: var(--danger-color); color: white; font-size: 0.625rem; padding: 0.125rem 0.375rem; border-radius: 9999px; font-weight: 600; min-width: 18px; text-align: center;">{{ unread_count }}</span>
+            {% endif %}
+        </button>
+        
+        <!-- Profile Picture -->
+        <button onclick="showProfileMenu()" style="display: flex; align-items: center; gap: 0.75rem; background: var(--white); padding: 0.3rem 0.6rem; border-radius: 9999px; border: 1px solid var(--border-color); cursor: pointer; transition: all 0.2s; height: 38px;">
+            <div class="header-avatar {% if employer.profile_picture %}has-profile-picture{% else %}header-avatar-gradient{% endif %}" style="width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 0.75rem; font-weight: bold; flex-shrink: 0; overflow: hidden; color: white;">
+                {% if employer.profile_picture %}
+                    <img src="{{ url_for('static', filename='uploads/' + employer.profile_picture) }}" style="width: 100%; height: 100%; object-fit: cover;" alt="Profile Picture">
+                {% else %}
+                    {{ current_user.full_name[0].upper() }}
+                {% endif %}
+            </div>
+            <div style="text-align: left;">
+                <div style="font-weight: 600; font-size: 0.875rem; line-height: 1.2; color: var(--text-primary);">{{ current_user.full_name.split()|last }}</div>
+                {% if employer.is_verified %}
+                    <div style="font-size: 0.625rem; color: var(--success-color); line-height: 1;">Verified</div>
+                {% else %}
+                    <div style="font-size: 0.625rem; color: var(--warning-color); line-height: 1;">Pending</div>
+                {% endif %}
+            </div>
+            <i class='bx bx-chevron-down' style="font-size: 1rem; color: var(--text-secondary);"></i>
+        </button>
+    </div>
+</div>
+
 <div class="sidebar-overlay" onclick="closeSidebar()"></div>
 
 <div class="dashboard-layout">
