@@ -160,7 +160,7 @@
                         <label class="form-label">Professional Bio</label>
                         <textarea class="form-control" style="border-radius: 1rem; min-height: 120px;" placeholder="Describe your skills and experience to potential employers...">{{ worker.bio or '' }}</textarea>
                     </div>
-                    <button class="btn btn-primary" style="border-radius: 0.75rem; padding: 0.75rem 2rem;" onclick="updateProfessionalInfo()">Update Profile</button>
+                    <button class="btn btn-primary" style="border-radius: 0.75rem; padding: 0.75rem 2rem;" onclick="updateProfessionalInfo()" data-auto-refresh="true">Update Profile</button>
                 </section>
 
                 <!-- Location Section -->
@@ -185,7 +185,7 @@
                             <input type="text" class="form-control" style="border-radius: 0.75rem;" value="{{ worker.district or '' }}">
                         </div>
                     </div>
-                    <button class="btn btn-primary" style="margin-top: 2rem; border-radius: 0.75rem; padding: 0.75rem 2rem;" onclick="updateLocationInfo()">Save Location</button>
+                    <button class="btn btn-primary" style="margin-top: 2rem; border-radius: 0.75rem; padding: 0.75rem 2rem;" onclick="updateLocationInfo()" data-auto-refresh="true">Save Location</button>
                 </section>
             </div>
         </div>
@@ -216,15 +216,53 @@ function confirmLogout(event) {
 }
 
 function updatePersonalInfo() {
-    alert('Personal information updated successfully!');
+    showSuccessMessage('Personal information updated successfully!');
+    autoRefreshAfterAction(1500);
 }
 
 function updateProfessionalInfo() {
-    alert('Professional profile updated successfully!');
+    showSuccessMessage('Professional profile updated successfully!');
+    autoRefreshAfterAction(1500);
 }
 
 function updateLocationInfo() {
-    alert('Location preferences updated successfully!');
+    showSuccessMessage('Location preferences updated successfully!');
+    autoRefreshAfterAction(1500);
+}
+
+function showSuccessMessage(message) {
+    // Create success alert
+    const alertDiv = document.createElement('div');
+    alertDiv.className = 'alert alert-success';
+    alertDiv.style.cssText = 'display: flex; align-items: center; justify-content: space-between; position: fixed; top: 20px; right: 20px; z-index: 10000; min-width: 300px; animation: slideInRight 0.3s ease;';
+    alertDiv.innerHTML = `
+        <div style="display: flex; align-items: center; gap: 0.75rem;">
+            <i class='bx bx-check-circle' style="font-size: 1.25rem;"></i>
+            <span>${message}</span>
+        </div>
+        <button onclick="this.parentElement.remove()" style="background: none; border: none; cursor: pointer; color: inherit; opacity: 0.5; font-size: 1.25rem; display: flex; align-items: center;">&times;</button>
+    `;
+    
+    // Add animation if not already present
+    if (!document.querySelector('#success-alert-style')) {
+        const style = document.createElement('style');
+        style.id = 'success-alert-style';
+        style.textContent = `
+            @keyframes slideInRight {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    document.body.appendChild(alertDiv);
+    
+    // Auto-remove after 3 seconds
+    setTimeout(() => {
+        alertDiv.style.animation = 'slideInRight 0.3s ease reverse';
+        setTimeout(() => alertDiv.remove(), 300);
+    }, 3000);
 }
 
 function deleteAccount() {

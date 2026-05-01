@@ -1415,6 +1415,15 @@ def logout():
     user_name = current_user.full_name
     logout_user()
     flash(f'👋 Goodbye, {user_name}! You have been successfully logged out. We hope to see you again soon!', 'info')
+    
+    # Check if this is an AJAX request for auto-refresh
+    if request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        return jsonify({
+            'success': True,
+            'message': f'Goodbye, {user_name}! You have been successfully logged out.',
+            'redirect': url_for('index')
+        })
+    
     return redirect(url_for('index'))
 
 if __name__ == '__main__':

@@ -318,11 +318,18 @@
         function confirmLogout(event, url) {
             if (event) event.preventDefault();
             logoutUrl = url;
+            if (!logoutUrl && event && event.currentTarget) {
+                logoutUrl = event.currentTarget.getAttribute('data-logout-url');
+            }
+            if (!logoutUrl) logoutUrl = '/logout';
+            
             const modal = document.getElementById('logoutModal');
-            modal.style.display = 'flex';
-            setTimeout(() => {
-                modal.classList.add('active');
-            }, 10);
+            if (modal) {
+                modal.style.display = 'flex';
+                setTimeout(() => {
+                    modal.classList.add('active');
+                }, 10);
+            }
         }
 
         function closeLogoutModal() {
@@ -447,7 +454,7 @@
 
         document.getElementById('confirmLogoutBtn').addEventListener('click', function() {
             if (logoutUrl) {
-                window.location.href = logoutUrl;
+                performLogoutWithRefresh(logoutUrl);
             }
         });
 
@@ -584,6 +591,40 @@
             }
         }
 
+        // Auto-refresh functionality for actions
+        function autoRefreshAfterAction(delay = 1000) {
+            setTimeout(function() {
+                window.location.reload();
+            }, delay);
+        }
+
+        // Enhanced logout with auto-refresh
+        function performLogoutWithRefresh(url) {
+            fetch(url, {
+                method: 'GET',
+                headers: {
+                    'X-Requested-With': 'XMLHttpRequest'
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Show success message and redirect to home with refresh
+                    window.location.href = data.redirect || '/';
+                    setTimeout(() => {
+                        window.location.reload();
+                    }, 500);
+                } else {
+                    // Fallback to regular redirect
+                    window.location.href = url;
+                }
+            })
+            .catch(error => {
+                // Fallback to regular redirect on error
+                window.location.href = url;
+            });
+        }
+
         // Auto-dismiss alerts after 4 seconds
         document.addEventListener('DOMContentLoaded', function() {
             const alerts = document.querySelectorAll('.alert');
@@ -596,6 +637,31 @@
                         alert.remove();
                     }, 600);
                 }, 4000); // 4 seconds
+            });
+
+            // Check for auto-refresh triggers
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.get('auto_refresh') === 'true') {
+                autoRefreshAfterAction(1000);
+            }
+
+            // Auto-refresh after form submissions
+            const forms = document.querySelectorAll('form[data-auto-refresh="true"]');
+            forms.forEach(function(form) {
+                form.addEventListener('submit', function() {
+                    autoRefreshAfterAction(2000);
+                });
+            });
+
+            // Auto-refresh after button clicks with data attribute
+            const buttons = document.querySelectorAll('button[data-auto-refresh="true"], a[data-auto-refresh="true"]');
+            buttons.forEach(function(button) {
+                button.addEventListener('click', function(e) {
+                    // Don't refresh if it's a logout button (handled separately)
+                    if (!this.closest('.logout')) {
+                        autoRefreshAfterAction(1500);
+                    }
+                });
             });
         });
     </script>
