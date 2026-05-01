@@ -202,6 +202,15 @@ def load_user(user_id):
 
 @app.route('/')
 def index():
+    # Clear any existing session data to prevent session sharing
+    if current_user.is_authenticated:
+        # If user is authenticated but accessing homepage, redirect to dashboard
+        return redirect(url_for('dashboard'))
+    
+    # Ensure clean session for new visitors
+    from flask import session
+    session.clear()
+    
     return render_template('index.html')
 
 @app.route('/manifest.json')
