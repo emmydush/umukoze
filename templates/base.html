@@ -52,38 +52,37 @@
                     <div class="notification-dropdown" id="notificationDropdown" style="position: relative;">
                         <button class="notification-toggle" onclick="toggleNotificationDropdown()" style="background: none; border: none; cursor: pointer; position: relative; padding: 0.25rem;">
                             <span class="notification-icon" style="color: var(--text-primary);"><i class='bx bxs-bell' style="font-size: 1.5rem;"></i></span>
-                            <span class="notification-badge" id="notifBadge" style="position: absolute; top: 0; right: 0; background: var(--danger-color); color: white; border-radius: 50%; font-size: 0.65rem; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-weight: bold;">2</span>
+                            {% if unread_count > 0 %}
+                            <span class="notification-badge" id="notifBadge" style="position: absolute; top: 0; right: 0; background: var(--danger-color); color: white; border-radius: 50%; font-size: 0.65rem; width: 16px; height: 16px; display: flex; align-items: center; justify-content: center; font-weight: bold;">{{ unread_count }}</span>
+                            {% endif %}
                         </button>
                         
                         <div class="notification-menu">
                             <div class="notification-header">
                                 <span>Notifications</span>
+                                {% if unread_count > 0 %}
                                 <button onclick="markAllAsRead()" style="background: none; border: none; color: var(--primary-color); font-size: 0.75rem; cursor: pointer; font-weight: 600;">Mark all as read</button>
+                                {% endif %}
                             </div>
                             
                             <div class="notification-list" id="notificationList">
-                                <!-- Sample Notifications -->
-                                <div class="notification-item-new">
-                                    <div class="notif-icon-circle" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-color);">
-                                        <i class='bx bxs-check-circle'></i>
+                                {% if notifs %}
+                                    {% for notif in notifs %}
+                                    <div class="notification-item {{ 'notification-item-new' if not notif.is_read else 'notification-item-read' }}" onclick="markAsRead({{ notif.id }})">
+                                        <div class="notif-icon-circle" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-color);">
+                                            <i class='bx bxs-bell'></i>
+                                        </div>
+                                        <div class="notif-content">
+                                            <div class="notif-msg">{{ notif.message }}</div>
+                                            <div class="notif-time">{{ notif.created_at.strftime('%Y-%m-%d %H:%M') }}</div>
+                                        </div>
                                     </div>
-                                    <div class="notif-content">
-                                        <div class="notif-title">Application Submitted</div>
-                                        <div class="notif-msg">Your application for "House Cleaner" was sent.</div>
-                                        <div class="notif-time">Just now</div>
+                                    {% endfor %}
+                                {% else %}
+                                    <div style="padding: 2rem; text-align: center; color: var(--text-secondary); font-size: 0.85rem;">
+                                        No new notifications
                                     </div>
-                                </div>
-                                
-                                <div class="notification-item-new">
-                                    <div class="notif-icon-circle" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);">
-                                        <i class='bx bxs-user-detail'></i>
-                                    </div>
-                                    <div class="notif-content">
-                                        <div class="notif-title">Profile Update</div>
-                                        <div class="notif-msg">Your profile completion is now at 80%.</div>
-                                        <div class="notif-time">2 hours ago</div>
-                                    </div>
-                                </div>
+                                {% endif %}
                             </div>
                             
                             <div class="notification-footer">
@@ -249,14 +248,35 @@
             document.getElementById('profileDropdown')?.classList.remove('active');
         }
 
+        function markAsRead(notifId) {
+            fetch(`/notifications/read/${notifId}`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        // Refresh UI if needed or just update item style
+                        const item = document.querySelector(`[onclick="markAsRead(${notifId})"]`);
+                        if (item) {
+                            item.classList.remove('notification-item-new');
+                            item.classList.add('notification-item-read');
+                        }
+                    }
+                });
+        }
+
         function markAllAsRead() {
-            document.getElementById('notifBadge').style.display = 'none';
-            const newNotifs = document.querySelectorAll('.notification-item-new');
-            newNotifs.forEach(n => {
-                n.style.opacity = '0.6';
-                n.classList.remove('notification-item-new');
-                n.classList.add('notification-item-read');
-            });
+            fetch('/notifications/read-all', { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        const badge = document.getElementById('notifBadge');
+                        if (badge) badge.style.display = 'none';
+                        const newNotifs = document.querySelectorAll('.notification-item-new');
+                        newNotifs.forEach(n => {
+                            n.classList.remove('notification-item-new');
+                            n.classList.add('notification-item-read');
+                        });
+                    }
+                });
         }
 
         function toggleProfileDropdown() {

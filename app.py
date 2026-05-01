@@ -44,6 +44,32 @@ login_manager = LoginManager()
 login_manager.init_app(app)
 login_manager.login_view = 'login'
 
+# Notification Context Processor
+@app.context_processor
+def inject_notifications():
+    if current_user.is_authenticated:
+        # Get last 5 notifications for the current user
+        notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).limit(5).all()
+        unread_count = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+        return dict(notifs=notifs, unread_count=unread_count)
+    return dict(notifs=[], unread_count=0)
+
+# Notification Routes
+@app.route('/notifications/read/<int:notif_id>', methods=['POST'])
+@login_required
+def mark_notification_read(notif_id):
+    notif = Notification.query.filter_by(id=notif_id, user_id=current_user.id).first_or_404()
+    notif.is_read = True
+    db.session.commit()
+    return jsonify(success=True)
+
+@app.route('/notifications/read-all', methods=['POST'])
+@login_required
+def mark_all_notifications_read():
+    Notification.query.filter_by(user_id=current_user.id, is_read=False).update({Notification.is_read: True})
+    db.session.commit()
+    return jsonify(success=True)
+
 # Setup logging
 if not os.path.exists('logs'):
     os.makedirs('logs')
@@ -257,6 +283,14 @@ def register():
         
         # Send email notification to admin about new registration
         send_user_registration_notification(new_user)
+        
+        # Add welcome notification
+        welcome_notif = Notification(
+            user_id=new_user.id,
+            message=f"Welcome to Umukozi, {full_name}! Complete your profile to start finding jobs." if user_type == 'worker' else f"Welcome to Umukozi, {full_name}! Post your first job to find workers."
+        )
+        db.session.add(welcome_notif)
+        db.session.commit()
         
         flash('Registration successful! Please login.')
         return redirect(url_for('login'))
@@ -548,6 +582,14 @@ def admin_approve_verification(user_type, profile_id):
     
     # Send email notification to user about approval
     send_user_approval_notification(profile.user)
+    
+    # Add in-app notification
+    approval_notif = Notification(
+        user_id=profile.user.id,
+        message="Congratulations! Your profile has been verified and approved by the admin."
+    )
+    db.session.add(approval_notif)
+    db.session.commit()
     
     flash('Verification approved successfully!', 'success')
     return redirect(url_for('admin_verification'))
@@ -1130,6 +1172,14 @@ def worker_apply_job(job_id):
     # Send email notification to employer and admin about new job application
     send_job_application_notification(application)
     
+    # Notify employer in-app
+    employer_notif = Notification(
+        user_id=job.employer.user.id,
+        message=f"New Application: {current_user.full_name} applied for your job '{job.title}'."
+    )
+    db.session.add(employer_notif)
+    db.session.commit()
+    
     flash('🎉 Application submitted successfully! Good luck.', 'success')
     return redirect(url_for('worker_applications'))
 
@@ -1296,6 +1346,13 @@ def accept_application(application_id):
         application.status = 'accepted'
         application.updated_at = datetime.utcnow()
         
+        # Notify worker
+        worker_notif = Notification(
+            user_id=application.worker.user.id,
+            message=f"Application Accepted! Your application for '{application.job.title}' has been accepted."
+        )
+        db.session.add(worker_notif)
+        
         # Update worker availability status to 'busy'
         worker = application.worker
         worker.availability_status = 'busy'
@@ -1334,6 +1391,13 @@ def reject_application(application_id):
         # Update application status
         application.status = 'rejected'
         application.updated_at = datetime.utcnow()
+        
+        # Notify worker
+        worker_notif = Notification(
+            user_id=application.worker.user.id,
+            message=f"Application Status: Your application for '{application.job.title}' was reviewed."
+        )
+        db.session.add(worker_notif)
         
         db.session.commit()
         
