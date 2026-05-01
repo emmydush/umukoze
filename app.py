@@ -485,10 +485,16 @@ def admin_approve_verification(user_type, profile_id):
         profile = Worker.query.get_or_404(profile_id)
         profile.is_verified = True
         profile.user.is_approved = True
+        profile.user.approved_at = datetime.utcnow()
+        profile.user.approved_by = current_user.id
+        profile.user.rejection_reason = None
     elif user_type == 'employer':
         profile = Employer.query.get_or_404(profile_id)
         profile.is_verified = True
         profile.user.is_approved = True
+        profile.user.approved_at = datetime.utcnow()
+        profile.user.approved_by = current_user.id
+        profile.user.rejection_reason = None
     
     db.session.commit()
     flash('Verification approved successfully!', 'success')
@@ -505,10 +511,12 @@ def admin_reject_verification(user_type, profile_id):
     if user_type == 'worker':
         profile = Worker.query.get_or_404(profile_id)
         profile.is_verified = False
+        profile.user.is_approved = False
         profile.user.rejection_reason = reason
     elif user_type == 'employer':
         profile = Employer.query.get_or_404(profile_id)
         profile.is_verified = False
+        profile.user.is_approved = False
         profile.user.rejection_reason = reason
     
     db.session.commit()

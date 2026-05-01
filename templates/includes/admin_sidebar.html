@@ -1,0 +1,73 @@
+<aside class="sidebar modern-sidebar admin-sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <span class="logo-text" style="color: var(--danger-color);">ADMIN</span>
+    </div>
+    <nav class="sidebar-menu">
+        <ul class="sidebar-nav-list">
+            <div class="nav-section-title">Dashboard</div>
+            <li>
+                <a href="{{ url_for('admin_dashboard') }}" class="sidebar-item {% if request.endpoint == 'admin_dashboard' %}active{% endif %}">
+                    <i class='bx bx-grid-alt'></i> <span>Overview</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('admin_users') }}" class="sidebar-item {% if request.endpoint == 'admin_users' %}active{% endif %}">
+                    <i class='bx bx-group'></i> <span>Users</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('admin_workers') }}" class="sidebar-item {% if request.endpoint == 'admin_workers' %}active{% endif %}">
+                    <i class='bx bx-hard-hat'></i> <span>Workers</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('admin_employers') }}" class="sidebar-item {% if request.endpoint == 'admin_employers' %}active{% endif %}">
+                    <i class='bx bx-buildings'></i> <span>Employers</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('admin_jobs') }}" class="sidebar-item {% if request.endpoint == 'admin_jobs' %}active{% endif %}">
+                    <i class='bx bx-briefcase'></i> <span>Jobs</span>
+                </a>
+            </li>
+        </ul>
+        <div class="sidebar-divider"></div>
+        <ul class="sidebar-nav-list">
+            <div class="nav-section-title">Management</div>
+            <li>
+                <a href="{{ url_for('admin_verification') }}" class="sidebar-item {% if request.endpoint == 'admin_verification' %}active{% endif %}">
+                    <i class='bx bx-check-shield'></i> <span>Verification</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" onclick="showMessages()" class="sidebar-item">
+                    <i class='bx bx-message-dots'></i> <span>Messages</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="sidebar-item">
+                    <i class='bx bx-bell'></i> <span>Notifications</span>
+                </a>
+            </li>
+        </ul>
+        <div class="sidebar-divider"></div>
+        <ul class="sidebar-nav-list">
+            <div class="nav-section-title">System</div>
+            <li>
+                <a href="#" class="sidebar-item">
+                    <i class='bx bx-cog'></i> <span>Settings</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" class="sidebar-item">
+                    <i class='bx bx-bar-chart'></i> <span>Reports</span>
+                </a>
+            </li>
+            <li class="logout-item">
+                <a href="javascript:void(0)" onclick="confirmLogout(event)" data-logout-url="{{ url_for('logout') }}" class="sidebar-item text-danger">
+                    <i class='bx bx-log-out'></i> <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</aside>

@@ -5,70 +5,7 @@
 {% block content %}
 <div class="dashboard-layout">
     <!-- Admin Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-logo">
-                <i class='bx bxs-shield-alt' style="color: #dc2626; font-size: 1.5rem;"></i>
-                <span style="font-weight: 800; color: #dc2626;">Admin</span>
-            </div>
-        </div>
-
-        <nav class="sidebar-menu">
-            <div class="sidebar-section">
-                <a href="{{ url_for('admin_dashboard') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bxs-dashboard'></i></span>
-                    Overview
-                </a>
-                <a href="{{ url_for('admin_workers') }}" class="sidebar-item active">
-                    <span class="sidebar-item-icon"><i class='bx bxs-group'></i></span>
-                    Workers
-                    <span class="sidebar-badge">{{ workers|length if workers else 0 }}</span>
-                </a>
-                <a href="{{ url_for('admin_employers') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bxs-business'></i></span>
-                    Employers
-                    <span class="sidebar-badge">{{ employers|length if employers else 0 }}</span>
-                </a>
-                <a href="{{ url_for('admin_jobs') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bxs-briefcase-alt'></i></span>
-                    Jobs
-                    <span class="sidebar-badge">{{ jobs|length if jobs else 0 }}</span>
-                </a>
-                <a href="{{ url_for('admin_verification') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bxs-check-shield'></i></span>
-                    Verifications
-                    <span class="sidebar-badge" style="background: var(--warning-color);" id="pendingCount">{{ pending_verifications|length if pending_verifications else 0 }}</span>
-                </a>
-            </div>
-
-            <div class="sidebar-section">
-                <div class="sidebar-section-title">System Management</div>
-                <a href="{{ url_for('admin_reports') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bxs-chart'></i></span>
-                    Reports
-                </a>
-                <a href="{{ url_for('admin_settings') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bxs-cog'></i></span>
-                    Settings
-                </a>
-                <a href="{{ url_for('admin_logs') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bxs-file-find'></i></span>
-                    Activity Logs
-                </a>
-                <a href="{{ url_for('admin_moderation') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bxs-shield-x'></i></span>
-                    Moderation
-                </a>
-            </div>
-
-            <div class="sidebar-section">
-                <a href="{{ url_for('logout') }}" class="sidebar-item" style="color: var(--danger-color); margin-top: 2rem;">
-                    <span class="sidebar-item-icon"><i class='bx bx-log-out'></i></span>
-                    Logout
-                </a>
-            </div>
-        </nav>
-    </aside>
+    {% include 'includes/admin_sidebar.html' %}
 
     <!-- Main Content -->
     <main class="main-content">

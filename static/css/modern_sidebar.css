@@ -1,0 +1,173 @@
+/* Modern Sidebar UI/UX */
+.modern-sidebar {
+    width: 260px !important;
+    background: rgba(255, 255, 255, 0.95) !important;
+    backdrop-filter: blur(10px) !important;
+    border-right: 1px solid rgba(229, 231, 235, 0.8) !important;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    padding: 1.5rem 1rem;
+    box-shadow: 4px 0 15px rgba(0, 0, 0, 0.03) !important;
+    font-family: 'Inter', sans-serif;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    position: fixed !important;
+    left: 0;
+    top: 80px; /* Offset for top nav */
+}
+
+.modern-sidebar .sidebar-logo {
+    margin-bottom: 2rem;
+    padding-left: 0.5rem;
+    letter-spacing: 3px;
+    font-weight: 800;
+    font-size: 0.85rem;
+    color: var(--primary-color, #2563eb);
+    display: flex;
+    align-items: center;
+}
+
+.modern-sidebar .sidebar-menu {
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    padding-bottom: 80px; /* space for scrolling */
+    overflow-y: auto;
+}
+
+.modern-sidebar .sidebar-nav-list {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 0.35rem;
+}
+
+.modern-sidebar .sidebar-nav-list .nav-section-title {
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    color: #9ca3af;
+    font-weight: 700;
+    margin: 1.5rem 0 0.5rem 0.5rem;
+    letter-spacing: 1px;
+}
+
+.modern-sidebar .sidebar-item {
+    display: flex;
+    align-items: center;
+    padding: 0.85rem 1.2rem;
+    border-radius: 0.75rem;
+    color: #4b5563 !important;
+    text-decoration: none !important;
+    font-weight: 600;
+    font-size: 0.875rem;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    border-left: none !important;
+    background: transparent !important;
+}
+
+.modern-sidebar .sidebar-item i {
+    font-size: 1.25rem;
+    margin-right: 0.85rem;
+    color: #9ca3af;
+    transition: color 0.2s ease-in-out;
+}
+
+.modern-sidebar .sidebar-item:hover {
+    background: #f3f4f6 !important;
+    color: #111827 !important;
+    transform: translateX(4px);
+}
+
+.modern-sidebar .sidebar-item:hover i {
+    color: var(--primary-color, #2563eb);
+}
+
+.modern-sidebar .sidebar-item.active {
+    background: linear-gradient(135deg, var(--primary-color, #2563eb), #3b82f6) !important;
+    color: #ffffff !important;
+    box-shadow: 0 4px 10px rgba(37, 99, 235, 0.3) !important;
+}
+
+.modern-sidebar .sidebar-item.active i {
+    color: #ffffff;
+}
+
+.modern-sidebar .sidebar-divider {
+    height: 1px;
+    background: #f3f4f6;
+    margin: 1.5rem 0;
+    width: 100%;
+}
+
+.modern-sidebar .logout-item {
+    margin-top: 1rem;
+}
+
+.modern-sidebar .text-danger {
+    color: #ef4444 !important;
+}
+
+.modern-sidebar .text-danger i {
+    color: #ef4444 !important;
+}
+.modern-sidebar .text-danger:hover {
+    background: #fef2f2 !important;
+}
+
+/* Animations */
+@keyframes slideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-15px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+.modern-sidebar .sidebar-nav-list li {
+    animation: slideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+    opacity: 0;
+}
+
+.modern-sidebar .sidebar-nav-list li:nth-child(1) { animation-delay: 0.05s; }
+.modern-sidebar .sidebar-nav-list li:nth-child(2) { animation-delay: 0.1s; }
+.modern-sidebar .sidebar-nav-list li:nth-child(3) { animation-delay: 0.15s; }
+.modern-sidebar .sidebar-nav-list li:nth-child(4) { animation-delay: 0.2s; }
+.modern-sidebar .sidebar-nav-list li:nth-child(5) { animation-delay: 0.25s; }
+.modern-sidebar .sidebar-nav-list li:nth-child(6) { animation-delay: 0.3s; }
+.modern-sidebar .sidebar-nav-list li:nth-child(7) { animation-delay: 0.35s; }
+.modern-sidebar .sidebar-nav-list li:nth-child(8) { animation-delay: 0.4s; }
+
+/* Dashboard layout reset */
+.dashboard-layout {
+    display: flex;
+    min-height: 100vh;
+}
+
+.dashboard-layout > .main-content {
+    margin-left: 260px !important;
+    width: calc(100% - 260px);
+    transition: all 0.3s ease;
+}
+
+@media (max-width: 768px) {
+    .modern-sidebar {
+        transform: translateX(-100%);
+        z-index: 1000 !important;
+        position: fixed !important;
+        top: 0 !important;
+    }
+    
+    .modern-sidebar.active {
+        transform: translateX(0);
+    }
+    
+    .dashboard-layout > .main-content {
+        margin-left: 0 !important;
+        width: 100%;
+    }
+}

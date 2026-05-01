@@ -1,0 +1,52 @@
+<aside class="sidebar modern-sidebar" id="sidebar">
+    <div class="sidebar-logo">
+        <span class="logo-text">WORKER</span>
+    </div>
+    <nav class="sidebar-menu">
+        <ul class="sidebar-nav-list">
+            <li>
+                <a href="{{ url_for('dashboard') }}" class="sidebar-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
+                    <i class='bx bx-grid-alt'></i> <span>Overview</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('worker_find_jobs') }}" class="sidebar-item {% if request.endpoint == 'worker_find_jobs' %}active{% endif %}">
+                    <i class='bx bx-search'></i> <span>Find Jobs</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('worker_applications') }}" class="sidebar-item {% if request.endpoint == 'worker_applications' %}active{% endif %}">
+                    <i class='bx bx-file'></i> <span>Applications</span>
+                </a>
+            </li>
+            <li>
+                <a href="#" onclick="showMessages()" class="sidebar-item">
+                    <i class='bx bx-message-square-detail'></i> <span>Messages</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('worker_activity') }}" class="sidebar-item {% if request.endpoint == 'worker_activity' %}active{% endif %}">
+                    <i class='bx bx-pulse'></i> <span>Activity</span>
+                </a>
+            </li>
+        </ul>
+        <div class="sidebar-divider"></div>
+        <ul class="sidebar-nav-list">
+            <li>
+                <a href="{{ url_for('worker_complete_profile') }}" class="sidebar-item {% if request.endpoint == 'worker_complete_profile' %}active{% endif %}">
+                    <i class='bx bx-user'></i> <span>My Profile</span>
+                </a>
+            </li>
+            <li>
+                <a href="{{ url_for('worker_settings') }}" class="sidebar-item {% if request.endpoint == 'worker_settings' %}active{% endif %}">
+                    <i class='bx bx-cog'></i> <span>Settings</span>
+                </a>
+            </li>
+            <li class="logout-item">
+                <a href="javascript:void(0)" onclick="confirmLogout(event)" data-logout-url="{{ url_for('logout') }}" class="sidebar-item text-danger">
+                    <i class='bx bx-log-out'></i> <span>Logout</span>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</aside>

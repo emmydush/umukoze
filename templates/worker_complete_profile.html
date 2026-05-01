@@ -9,71 +9,7 @@
 
 <div class="dashboard-layout">
     <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <div class="sidebar-header">
-            <div class="sidebar-user">
-                <div class="sidebar-avatar {% if worker.profile_picture %}has-profile-picture{% else %}sidebar-avatar-gradient{% endif %}">
-                    {% if worker.profile_picture %}
-                        <img src="{{ url_for('static', filename='uploads/' + worker.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
-                    {% else %}
-                        {{ current_user.full_name[0].upper() }}
-                    {% endif %}
-                </div>
-                <div class="sidebar-user-info">
-                    <h4>{{ current_user.full_name }}</h4>
-                    <p style="font-size: 0.75rem; opacity: 0.8;">Worker Account</p>
-                </div>
-            </div>
-            {% if worker.is_verified %}
-                <div class="badge badge-success" style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2);">
-                    ✓ Verified Worker
-                </div>
-            {% else %}
-                <div class="badge badge-warning" style="font-size: 0.7rem; width: 100%; justify-content: center; margin-top: 1rem; border: 1px solid rgba(255,255,255,0.2);">
-                    ⏳ Verification Pending
-                </div>
-            {% endif %}
-        </div>
-        
-        <nav class="sidebar-menu">
-            <div class="sidebar-section">
-                <a href="{{ url_for('dashboard') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bxs-dashboard'></i></span>
-                    Overview
-                </a>
-                <a href="{{ url_for('worker_find_jobs') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bx-search-alt'></i></span>
-                    Find Jobs
-                </a>
-                <a href="{{ url_for('worker_applications') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bxs-file-doc'></i></span>
-                    Applications
-                    <span class="sidebar-badge">{{ worker.applications|length }}</span>
-                </a>
-                <a href="#" onclick="showMessages()" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bxs-message-dots'></i></span>
-                    Messages
-                    <span class="sidebar-badge">2</span>
-                </a>
-                <a href="{{ url_for('worker_activity') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bx-line-chart'></i></span>
-                    Activity
-                </a>
-                <a href="{{ url_for('worker_complete_profile') }}" class="sidebar-item active">
-                    <span class="sidebar-item-icon"><i class='bx bxs-user-circle'></i></span>
-                    My Profile
-                </a>
-                <a href="{{ url_for('worker_settings') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bxs-cog'></i></span>
-                    Settings
-                </a>
-                <a href="javascript:void(0)" onclick="confirmLogout(event)" data-logout-url="{{ url_for('logout') }}" class="sidebar-item" style="color: var(--danger-color); margin-top: 2rem;">
-                    <span class="sidebar-item-icon"><i class='bx bx-log-out'></i></span>
-                    Logout
-                </a>
-            </div>
-        </nav>
-    </aside>
+    {% include 'includes/worker_sidebar.html' %}
 
     <!-- Main Content -->
     <main class="main-content">

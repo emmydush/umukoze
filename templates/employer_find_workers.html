@@ -9,74 +9,7 @@
 
 <div class="dashboard-layout">
     <!-- Sidebar -->
-    <aside class="sidebar" id="sidebar">
-        <div style="padding: 1.5rem 1.5rem 0.5rem 1.5rem; display: flex; justify-content: center;">
-            <a href="{{ url_for('index') }}" style="text-decoration: none;">
-                <img src="{{ url_for('static', filename='images/logo.png') }}" alt="Umukozi Logo" style="height: 60px; width: auto; object-fit: contain;">
-            </a>
-        </div>
-        <div class="sidebar-header">
-            <div class="sidebar-user">
-                <div class="sidebar-avatar {% if employer.profile_picture %}has-profile-picture{% endif %}">
-                    {% if employer.profile_picture %}
-                        <img src="{{ url_for('static', filename='uploads/' + employer.profile_picture) }}" style="width: 100%; height: 100%; border-radius: 50%; object-fit: cover;" alt="Profile Picture">
-                    {% else %}
-                        {{ current_user.full_name[0].upper() }}
-                    {% endif %}
-                </div>
-                <div class="sidebar-user-info">
-                    <h4>{{ current_user.full_name }}</h4>
-                    <p>Employer Account</p>
-                </div>
-            </div>
-            {% if employer.is_verified %}
-                <div style="font-size: 0.75rem; opacity: 0.9;">✓ Verified Employer</div>
-            {% else %}
-                <div style="font-size: 0.75rem; opacity: 0.9;">⚠ Verification Pending</div>
-            {% endif %}
-        </div>
-        
-        <nav class="sidebar-menu">
-            <div class="sidebar-section">
-                <a href="{{ url_for('dashboard') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bxs-dashboard'></i></span>
-                    Overview
-                </a>
-                <a href="{{ url_for('employer_my_jobs') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bxs-briefcase'></i></span>
-                    My Jobs
-                    <span class="sidebar-badge">{{ employer.jobs|length }}</span>
-                </a>
-                <a href="{{ url_for('employer_find_workers') }}" class="sidebar-item active">
-                    <span class="sidebar-item-icon"><i class='bx bx-search-alt'></i></span>
-                    Find Workers
-                </a>
-                <a href="{{ url_for('employer_applications') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bxs-file-doc'></i></span>
-                    Applications
-                    <span class="sidebar-badge">
-                        {% set total_applications = 0 %}
-                        {% for job in employer.jobs %}
-                            {% set total_applications = total_applications + job.applications|length %}
-                        {% endfor %}
-                        {{ total_applications }}
-                    </span>
-                </a>
-                <a href="{{ url_for('employer_activity') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bx-line-chart'></i></span>
-                    Activity
-                </a>
-                <a href="{{ url_for('employer_settings') }}" class="sidebar-item">
-                    <span class="sidebar-item-icon"><i class='bx bxs-cog'></i></span>
-                    Settings
-                </a>
-                <a href="{{ url_for('logout') }}" class="sidebar-item" style="color: var(--danger-color);">
-                    <span class="sidebar-item-icon"><i class='bx bx-log-out'></i></span>
-                    Logout
-                </a>
-            </div>
-        </nav>
-    </aside>
+    {% include 'includes/employer_sidebar.html' %}
     
     <!-- Main Content -->
     <main class="main-content">
