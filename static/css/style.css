@@ -102,9 +102,9 @@ body {
     text-decoration: none;
 }
 
-.nav-links {
+.nav-links, .nav-links li {
     display: flex;
-    list-style: none;
+    list-style: none !important;
     gap: 2rem;
     align-items: center;
 }
@@ -966,7 +966,8 @@ body {
     transition: all 0.2s;
 }
 
-.profile-dropdown.active .profile-menu {
+.profile-dropdown.active .profile-menu,
+.profile-menu.active {
     opacity: 1;
     visibility: visible;
     transform: translateY(0);

@@ -33,9 +33,9 @@
             <div style="text-align: left;">
                 <div style="font-weight: 600; font-size: 0.875rem; line-height: 1.2; color: var(--text-primary);">{{ current_user.full_name.split()|last }}</div>
                 {% if worker.is_verified %}
-                    <div style="font-size: 0.625rem; color: var(--success-color); line-height: 1;">Verified</div>
+                    <div style="font-size: 0.625rem; color: var(--success-color); line-height: 1;">{{ _('verified') }}</div>
                 {% else %}
-                    <div style="font-size: 0.625rem; color: var(--warning-color); line-height: 1;">Pending</div>
+                    <div style="font-size: 0.625rem; color: var(--warning-color); line-height: 1;">{{ _('pending') }}</div>
                 {% endif %}
             </div>
             <i class='bx bx-chevron-down' style="font-size: 1rem; color: var(--text-secondary);"></i>
@@ -54,7 +54,7 @@
         <!-- Dashboard Header -->
         <header style="margin-bottom: 2.5rem; padding-top: 1rem;">
             <div>
-                <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em;">Welcome back, {{ current_user.full_name.split()|last }}!</h1>
+                <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em;">{{ _('welcome_back_user', name=current_user.full_name.split()|last) }}</h1>
             </div>
         </header>
 
@@ -64,14 +64,14 @@
                 <div class="stat-icon-wrapper" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-color);"><i class='bx bxs-briefcase'></i></div>
                 <div class="stat-info">
                     <div class="stat-value">{{ worker.total_jobs_completed }}</div>
-                    <div class="stat-label">Jobs Completed</div>
+                    <div class="stat-label">{{ _('jobs_completed') }}</div>
                 </div>
             </div>
                         <div class="stat-card-modern">
                 <div class="stat-icon-wrapper" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color);"><i class='bx bxs-file-doc'></i></div>
                 <div class="stat-info">
                     <div class="stat-value">{{ worker.applications|length }}</div>
-                    <div class="stat-label">Applications</div>
+                    <div class="stat-label">{{ _('applications') }}</div>
                 </div>
             </div>
                     </div>
@@ -82,8 +82,8 @@
                 <!-- Recent Job Matches -->
                 <section style="margin-bottom: 3rem;">
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h2 style="font-size: 1.25rem; font-weight: 700;">Job Recommendations</h2>
-                        <a href="{{ url_for('worker_find_jobs') }}" style="color: var(--primary-color); font-size: 0.875rem; font-weight: 600; text-decoration: none;">View All Jobs →</a>
+                        <h2 style="font-size: 1.25rem; font-weight: 700;">{{ _('job_recommendations') }}</h2>
+                        <a href="{{ url_for('worker_find_jobs') }}" style="color: var(--primary-color); font-size: 0.875rem; font-weight: 600; text-decoration: none;">{{ _('view_all_jobs') }}</a>
                     </div>
                     
                     <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem;">
@@ -99,7 +99,7 @@
                                 <span class="job-type-pill" style="background: #f1f5f9; color: #475569;">Full-time</span>
                                 <span class="job-type-pill" style="background: #f0fdf4; color: #166534;">50,000 RWF</span>
                             </div>
-                            <button class="btn btn-primary" style="width: 100%; border-radius: 0.75rem;">Apply Now</button>
+                            <button class="btn btn-primary" style="width: 100%; border-radius: 0.75rem;">{{ _('apply_now') }}</button>
                         </div>
 
                         <!-- Sample Job 2 -->
@@ -114,7 +114,7 @@
                                 <span class="job-type-pill" style="background: #f1f5f9; color: #475569;">Part-time</span>
                                 <span class="job-type-pill" style="background: #f0fdf4; color: #166534;">2,500 RWF/hr</span>
                             </div>
-                            <button class="btn btn-primary" style="width: 100%; border-radius: 0.75rem;">Apply Now</button>
+                            <button class="btn btn-primary" style="width: 100%; border-radius: 0.75rem;">{{ _('apply_now') }}</button>
                         </div>
                     </div>
                 </section>
@@ -122,8 +122,8 @@
                 <!-- Active Applications -->
                 <section>
                     <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                        <h2 style="font-size: 1.25rem; font-weight: 700;">Active Applications</h2>
-                        <span class="badge" style="background: var(--light-bg); color: var(--text-secondary);">{{ worker.applications|length }} Total</span>
+                        <h2 style="font-size: 1.25rem; font-weight: 700;">{{ _('active_applications') }}</h2>
+                        <span class="badge" style="background: var(--light-bg); color: var(--text-secondary);">{{ worker.applications|length }} {{ _('total') }}</span>
                     </div>
                     
                     <div class="border-list" style="background: var(--white); border-radius: 1.25rem; border: 1px solid var(--border-color); overflow: hidden;">
@@ -156,7 +156,7 @@
                         {% else %}
                             <div style="padding: 3rem; text-align: center; color: var(--text-secondary);">
                                 <div style="font-size: 2.5rem; margin-bottom: 1rem; opacity: 0.5;"><i class='bx bx-briefcase-alt-2'></i></div>
-                                <p>No active applications at the moment.</p>
+                                <p>{{ _('no_active_applications') }}</p>
                             </div>
                         {% endif %}
                     </div>

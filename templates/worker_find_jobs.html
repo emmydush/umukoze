@@ -13,8 +13,8 @@
     <main class="main-content">
         <!-- Header Section -->
         <header style="margin-bottom: 2.5rem;">
-            <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em;">Find Opportunities</h1>
-            <p style="color: var(--text-secondary);">Browse and apply for the latest job openings in your area.</p>
+            <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em;">{{ _('find_opportunities_title') }}</h1>
+            <p style="color: var(--text-secondary);">{{ _('browse_apply_jobs') }}</p>
         </header>
 
         <!-- Search Bar & Quick Filters -->
@@ -22,13 +22,13 @@
             <div style="display: flex; gap: 1rem; align-items: center; flex-wrap: wrap;">
                 <div style="flex-grow: 1; position: relative;">
                     <span style="position: absolute; left: 1.25rem; top: 50%; transform: translateY(-50%); color: var(--text-secondary);"><i class='bx bx-search'></i></span>
-                    <input type="text" class="form-control" placeholder="Search by job title, skills, or location..." style="padding-left: 3rem; border-radius: 1rem; border: 1px solid var(--border-color); width: 100%;">
+                    <input type="text" class="form-control" placeholder="{{ _('search_placeholder') }}" style="padding-left: 3rem; border-radius: 1rem; border: 1px solid var(--border-color); width: 100%;">
                 </div>
                 <div style="display: flex; gap: 0.75rem;">
                     <button class="btn btn-outline" style="border-radius: 1rem; padding: 0.75rem 1.25rem; display: flex; align-items: center; gap: 0.5rem;" onclick="toggleFilters()">
-                        <i class='bx bx-filter-alt'></i> Filters
+                        <i class='bx bx-filter-alt'></i> {{ _('filters') }}
                     </button>
-                    <button class="btn btn-primary" style="border-radius: 1rem; padding: 0.75rem 2rem;">Search</button>
+                    <button class="btn btn-primary" style="border-radius: 1rem; padding: 0.75rem 2rem;">{{ _('search') }}</button>
                 </div>
             </div>
         </div>
@@ -36,14 +36,14 @@
         <!-- Filter Panel (Hidden by default) -->
         <div id="filtersPanel" class="card" style="display: none; border-radius: 1.5rem; padding: 2rem; margin-bottom: 2.5rem; border: 1px solid var(--primary-color);">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3 style="font-size: 1.125rem; font-weight: 700;">Refine your search</h3>
+                <h3 style="font-size: 1.125rem; font-weight: 700;">{{ _('refine_search') }}</h3>
                 <button onclick="toggleFilters()" style="background: none; border: none; cursor: pointer; color: var(--text-secondary);">✕</button>
             </div>
             <div class="grid grid-3" style="gap: 1.5rem;">
                 <div class="form-group">
-                    <label class="form-label">Location</label>
+                    <label class="form-label">{{ _('location') }}</label>
                     <select class="form-control" style="border-radius: 0.75rem;">
-                        <option value="">All Locations</option>
+                        <option value="">{{ _('all_locations') }}</option>
                         <option value="kigali">Kigali</option>
                         <option value="northern">Northern Province</option>
                         <option value="southern">Southern Province</option>
@@ -52,19 +52,19 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Job Type</label>
+                    <label class="form-label">{{ _('job_type') }}</label>
                     <select class="form-control" style="border-radius: 0.75rem;">
-                        <option value="">All Types</option>
-                        <option value="full_time">Full Time</option>
-                        <option value="part_time">Part Time</option>
-                        <option value="live_in">Live In</option>
-                        <option value="temporary">Temporary</option>
+                        <option value="">{{ _('all_types') }}</option>
+                        <option value="full_time">{{ _('full_time') }}</option>
+                        <option value="part_time">{{ _('part_time') }}</option>
+                        <option value="live_in">{{ _('live_in') }}</option>
+                        <option value="temporary">{{ _('temporary') }}</option>
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Price Range</label>
+                    <label class="form-label">{{ _('price_range') }}</label>
                     <select class="form-control" style="border-radius: 0.75rem;">
-                        <option value="">Any Price</option>
+                        <option value="">{{ _('any_price') }}</option>
                         <option value="0-50000">Below 50k RWF</option>
                         <option value="50000-100000">50k - 100k RWF</option>
                         <option value="100000+">100k+ RWF</option>
@@ -72,21 +72,21 @@
                 </div>
             </div>
             <div style="display: flex; justify-content: flex-end; gap: 1rem; margin-top: 1.5rem;">
-                <button class="btn btn-outline btn-sm" onclick="clearFilters()">Reset All</button>
-                <button class="btn btn-primary btn-sm" onclick="toggleFilters()">Apply Changes</button>
+                <button class="btn btn-outline btn-sm" onclick="clearFilters()">{{ _('reset_all') }}</button>
+                <button class="btn btn-primary btn-sm" onclick="toggleFilters()">{{ _('apply_changes') }}</button>
             </div>
         </div>
 
         <!-- Job Grid -->
         <div style="display: flex; flex-direction: column; gap: 1.5rem;">
             <div style="display: flex; justify-content: space-between; align-items: center;">
-                <h2 style="font-size: 1.25rem; font-weight: 700;">Available Jobs ({{ jobs|length }})</h2>
+                <h2 style="font-size: 1.25rem; font-weight: 700;">{{ _('available_jobs', count=jobs|length) }}</h2>
                 <div style="display: flex; align-items: center; gap: 0.5rem; font-size: 0.875rem; color: var(--text-secondary);">
-                    <span>Sort by:</span>
+                    <span>{{ _('sort_by') }}</span>
                     <select style="background: none; border: none; font-weight: 600; color: var(--primary-color); cursor: pointer; outline: none;">
-                        <option>Newest First</option>
-                        <option>Highest Paid</option>
-                        <option>Urgent</option>
+                        <option>{{ _('newest_first') }}</option>
+                        <option>{{ _('highest_paid') }}</option>
+                        <option>{{ _('urgent') }}</option>
                     </select>
                 </div>
             </div>
@@ -106,7 +106,7 @@
                                 </div>
                             </div>
                             {% if job.is_urgent %}
-                            <span class="badge" style="background: #fef2f2; color: #ef4444; font-size: 0.65rem; text-transform: uppercase; font-weight: 800; border: 1px solid #fee2e2;">Urgent</span>
+                            <span class="badge" style="background: #fef2f2; color: #ef4444; font-size: 0.65rem; text-transform: uppercase; font-weight: 800; border: 1px solid #fee2e2;">{{ _('urgent') }}</span>
                             {% endif %}
                         </div>
                         
@@ -116,20 +116,20 @@
                         
                         <div style="display: flex; align-items: center; gap: 1.5rem; margin-bottom: 2rem; padding: 1rem; background: #f8fafc; border-radius: 1rem;">
                             <div style="display: flex; flex-direction: column;">
-                                <span style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; letter-spacing: 0.05em;">Salary</span>
+                                <span style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; letter-spacing: 0.05em;">{{ _('salary') }}</span>
                                 <span style="font-size: 1rem; font-weight: 700; color: var(--secondary-color);">{{ job.salary_amount }} RWF</span>
                             </div>
                             <div style="width: 1px; height: 24px; background: var(--border-color);"></div>
                             <div style="display: flex; flex-direction: column;">
-                                <span style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; letter-spacing: 0.05em;">Location</span>
+                                <span style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700; letter-spacing: 0.05em;">{{ _('location') }}</span>
                                 <span style="font-size: 1rem; font-weight: 700; color: var(--text-primary);">{{ job.district }}</span>
                             </div>
                         </div>
                         
                         <div style="display: flex; gap: 0.75rem;">
-                            <a href="{{ url_for('worker_job_details', job_id=job.id) }}" class="btn btn-outline" style="flex: 1; border-radius: 0.75rem; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center;">Details</a>
+                            <a href="{{ url_for('worker_job_details', job_id=job.id) }}" class="btn btn-outline" style="flex: 1; border-radius: 0.75rem; text-decoration: none; text-align: center; display: flex; align-items: center; justify-content: center;">{{ _('details') }}</a>
                             <form action="{{ url_for('worker_apply_job', job_id=job.id) }}" method="POST" style="flex: 2;">
-                                <button type="submit" class="btn btn-primary" style="width: 100%; border-radius: 0.75rem; border: none; font-weight: 600; cursor: pointer;">Apply Now</button>
+                                <button type="submit" class="btn btn-primary" style="width: 100%; border-radius: 0.75rem; border: none; font-weight: 600; cursor: pointer;">{{ _('apply_now') }}</button>
                             </form>
                         </div>
                     </div>
@@ -137,9 +137,9 @@
                 {% else %}
                     <div style="grid-column: span 2; text-align: center; padding: 5rem 2rem;">
                         <div style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.2;">🔍</div>
-                        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">No matching jobs found</h3>
-                        <p style="color: var(--text-secondary); max-width: 400px; margin: 0 auto 2rem;">Try adjusting your filters or location to see more opportunities available in your region.</p>
-                        <button class="btn btn-primary" onclick="clearFilters()" style="border-radius: 1rem; padding: 0.75rem 2rem;">Clear All Filters</button>
+                        <h3 style="font-size: 1.5rem; font-weight: 700; margin-bottom: 1rem;">{{ _('no_jobs_found') }}</h3>
+                        <p style="color: var(--text-secondary); max-width: 400px; margin: 0 auto 2rem;">{{ _('no_jobs_desc') }}</p>
+                        <button class="btn btn-primary" onclick="clearFilters()" style="border-radius: 1rem; padding: 0.75rem 2rem;">{{ _('clear_all_filters') }}</button>
                     </div>
                 {% endif %}
             </div>

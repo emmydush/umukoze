@@ -15,14 +15,14 @@
         <div class="card" style="margin-bottom: 2rem;">
             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
                 <div>
-                    <h1 style="margin-bottom: 0.5rem;">Find Workers</h1>
+                    <h1 style="margin-bottom: 0.5rem;">{{ _('find_workers_title') }}</h1>
                     <p style="color: var(--text-secondary); margin: 0;">
-                        Discover talented workers who match your requirements.
+                        {{ _('discover_workers') }}
                     </p>
                 </div>
                 <div>
                     <button class="btn btn-outline" onclick="toggleFilters()">
-                        <span style="margin-right: 0.5rem;">🔍</span> Filters
+                        <span style="margin-right: 0.5rem;">🔍</span> {{ _('filters') }}
                     </button>
                 </div>
             </div>
@@ -30,16 +30,16 @@
 
         <!-- Search and Filters -->
         <div class="card" id="filtersSection" style="margin-bottom: 2rem; display: none;">
-            <h3 style="margin-bottom: 1rem;">Search Filters</h3>
+            <h3 style="margin-bottom: 1rem;">{{ _('search_filters') }}</h3>
             <div class="grid grid-3">
                 <div class="form-group">
-                    <label class="form-label">Skills</label>
+                    <label class="form-label">{{ _('skills') }}</label>
                     <input type="text" class="form-control" placeholder="e.g., Cleaning, Cooking, Childcare">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Location</label>
+                    <label class="form-label">{{ _('location') }}</label>
                     <select class="form-control">
-                        <option value="">All Locations</option>
+                        <option value="">{{ _('all_locations') }}</option>
                         <option value="kigali">Kigali</option>
                         <option value="northern">Northern Province</option>
                         <option value="southern">Southern Province</option>
@@ -48,9 +48,9 @@
                     </select>
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Availability</label>
+                    <label class="form-label">{{ _('availability') }}</label>
                     <select class="form-control">
-                        <option value="">All Availability</option>
+                        <option value="">{{ _('all_availability') if _('all_availability') != 'all_availability' else 'All Availability' }}</option>
                         <option value="available">Available</option>
                         <option value="busy">Busy</option>
                         <option value="unavailable">Unavailable</option>
@@ -58,22 +58,22 @@
                 </div>
             </div>
             <div style="display: flex; gap: 1rem; margin-top: 1rem;">
-                <button class="btn btn-primary">Apply Filters</button>
-                <button class="btn btn-outline" onclick="clearFilters()">Clear</button>
+                <button class="btn btn-primary">{{ _('apply_filters') }}</button>
+                <button class="btn btn-outline" onclick="clearFilters()">{{ _('clear') }}</button>
             </div>
         </div>
 
         <!-- Worker Listings Grid -->
         <div style="margin-bottom: 3rem;">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 2rem;">
-                <h3 style="font-weight: 800;">Available Workers ({{ workers|length }})</h3>
+                <h3 style="font-weight: 800;">{{ _('available_workers', count=workers|length) }}</h3>
                 <div style="display: flex; gap: 0.75rem; align-items: center;">
-                    <label style="font-size: 0.875rem; color: var(--text-secondary);">Sort by:</label>
+                    <label style="font-size: 0.875rem; color: var(--text-secondary);">{{ _('sort_by') }}</label>
                     <select class="form-control" style="width: auto; border-radius: 0.75rem; height: 38px;">
-                        <option>Most Recent</option>
-                        <option>Rating: High to Low</option>
-                        <option>Experience: High to Low</option>
-                        <option>Verified First</option>
+                        <option>{{ _('most_recent') }}</option>
+                        <option>{{ _('rating_high_low') }}</option>
+                        <option>{{ _('experience_high_low') }}</option>
+                        <option>{{ _('verified_first') }}</option>
                     </select>
                 </div>
             </div>
@@ -110,7 +110,7 @@
                         </p>
                     </div>
 
-                    <p style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                    <p style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.6; margin-bottom: 1.5rem; display: -webkit-box; -webkit-line-clamp: 3; line-clamp: 3; -webkit-box-orient: vertical; overflow: hidden;">
                         {{ worker.bio if worker.bio else 'Reliable professional with a commitment to excellence and customer satisfaction.' }}
                     </p>
 
@@ -127,7 +127,7 @@
                     </div>
 
                     <div style="display: flex; gap: 0.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border-color); margin-top: auto;">
-                        <button class="btn btn-outline btn-sm" onclick="viewWorkerProfile({{ worker.id }})" style="flex: 1; padding: 0.5rem 0; border-radius: 0.75rem; font-size: 0.85rem;">View Profile</button>
+                        <button class="btn btn-outline btn-sm" onclick="viewWorkerProfile({{ worker.id }})" style="flex: 1; padding: 0.5rem 0; border-radius: 0.75rem; font-size: 0.85rem;">{{ _('view_profile') }}</button>
                         {% if worker_data.has_access %}
                         <button onclick="openWhatsApp('{{ worker_data.phone }}')" class="btn btn-sm" style="flex: 1; padding: 0.5rem 0; border-radius: 0.75rem; background-color: #25D366; color: white; display: flex; align-items: center; justify-content: center; gap: 0.25rem; font-size: 0.85rem; border: none; cursor: pointer;">
                             <i class='bx bxl-whatsapp' style="font-size: 1.1rem;"></i> WhatsApp
@@ -150,9 +150,9 @@
             {% else %}
                 <div style="text-align: center; padding: 4rem; background: var(--white); border-radius: 2rem; border: 1px dashed var(--border-color);">
                     <div style="font-size: 3.5rem; margin-bottom: 1rem;">🔍</div>
-                    <h3 style="font-weight: 700;">No Workers Found</h3>
-                    <p style="color: var(--text-secondary);">No workers are currently available based on your search filters.</p>
-                    <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="clearFilters()">Clear All Filters</button>
+                    <h3 style="font-weight: 700;">{{ _('no_workers_found') }}</h3>
+                    <p style="color: var(--text-secondary);">{{ _('no_workers_desc') }}</p>
+                    <button class="btn btn-primary" style="margin-top: 1.5rem;" onclick="clearFilters()">{{ _('clear_all_filters') }}</button>
                 </div>
             {% endif %}
         </div>
@@ -161,11 +161,11 @@
         {% if workers %}
         <div style="display: flex; justify-content: center; margin-top: 2rem;">
             <div style="display: flex; gap: 0.5rem;">
-                <button class="btn btn-outline btn-sm" disabled>Previous</button>
+                <button class="btn btn-outline btn-sm" disabled>{{ _('previous') }}</button>
                 <button class="btn btn-primary btn-sm">1</button>
                 <button class="btn btn-outline btn-sm">2</button>
                 <button class="btn btn-outline btn-sm">3</button>
-                <button class="btn btn-outline btn-sm">Next</button>
+                <button class="btn btn-outline btn-sm">{{ _('next') }}</button>
             </div>
         </div>
         {% endif %}

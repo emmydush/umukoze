@@ -14,11 +14,11 @@
         <!-- Header -->
         <header style="margin-bottom: 2.5rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
             <div>
-                <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em;">Job Applications</h1>
-                <p style="color: var(--text-secondary);">Track and manage your ongoing employment requests.</p>
+                <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem; letter-spacing: -0.02em;">{{ _('job_applications') }}</h1>
+                <p style="color: var(--text-secondary);">{{ _('track_manage_apps') }}</p>
             </div>
             <a href="{{ url_for('worker_find_jobs') }}" class="btn btn-primary" style="border-radius: 0.75rem; padding: 0.75rem 1.5rem;">
-                Browse More Jobs
+                {{ _('browse_more_jobs') }}
             </a>
         </header>
 
@@ -28,28 +28,28 @@
                 <div class="stat-icon-wrapper" style="background: rgba(37, 99, 235, 0.1); color: var(--primary-color);"><i class='bx bxs-file-doc'></i></div>
                 <div class="stat-info">
                     <div class="stat-value">{{ (applications or [])|length }}</div>
-                    <div class="stat-label">Total Applied</div>
+                    <div class="stat-label">{{ _('total_applied') }}</div>
                 </div>
             </div>
             <div class="stat-card-modern">
                 <div class="stat-icon-wrapper" style="background: rgba(245, 158, 11, 0.1); color: var(--warning-color);"><i class='bx bx-time-five'></i></div>
                 <div class="stat-info">
                     <div class="stat-value">{{ (applications|selectattr('status', 'equalto', 'pending')|list if applications else [])|length }}</div>
-                    <div class="stat-label">Pending Review</div>
+                    <div class="stat-label">{{ _('pending_review') }}</div>
                 </div>
             </div>
             <div class="stat-card-modern">
                 <div class="stat-icon-wrapper" style="background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);"><i class='bx bxs-check-circle'></i></div>
                 <div class="stat-info">
                     <div class="stat-value">{{ (applications|selectattr('status', 'equalto', 'accepted')|list if applications else [])|length }}</div>
-                    <div class="stat-label">Accepted</div>
+                    <div class="stat-label">{{ _('accepted') }}</div>
                 </div>
             </div>
             <div class="stat-card-modern" style="grid-column: span 1;">
                 <div class="stat-icon-wrapper" style="background: rgba(239, 68, 68, 0.1); color: var(--danger-color);"><i class='bx bxs-x-circle'></i></div>
                 <div class="stat-info">
                     <div class="stat-value">{{ (applications|selectattr('status', 'equalto', 'rejected')|list if applications else [])|length }}</div>
-                    <div class="stat-label">Rejected</div>
+                    <div class="stat-label">{{ _('rejected') }}</div>
                 </div>
             </div>
         </div>
@@ -57,12 +57,12 @@
         <!-- Applications List -->
         <div style="background: var(--white); border-radius: 1.5rem; border: 1px solid var(--border-color); overflow: hidden;">
             <div style="padding: 1.5rem 2rem; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center; background: #f8fafc;">
-                <h3 style="font-size: 1.125rem; font-weight: 700;">Submission History</h3>
+                <h3 style="font-size: 1.125rem; font-weight: 700;">{{ _('submission_history') }}</h3>
                 <div style="display: flex; gap: 0.5rem; align-items: center;">
-                    <span style="font-size: 0.8125rem; color: var(--text-secondary);">Sort:</span>
+                    <span style="font-size: 0.8125rem; color: var(--text-secondary);">{{ _('sort_by') }}</span>
                     <select style="background: none; border: none; font-size: 0.8125rem; font-weight: 600; color: var(--primary-color); outline: none;">
-                        <option>Recently Applied</option>
-                        <option>Status Updates</option>
+                        <option>{{ _('recently_applied') }}</option>
+                        <option>{{ _('status_updates') }}</option>
                     </select>
                 </div>
             </div>
@@ -83,33 +83,33 @@
                                 </div>
                                 <div style="text-align: right;">
                                     <span class="badge badge-{{ 'success' if application.status == 'accepted' else 'warning' if application.status == 'pending' else 'danger' if application.status == 'rejected' else 'secondary' }}" style="padding: 0.5rem 1.25rem; border-radius: 9999px; font-weight: 700; letter-spacing: 0.02em;">
-                                        {{ application.status|upper }}
+                                        {{ _(application.status)|upper }}
                                     </span>
-                                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">Applied {{ application.applied_at.strftime('%b d, %Y') }}</p>
+                                    <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">{{ _('applied_on') }} {{ application.applied_at.strftime('%b d, %Y') }}</p>
                                 </div>
                             </div>
                             
                             <div style="margin-bottom: 1.5rem;">
                                 <p style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; padding: 1rem; background: #f8fafc; border-radius: 0.75rem;">
-                                    "{{ application.cover_letter or 'No cover letter was provided.' }}"
+                                    "{{ application.cover_letter or _('no_cover_letter') }}"
                                 </p>
                             </div>
                             
                             <div style="display: flex; justify-content: space-between; align-items: center; border-top: 1px solid #f1f5f9; padding-top: 1.5rem;">
                                 <div style="display: flex; gap: 2rem;">
                                     <div style="display: flex; flex-direction: column;">
-                                        <span style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Proposed Salary</span>
+                                        <span style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">{{ _('proposed_salary') }}</span>
                                         <span style="font-size: 0.875rem; font-weight: 600;">{{ application.job.salary_amount or 'Negotiable' }} RWF</span>
                                     </div>
                                     <div style="display: flex; flex-direction: column;">
-                                        <span style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">Job Type</span>
+                                        <span style="font-size: 0.65rem; text-transform: uppercase; color: var(--text-secondary); font-weight: 700;">{{ _('job_type') }}</span>
                                         <span style="font-size: 0.875rem; font-weight: 600;">{{ application.job.job_type.replace('_', ' ').title() }}</span>
                                     </div>
                                 </div>
                                 <div style="display: flex; gap: 0.75rem;">
-                                    <button class="btn btn-outline btn-sm" style="border-radius: 0.5rem;" onclick="viewApplication('{{ application.id }}')">Details</button>
+                                    <button class="btn btn-outline btn-sm" style="border-radius: 0.5rem;" onclick="viewApplication('{{ application.id }}')">{{ _('details') }}</button>
                                     {% if application.status == 'pending' %}
-                                        <button class="btn btn-outline btn-sm" style="border-radius: 0.5rem; color: var(--danger-color); border-color: var(--danger-color);" onclick="withdrawApplication('{{ application.id }}')">Withdraw</button>
+                                        <button class="btn btn-outline btn-sm" style="border-radius: 0.5rem; color: var(--danger-color); border-color: var(--danger-color);" onclick="withdrawApplication('{{ application.id }}')">{{ _('withdraw') }}</button>
                                     {% endif %}
                                 </div>
                             </div>
@@ -118,9 +118,9 @@
                 {% else %}
                     <div style="text-align: center; padding: 5rem 2rem;">
                         <div style="font-size: 4rem; margin-bottom: 1.5rem; opacity: 0.1;">💼</div>
-                        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">No applications yet</h3>
-                        <p style="color: var(--text-secondary); max-width: 350px; margin: 0 auto 2rem;">You haven't submitted any applications. Start exploring jobs to find your next opportunity!</p>
-                        <a href="{{ url_for('worker_find_jobs') }}" class="btn btn-primary" style="padding: 0.75rem 2rem; border-radius: 0.75rem;">Browse Jobs</a>
+                        <h3 style="font-size: 1.25rem; font-weight: 700; margin-bottom: 0.5rem;">{{ _('no_apps_yet') }}</h3>
+                        <p style="color: var(--text-secondary); max-width: 350px; margin: 0 auto 2rem;">{{ _('no_apps_desc') }}</p>
+                        <a href="{{ url_for('worker_find_jobs') }}" class="btn btn-primary" style="padding: 0.75rem 2rem; border-radius: 0.75rem;">{{ _('browse_jobs') }}</a>
                     </div>
                 {% endif %}
             </div>

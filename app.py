@@ -1,6 +1,8 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, jsonify
 from flask_login import LoginManager, UserMixin, login_user, logout_user, login_required, current_user
 from werkzeug.security import generate_password_hash, check_password_hash
+from flask import session
+from translations import TRANSLATIONS
 
 from datetime import datetime
 import os
@@ -47,12 +49,29 @@ login_manager.login_view = 'login'
 # Notification Context Processor
 @app.context_processor
 def inject_notifications():
+    # Language support
+    def translate(key, default=None, **kwargs):
+        lang = session.get('lang', 'en')
+        text = TRANSLATIONS.get(lang, TRANSLATIONS['en']).get(key, default or key)
+        try:
+            if kwargs:
+                return text.format(**kwargs)
+        except (KeyError, ValueError):
+            pass
+        return text
+    
     if current_user.is_authenticated:
         # Get last 5 notifications for the current user
         notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).limit(5).all()
         unread_count = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
-        return dict(notifs=notifs, unread_count=unread_count)
-    return dict(notifs=[], unread_count=0)
+        return dict(notifs=notifs, unread_count=unread_count, _=translate)
+    return dict(notifs=[], unread_count=0, _=translate)
+
+@app.route('/set_language/<lang>')
+def set_language(lang):
+    if lang in ['en', 'fr', 'rw']:
+        session['lang'] = lang
+    return redirect(request.referrer or url_for('index'))
 
 # Notification Routes
 @app.route('/notifications/read/<int:notif_id>', methods=['POST'])
@@ -202,15 +221,8 @@ def load_user(user_id):
 
 @app.route('/')
 def index():
-    # Clear any existing session data to prevent session sharing
     if current_user.is_authenticated:
-        # If user is authenticated but accessing homepage, redirect to dashboard
         return redirect(url_for('dashboard'))
-    
-    # Ensure clean session for new visitors
-    from flask import session
-    session.clear()
-    
     return render_template('index.html')
 
 @app.route('/manifest.json')

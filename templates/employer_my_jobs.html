@@ -15,14 +15,14 @@
         <div class="card" style="margin-bottom: 2rem;">
             <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
                 <div>
-                    <h1 style="margin-bottom: 0.5rem;">My Jobs</h1>
+                    <h1 style="margin-bottom: 0.5rem;">{{ _('my_jobs_title') }}</h1>
                     <p style="color: var(--text-secondary); margin: 0;">
-                        Manage your job postings and track applications.
+                        {{ _('manage_job_postings_desc') }}
                     </p>
                 </div>
                 <div>
                     <button class="btn btn-primary" onclick="postNewJob()">
-                        <span style="margin-right: 0.5rem;">➕</span> Post New Job
+                        <span style="margin-right: 0.5rem;">➕</span> {{ _('post_new_job_cta') }}
                     </button>
                 </div>
             </div>
@@ -32,15 +32,15 @@
         <div class="grid grid-4" style="margin-bottom: 2rem;">
             <div class="card text-center">
                 <div style="font-size: 2rem; font-weight: bold; color: var(--primary-color);">{{ jobs|length }}</div>
-                <p style="color: var(--text-secondary); font-size: 0.875rem;">Total Jobs</p>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">{{ _('total_jobs') }}</p>
             </div>
             <div class="card text-center">
                 <div style="font-size: 2rem; font-weight: bold; color: var(--success-color);">{{ jobs|selectattr('status', 'equalto', 'open')|list|length }}</div>
-                <p style="color: var(--text-secondary); font-size: 0.875rem;">Active</p>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">{{ _('active') }}</p>
             </div>
             <div class="card text-center">
                 <div style="font-size: 2rem; font-weight: bold; color: var(--warning-color);">{{ jobs|selectattr('status', 'equalto', 'filled')|list|length }}</div>
-                <p style="color: var(--text-secondary); font-size: 0.875rem;">Filled</p>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">{{ _('filled') }}</p>
             </div>
             <div class="card text-center">
                 <div style="font-size: 2rem; font-weight: bold; color: var(--accent-color);">
@@ -50,20 +50,20 @@
                     {% endfor %}
                     {{ total_apps }}
                 </div>
-                <p style="color: var(--text-secondary); font-size: 0.875rem;">Applications</p>
+                <p style="color: var(--text-secondary); font-size: 0.875rem;">{{ _('applications') }}</p>
             </div>
         </div>
 
         <!-- Jobs List -->
         <div class="card">
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1.5rem;">
-                <h3>Your Job Postings</h3>
+                <h3>{{ _('your_job_postings') }}</h3>
                 <div style="display: flex; gap: 0.5rem;">
                     <select class="form-control" style="width: auto;" onchange="filterJobs(this.value)">
-                        <option value="all">All Jobs</option>
-                        <option value="open">Active</option>
-                        <option value="filled">Filled</option>
-                        <option value="closed">Closed</option>
+                        <option value="all">{{ _('all_jobs') }}</option>
+                        <option value="open">{{ _('active') }}</option>
+                        <option value="filled">{{ _('filled') }}</option>
+                        <option value="closed">{{ _('close') }}</option>
                     </select>
                 </div>
             </div>
@@ -76,21 +76,21 @@
                             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem;">
                                 <h4 style="margin: 0;">{{ job.title }}</h4>
                                 {% if job.is_urgent %}
-                                <span class="badge badge-danger">Urgent</span>
+                                <span class="badge badge-danger">{{ _('urgent') }}</span>
                                 {% endif %}
                                 <span class="badge badge-{{ 'success' if job.status == 'open' else ('warning' if job.status == 'filled' else 'secondary') }}">
                                     {{ job.status|title }}
                                 </span>
                             </div>
                             <p style="color: var(--text-secondary); font-size: 0.875rem; margin-bottom: 0.5rem;">
-                                {{ job.district }}, {{ job.sector }} • Posted {{ job.created_at.strftime('%d %b %Y') }}
+                                {{ job.district }}, {{ job.sector }} • {{ _('posted_on') }} {{ job.created_at.strftime('%d %b %Y') }}
                             </p>
                             <p style="margin-bottom: 1rem;">{{ job.description }}</p>
                             
                             <div style="display: flex; gap: 1rem; flex-wrap: wrap; font-size: 0.875rem; color: var(--text-secondary);">
-                                <div><strong>💰 Salary:</strong> {{ job.salary_amount }} RWF/{{ job.salary_type }}</div>
-                                <div><strong>🕐 Type:</strong> {{ job.job_type.replace('_', ' ').title() }}</div>
-                                <div><strong>📄 Applications:</strong> {{ job.applications|length }}</div>
+                                <div><strong>💰 {{ _('salary') }}:</strong> {{ job.salary_amount }} RWF/{{ job.salary_type }}</div>
+                                <div><strong>🕐 {{ _('job_type') }}:</strong> {{ job.job_type.replace('_', ' ').title() }}</div>
+                                <div><strong>📄 {{ _('applications') }}:</strong> {{ job.applications|length }}</div>
                             </div>
                         </div>
                     </div>
@@ -98,22 +98,22 @@
                     <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 1rem; border-top: 1px solid var(--border-color);">
                         <div style="display: flex; gap: 0.5rem;">
                             <button class="btn btn-outline btn-sm" onclick="viewJobDetails({{ job.id }})">
-                                View Details
+                                {{ _('details') }}
                             </button>
                             <button class="btn btn-outline btn-sm" onclick="viewApplications({{ job.id }})">
-                                Applications ({{ job.applications|length }})
+                                {{ _('applications') }} ({{ job.applications|length }})
                             </button>
                             {% if job.status == 'open' %}
                             <button class="btn btn-outline btn-sm" onclick="editJob({{ job.id }})">
-                                Edit
+                                {{ _('edit') }}
                             </button>
                             <button class="btn btn-outline btn-sm" onclick="closeJob({{ job.id }})">
-                                Close
+                                {{ _('close') }}
                             </button>
                             {% endif %}
                         </div>
                         <div style="font-size: 0.75rem; color: var(--text-secondary);">
-                            Last updated: {{ job.updated_at.strftime('%d %b %Y') if job.updated_at else job.created_at.strftime('%d %b %Y') }}
+                            {{ _('last_updated') }} {{ job.updated_at.strftime('%d %b %Y') if job.updated_at else job.created_at.strftime('%d %b %Y') }}
                         </div>
                     </div>
                 </div>
@@ -121,10 +121,10 @@
             {% else %}
                 <div style="text-align: center; padding: 3rem; color: var(--text-secondary);">
                     <div style="font-size: 3rem; margin-bottom: 1rem;">📋</div>
-                    <h3>No Job Postings Yet</h3>
-                    <p>Start posting jobs to find the perfect workers for your needs.</p>
+                    <h3>{{ _('no_job_postings') }}</h3>
+                    <p>{{ _('start_posting') }}</p>
                     <button class="btn btn-primary" style="margin-top: 1rem;" onclick="postNewJob()">
-                        <span style="margin-right: 0.5rem;">➕</span> Post Your First Job
+                        <span style="margin-right: 0.5rem;">➕</span> {{ _('post_first_job') }}
                     </button>
                 </div>
             {% endif %}

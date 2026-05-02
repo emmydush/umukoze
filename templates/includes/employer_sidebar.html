@@ -8,32 +8,32 @@
         <ul class="sidebar-nav-list">
             <li>
                 <a href="{{ url_for('dashboard') }}" class="sidebar-item {% if request.endpoint == 'dashboard' %}active{% endif %}">
-                    <i class='bx bx-grid-alt'></i> <span>Overview</span>
+                    <i class='bx bx-grid-alt'></i> <span>{{ _('overview') }}</span>
                 </a>
             </li>
             <li>
                 <a href="{{ url_for('employer_find_workers') }}" class="sidebar-item {% if request.endpoint == 'employer_find_workers' %}active{% endif %}">
-                    <i class='bx bx-user-pin'></i> <span>Find Workers</span>
+                    <i class='bx bx-user-pin'></i> <span>{{ _('find_workers') }}</span>
                 </a>
             </li>
             <li>
                 <a href="{{ url_for('employer_my_jobs') }}" class="sidebar-item {% if request.endpoint == 'employer_my_jobs' %}active{% endif %}">
-                    <i class='bx bx-briefcase'></i> <span>My Jobs</span>
+                    <i class='bx bx-briefcase'></i> <span>{{ _('my_jobs') }}</span>
                 </a>
             </li>
             <li>
                 <a href="{{ url_for('employer_applications') }}" class="sidebar-item {% if request.endpoint == 'employer_applications' %}active{% endif %}">
-                    <i class='bx bx-file-blank'></i> <span>Applications</span>
+                    <i class='bx bx-file-blank'></i> <span>{{ _('applications') }}</span>
                 </a>
             </li>
             <li>
                 <a href="#" onclick="showMessages()" class="sidebar-item">
-                    <i class='bx bx-message-square-detail'></i> <span>Messages</span>
+                    <i class='bx bx-message-square-detail'></i> <span>{{ _('messages') }}</span>
                 </a>
             </li>
             <li>
                 <a href="{{ url_for('employer_activity') }}" class="sidebar-item {% if request.endpoint == 'employer_activity' %}active{% endif %}">
-                    <i class='bx bx-pulse'></i> <span>Activity</span>
+                    <i class='bx bx-pulse'></i> <span>{{ _('activity') }}</span>
                 </a>
             </li>
         </ul>
@@ -41,12 +41,12 @@
         <ul class="sidebar-nav-list">
             <li>
                 <a href="{{ url_for('employer_settings') }}" class="sidebar-item {% if request.endpoint == 'employer_settings' %}active{% endif %}">
-                    <i class='bx bx-cog'></i> <span>Settings</span>
+                    <i class='bx bx-cog'></i> <span>{{ _('settings') }}</span>
                 </a>
             </li>
             <li class="logout-item">
                 <a href="javascript:void(0)" onclick="confirmLogout(event)" data-logout-url="{{ url_for('logout') }}" class="sidebar-item text-danger">
-                    <i class='bx bx-log-out'></i> <span>Logout</span>
+                    <i class='bx bx-log-out'></i> <span>{{ _('logout') }}</span>
                 </a>
             </li>
         </ul>

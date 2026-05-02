@@ -7,49 +7,46 @@
     <div class="auth-container" style="max-width: 550px;">
         <div class="auth-card">
             <div class="auth-header">
-                <a href="{{ url_for('index') }}" class="logo-animated" style="justify-content: center; margin-bottom: 1rem; font-size: 2.5rem;">
-                    <span style="--i:1; --c:#2563eb;">U</span><span style="--i:2; --c:#ef4444;">M</span><span style="--i:3; --c:#10b981;">U</span><span style="--i:4; --c:#f59e0b;">K</span><span style="--i:5; --c:#8b5cf6;">O</span><span style="--i:6; --c:#14b8a6;">Z</span><span style="--i:7; --c:#f43f5e;">I</span>
-                </a>
-                <h1 class="auth-title">Create Account</h1>
-                <p class="auth-subtitle">Join Umukozi and connect with the right opportunities</p>
+                <h1 class="auth-title">{{ _('create_account_title') }}</h1>
+                <p class="auth-subtitle">{{ _('create_account_subtitle') }}</p>
             </div>
             
             <form method="POST">
                 <!-- Account Type Selection -->
                 <div class="form-group">
-                    <label for="user_type" class="form-label">I want to:</label>
+                    <label for="user_type" class="form-label">{{ _('i_want_to') }}</label>
                     <select id="user_type" name="user_type" class="form-control" required>
-                        <option value="" disabled selected>Select your role</option>
-                        <option value="worker">👷 Find Work - I am a worker</option>
-                        <option value="employer">👤 Hire Workers - I am an employer</option>
+                        <option value="" disabled selected>{{ _('select_role') }}</option>
+                        <option value="worker">{{ _('role_worker') }}</option>
+                        <option value="employer">{{ _('role_employer') }}</option>
                     </select>
                 </div>
                 
                 <div class="form-group">
-                    <label for="full_name" class="form-label">Full Name</label>
+                    <label for="full_name" class="form-label">{{ _('full_name') }}</label>
                     <input type="text" id="full_name" name="full_name" class="form-control" required placeholder="John Doe">
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="email" class="form-label">Email Address</label>
+                        <label for="email" class="form-label">{{ _('email') }}</label>
                         <input type="email" id="email" name="email" class="form-control" required placeholder="john@example.com">
                     </div>
                     
                     <div class="form-group">
-                        <label for="phone" class="form-label">Phone Number</label>
+                        <label for="phone" class="form-label">{{ _('phone_number') }}</label>
                         <input type="tel" id="phone" name="phone" class="form-control" required placeholder="+250 7XX XXX XXX">
                     </div>
                 </div>
                 
                 <div class="form-row">
                     <div class="form-group">
-                        <label for="password" class="form-label">Password</label>
+                        <label for="password" class="form-label">{{ _('password') }}</label>
                         <input type="password" id="password" name="password" class="form-control" required placeholder="••••••••">
                     </div>
                     
                     <div class="form-group">
-                        <label for="confirm_password" class="form-label">Confirm Password</label>
+                        <label for="confirm_password" class="form-label">{{ _('confirm_password') }}</label>
                         <input type="password" id="confirm_password" name="confirm_password" class="form-control" required placeholder="••••••••">
                     </div>
                 </div>
@@ -58,29 +55,27 @@
                     <label style="display: flex; align-items: flex-start; cursor: pointer;">
                         <input type="checkbox" required style="width: 1.25rem; height: 1.25rem; margin-right: 0.75rem; margin-top: 0.125rem; accent-color: var(--primary-color);">
                         <span style="font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5;">
-                            I agree to the <a href="#" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">Terms of Service</a> and 
-                            <a href="#" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">Privacy Policy</a>.
+                            {{ _('agree_to') }} <a href="#" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">{{ _('terms_of_service') }}</a> and 
+                            <a href="#" style="color: var(--primary-color); font-weight: 600; text-decoration: none;">{{ _('privacy_policy') }}</a>.
                         </span>
                     </label>
                 </div>
                 
                 <button type="submit" class="btn btn-primary" style="width: 100%; padding: 1rem; font-size: 1rem; margin-bottom: 1.5rem;">
-                    Create Account
+                    {{ _('create_account') }}
                 </button>
             </form>
             
             <div class="auth-footer">
-                <p>Already have an account? <a href="{{ url_for('login') }}">Log In</a></p>
+                <p>{{ _('already_have_account') }} <a href="{{ url_for('login') }}">{{ _('log_in') }}</a></p>
             </div>
         </div>
         
         <div style="text-align: center; margin-top: 2rem; color: var(--text-secondary); font-size: 0.875rem;">
-            <p>🛡️ Verified & Secure Rwandan Platform</p>
+            <p>{{ _('secure_rwanda') }}</p>
         </div>
     </div>
 </div>
-
-
 
 <script>
 // Password confirmation validation
@@ -89,7 +84,7 @@ document.getElementById('confirm_password').addEventListener('input', function()
     const confirmPassword = this.value;
     
     if (password !== confirmPassword) {
-        this.setCustomValidity('Passwords do not match');
+        this.setCustomValidity('{{ _('passwords_match_error') }}');
     } else {
         this.setCustomValidity('');
     }
