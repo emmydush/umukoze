@@ -38,6 +38,7 @@ if os.getenv('FLASK_ENV') == 'production':
 
 # Import models and db
 from models import db, User, Worker, Employer, Job, Application, Review, Message, Notification, Payment, WorkerContactAccess, EmailConfig
+from translations import TRANSLATIONS
 
 # Initialize extensions
 db.init_app(app)
@@ -47,13 +48,27 @@ login_manager.login_view = 'login'
 
 # Notification Context Processor
 @app.context_processor
-def inject_notifications():
+def inject_globals():
+    # Translation helper
+    def translate(key, **kwargs):
+        lang = session.get('lang', 'en')
+        text = TRANSLATIONS.get(lang, TRANSLATIONS['en']).get(key, key)
+        if kwargs:
+            try:
+                return text.format(**kwargs)
+            except (KeyError, ValueError):
+                return text
+        return text
+
+    # Notifications helper
+    notifs = []
+    unread_count = 0
     if current_user.is_authenticated:
         # Get last 5 notifications for the current user
         notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).limit(5).all()
         unread_count = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
-        return dict(notifs=notifs, unread_count=unread_count)
-    return dict(notifs=[], unread_count=0)
+        
+    return dict(_=translate, notifs=notifs, unread_count=unread_count)
 
 @app.route('/set_language/<lang>')
 def set_language(lang):
