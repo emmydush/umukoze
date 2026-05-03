@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Settings - Umukozi{% endblock %}
+{% block title %}Employer Settings - Umukozi{% endblock %}
 
 {% block content %}
 <div class="sidebar-overlay" onclick="closeSidebar()"></div>
@@ -12,211 +12,330 @@
     <!-- Main Content -->
     <main class="main-content">
         <!-- Header -->
-        <div class="card" style="margin-bottom: 2rem;">
-            <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap;">
-                <div>
-                    <h1 style="margin-bottom: 0.5rem;">Settings</h1>
-                    <p style="color: var(--text-secondary); margin: 0;">
-                        Manage your account settings, company information, and preferences.
-                    </p>
-                </div>
+        <div class="card" style="margin-bottom: 2.5rem; background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; border: none; border-radius: 1.5rem; padding: 2.5rem; position: relative; overflow: hidden;">
+            <div style="position: relative; z-index: 1;">
+                <h1 style="margin-bottom: 0.5rem; color: white; font-size: 2.25rem; font-weight: 800;">{{ _('employer_settings_title') }}</h1>
+                <p style="color: rgba(255, 255, 255, 0.9); margin: 0; font-size: 1.1rem; max-width: 600px;">
+                    {{ _('employer_settings_desc') }}
+                </p>
+            </div>
+            <div style="position: absolute; right: -20px; bottom: -20px; font-size: 15rem; color: rgba(255, 255, 255, 0.1); transform: rotate(-15deg);">
+                <i class='bx bx-cog'></i>
             </div>
         </div>
 
-        <!-- Settings Sections -->
-        <div class="grid grid-3">
-            <!-- Personal Information -->
-            <div class="card" style="grid-column: span 1;">
-                <h3 style="margin-bottom: 1rem;">Personal Information</h3>
-                <form>
-                    <div class="form-group">
-                        <label class="form-label">Full Name</label>
-                        <input type="text" class="form-control" value="{{ current_user.full_name }}">
+        <div class="grid grid-3" style="gap: 2rem;">
+            <!-- Left Column: Core Profile & Stats -->
+            <div style="grid-column: span 1; display: flex; flex-direction: column; gap: 2rem;">
+                <!-- Profile Card -->
+                <div class="card text-center" style="padding: 2.5rem; border-radius: 1.5rem; position: relative;">
+                    <div style="position: absolute; top: 1.5rem; right: 1.5rem;">
+                        {% if employer.is_verified %}
+                            <span class="badge badge-success" title="Verified Employer"><i class='bx bxs-check-shield'></i></span>
+                        {% else %}
+                            <span class="badge badge-warning" title="Verification Pending"><i class='bx bx-time'></i></span>
+                        {% endif %}
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Email</label>
-                        <input type="email" class="form-control" value="{{ current_user.email }}">
+                    
+                    <div class="profile-avatar shadow-lg" style="width: 120px; height: 120px; border-radius: 50%; margin: 0 auto 1.5rem; background: var(--light-bg); border: 4px solid white; display: flex; align-items: center; justify-content: center; font-size: 3.5rem; color: var(--primary-color); overflow: hidden;">
+                        {% if employer.profile_picture %}
+                            <img src="{{ url_for('static', filename='uploads/' + employer.profile_picture) }}" style="width: 100%; height: 100%; object-fit: cover;">
+                        {% else %}
+                            {{ current_user.full_name[0].upper() }}
+                        {% endif %}
                     </div>
-                    <div class="form-group">
-                        <label class="form-label">Phone</label>
-                        <input type="tel" class="form-control" value="{{ current_user.phone }}">
-                    </div>
-                    <button type="button" class="btn btn-primary" style="width: 100%;" onclick="updatePersonalInfo()">
-                        Save Changes
-                    </button>
-                </form>
-            </div>
-
-            <!-- Company Information -->
-            <div class="card" style="grid-column: span 1;">
-                <h3 style="margin-bottom: 1rem;">Company Information</h3>
-                <form>
-                    <div class="form-group">
-                        <label class="form-label">Company Name</label>
-                        <input type="text" class="form-control" value="{{ employer.company_name or '' }}">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Household Type</label>
-                        <select class="form-control">
-                            <option value="family" {% if employer.household_type == 'family' %}selected{% endif %}>Family</option>
-                            <option value="individual" {% if employer.household_type == 'individual' %}selected{% endif %}>Individual</option>
-                            <option value="company" {% if employer.household_type == 'company' %}selected{% endif %}>Company</option>
-                            <option value="organization" {% if employer.household_type == 'organization' %}selected{% endif %}>Organization</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Website (Optional)</label>
-                        <input type="url" class="form-control" value="{{ employer.website or '' }}">
-                    </div>
-                    <button type="button" class="btn btn-primary" style="width: 100%;" onclick="updateCompanyInfo()">
-                        Save Changes
-                    </button>
-                </form>
-            </div>
-
-            <!-- Location Information -->
-            <div class="card" style="grid-column: span 1;">
-                <h3 style="margin-bottom: 1rem;">Location Information</h3>
-                <form>
-                    <div class="form-group">
-                        <label class="form-label">Province</label>
-                        <select class="form-control">
-                            <option value="">Select Province</option>
-                            <option value="kigali" {% if employer.province == 'kigali' %}selected{% endif %}>Kigali</option>
-                            <option value="northern" {% if employer.province == 'northern' %}selected{% endif %}>Northern Province</option>
-                            <option value="southern" {% if employer.province == 'southern' %}selected{% endif %}>Southern Province</option>
-                            <option value="eastern" {% if employer.province == 'eastern' %}selected{% endif %}>Eastern Province</option>
-                            <option value="western" {% if employer.province == 'western' %}selected{% endif %}>Western Province</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">District</label>
-                        <input type="text" class="form-control" value="{{ employer.district or '' }}">
-                    </div>
-                    <div class="form-group">
-                        <label class="form-label">Sector</label>
-                        <input type="text" class="form-control" value="{{ employer.sector or '' }}">
-                    </div>
-                    <button type="button" class="btn btn-primary" style="width: 100%;" onclick="updateLocationInfo()">
-                        Save Changes
-                    </button>
-                </form>
-            </div>
-        </div>
-
-        <!-- Bio & Description -->
-        <div class="card" style="margin-top: 2rem;">
-            <h3 style="margin-bottom: 1rem;">Company Description</h3>
-            <div class="grid grid-2">
-                <div>
-                    <div class="form-group">
-                        <label class="form-label">Company Bio</label>
-                        <textarea class="form-control" rows="4" placeholder="Tell workers about your company/household...">{{ employer.bio or '' }}</textarea>
+                    
+                    <h2 style="margin-bottom: 0.25rem; font-weight: 700;">{{ current_user.full_name }}</h2>
+                    <p style="color: var(--text-secondary); margin-bottom: 1.5rem;">{{ employer.household_type|title or _('employer') }} Account</p>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 1rem; text-align: left; background: #f8fafc; padding: 1.5rem; border-radius: 1rem;">
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <i class='bx bx-envelope' style="color: var(--primary-color);"></i>
+                            <span style="font-size: 0.875rem;">{{ current_user.email }}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <i class='bx bx-phone' style="color: var(--primary-color);"></i>
+                            <span style="font-size: 0.875rem;">{{ current_user.phone }}</span>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 0.75rem;">
+                            <i class='bx bx-map' style="color: var(--primary-color);"></i>
+                            <span style="font-size: 0.875rem;">{{ employer.district or 'Kigali' }}, Rwanda</span>
+                        </div>
                     </div>
                 </div>
-                <div>
-                    <div class="form-group">
-                        <label class="form-label">What You're Looking For</label>
-                        <textarea class="form-control" rows="4" placeholder="Describe the type of workers you're looking for..."></textarea>
+
+                <!-- Trust Badge -->
+                <div class="card" style="background: rgba(16, 185, 129, 0.05); border: 1px dashed var(--secondary-color); text-align: center; padding: 1.5rem;">
+                    <div style="font-size: 2.5rem; color: var(--secondary-color); margin-bottom: 0.5rem;"><i class='bx bxs-award'></i></div>
+                    <h4 style="margin-bottom: 0.25rem;">{{ _('trust_score') }}: {{ (employer.average_rating * 20)|int }}%</h4>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">Verified employers get 40% more applications.</p>
+                </div>
+            </div>
+
+            <!-- Right Column: Settings Form -->
+            <div style="grid-column: span 2;">
+                <div class="card" style="padding: 2.5rem; border-radius: 1.5rem;">
+                    <!-- Tabs -->
+                    <div style="display: flex; gap: 2rem; border-bottom: 1px solid var(--border-color); margin-bottom: 2rem;">
+                        <button class="settings-tab active" onclick="switchTab(event, 'basic')">{{ _('employer_profile') }}</button>
+                        <button class="settings-tab" onclick="switchTab(event, 'preferences')">{{ _('hiring_preferences') }}</button>
+                        <button class="settings-tab" onclick="switchTab(event, 'account')">{{ _('account_security') }}</button>
+                    </div>
+
+                    <!-- Basic Settings -->
+                    <div id="basic-tab" class="tab-content active">
+                        <form id="employerProfileForm">
+                            <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">{{ _('basic_info') }}</h3>
+                            <div class="grid grid-2" style="gap: 1.5rem; margin-bottom: 2rem;">
+                                <div class="form-group">
+                                    <label class="form-label">{{ _('employer_house_name') }}</label>
+                                    <input type="text" class="form-control" name="company_name" value="{{ employer.company_name or '' }}" placeholder="e.g., The Mugisha Household">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">{{ _('category') }}</label>
+                                    <select class="form-control" name="household_type">
+                                        <option value="family" {% if employer.household_type == 'family' %}selected{% endif %}>{{ _('household_family') }}</option>
+                                        <option value="individual" {% if employer.household_type == 'individual' %}selected{% endif %}>{{ _('individual') }}</option>
+                                        <option value="company" {% if employer.household_type == 'company' %}selected{% endif %}>{{ _('company') }}</option>
+                                        <option value="farm" {% if employer.household_type == 'farm' %}selected{% endif %}>{{ _('farm_agricultural') }}</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">{{ _('description') }}</h3>
+                            <div class="form-group" style="margin-bottom: 2rem;">
+                                <label class="form-label">{{ _('about_household') }}</label>
+                                <textarea class="form-control" name="bio" rows="4" placeholder="Tell workers a bit about your environment and what you value...">{{ employer.bio or '' }}</textarea>
+                                <p style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.5rem;">This helps workers understand your expectations before applying.</p>
+                            </div>
+
+                            <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">{{ _('location_details') }}</h3>
+                            <div class="grid grid-3" style="gap: 1rem; margin-bottom: 1.5rem;">
+                                <div class="form-group">
+                                    <label class="form-label">{{ _('province') }}</label>
+                                    <select class="form-control" name="province">
+                                        <option value="kigali" {% if employer.province == 'kigali' %}selected{% endif %}>Kigali City</option>
+                                        <option value="northern" {% if employer.province == 'northern' %}selected{% endif %}>Northern</option>
+                                        <option value="southern" {% if employer.province == 'southern' %}selected{% endif %}>Southern</option>
+                                        <option value="eastern" {% if employer.province == 'eastern' %}selected{% endif %}>Eastern</option>
+                                        <option value="western" {% if employer.province == 'western' %}selected{% endif %}>Western</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">{{ _('district') }}</label>
+                                    <input type="text" class="form-control" name="district" value="{{ employer.district or '' }}" placeholder="e.g., Gasabo">
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">{{ _('sector') }}</label>
+                                    <input type="text" class="form-control" name="sector" value="{{ employer.sector or '' }}" placeholder="e.g., Kimironko">
+                                </div>
+                            </div>
+                            <div class="form-group" style="margin-bottom: 2rem;">
+                                <label class="form-label">{{ _('directions_landmark') }}</label>
+                                <input type="text" class="form-control" name="address_details" value="{{ employer.address_details or '' }}" placeholder="e.g., Near Kimironko Market, House #12 or opposite the primary school">
+                            </div>
+
+                            <div style="display: flex; gap: 1rem; justify-content: flex-end; margin-top: 2rem;">
+                                <button type="reset" class="btn btn-outline">{{ _('discard_changes') }}</button>
+                                <button type="button" class="btn btn-primary" onclick="saveProfile()">{{ _('save_profile') }}</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Hiring Preferences -->
+                    <div id="preferences-tab" class="tab-content">
+                        <form id="hiringPreferencesForm">
+                            <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Default Job Preferences</h3>
+                            <p style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.9rem;">These will be used to pre-fill your future job postings.</p>
+                            
+                            <div class="grid grid-2" style="gap: 1.5rem; margin-bottom: 2rem;">
+                                <div class="form-group">
+                                    <label class="form-label">Typical Service Needed</label>
+                                    <select class="form-control">
+                                        <option>House Cleaning</option>
+                                        <option>Cooking / Chef</option>
+                                        <option>Gardening</option>
+                                        <option>Childcare / Nanny</option>
+                                        <option>Driving</option>
+                                        <option>Security Guard</option>
+                                    </select>
+                                </div>
+                                <div class="form-group">
+                                    <label class="form-label">Preferred Arrangement</label>
+                                    <select class="form-control">
+                                        <option>Full-time (Live-out)</option>
+                                        <option>Live-in (Stay at home)</option>
+                                        <option>Part-time / Weekly</option>
+                                        <option>One-time service</option>
+                                    </select>
+                                </div>
+                            </div>
+
+                            <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Notification Preferences</h3>
+                            <div style="background: #f8fafc; padding: 1.5rem; border-radius: 1rem; margin-bottom: 2rem;">
+                                <label style="display: flex; align-items: center; margin-bottom: 1.25rem; cursor: pointer;">
+                                    <input type="checkbox" checked style="width: 1.2rem; height: 1.2rem; margin-right: 0.75rem;">
+                                    <div>
+                                        <div style="font-weight: 600; font-size: 0.95rem;">New Application Alerts</div>
+                                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Receive an email immediately when a worker applies.</div>
+                                    </div>
+                                </label>
+                                <label style="display: flex; align-items: center; margin-bottom: 1.25rem; cursor: pointer;">
+                                    <input type="checkbox" checked style="width: 1.2rem; height: 1.2rem; margin-right: 0.75rem;">
+                                    <div>
+                                        <div style="font-weight: 600; font-size: 0.95rem;">Worker Recommendations</div>
+                                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Weekly email of workers matching your previous job posts.</div>
+                                    </div>
+                                </label>
+                                <label style="display: flex; align-items: center; cursor: pointer;">
+                                    <input type="checkbox" style="width: 1.2rem; height: 1.2rem; margin-right: 0.75rem;">
+                                    <div>
+                                        <div style="font-weight: 600; font-size: 0.95rem;">WhatsApp Notifications</div>
+                                        <div style="font-size: 0.8rem; color: var(--text-secondary);">Receive urgent application alerts directly on WhatsApp.</div>
+                                    </div>
+                                </label>
+                            </div>
+
+                            <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                                <button type="button" class="btn btn-primary" onclick="alert('Preferences saved!')">Update Preferences</button>
+                            </div>
+                        </form>
+                    </div>
+
+                    <!-- Account & Security -->
+                    <div id="account-tab" class="tab-content">
+                        <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Security</h3>
+                        <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 3rem;">
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--light-bg); border-radius: 0.75rem;">
+                                <div>
+                                    <div style="font-weight: 600;">Account Password</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Last changed 3 months ago</div>
+                                </div>
+                                <button class="btn btn-outline btn-sm" onclick="alert('Coming soon: Password Reset')">Change Password</button>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--light-bg); border-radius: 0.75rem;">
+                                <div>
+                                    <div style="font-weight: 600;">Two-Factor Authentication</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Not enabled</div>
+                                </div>
+                                <button class="btn btn-outline btn-sm" onclick="alert('Coming soon: 2FA Setup')">Enable</button>
+                            </div>
+                        </div>
+
+                        <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem; color: var(--danger-color);">Danger Zone</h3>
+                        <div style="border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 1rem; padding: 1.5rem;">
+                            <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Once you delete your account, there is no going back. Please be certain.</p>
+                            <div style="display: flex; gap: 1rem;">
+                                <button class="btn btn-outline" style="color: var(--danger-color); border-color: var(--danger-color);" onclick="alert('Account Deactivated')">Deactivate Account</button>
+                                <button class="btn btn-danger" onclick="confirmDeletion()">Delete Account</button>
+                            </div>
+                        </div>
                     </div>
                 </div>
-            </div>
-            <button type="button" class="btn btn-primary" onclick="updateBio()">
-                Save Description
-            </button>
-        </div>
-
-        <!-- Notification Settings -->
-        <div class="card" style="margin-top: 2rem;">
-            <h3 style="margin-bottom: 1rem;">Notification Preferences</h3>
-            <div class="grid grid-2">
-                <div>
-                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
-                        <input type="checkbox" checked style="margin-right: 0.5rem;">
-                        <span>Email notifications for new applications</span>
-                    </label>
-                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
-                        <input type="checkbox" checked style="margin-right: 0.5rem;">
-                        <span>Email notifications for worker messages</span>
-                    </label>
-                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
-                        <input type="checkbox" checked style="margin-right: 0.5rem;">
-                        <span>Email notifications for job updates</span>
-                    </label>
-                </div>
-                <div>
-                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
-                        <input type="checkbox" style="margin-right: 0.5rem;">
-                        <span>SMS notifications for urgent applications</span>
-                    </label>
-                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
-                        <input type="checkbox" checked style="margin-right: 0.5rem;">
-                        <span>Weekly worker recommendations</span>
-                    </label>
-                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
-                        <input type="checkbox" style="margin-right: 0.5rem;">
-                        <span>Marketing emails</span>
-                    </label>
-                </div>
-            </div>
-            <button type="button" class="btn btn-primary" onclick="updateNotifications()">
-                Save Notification Settings
-            </button>
-        </div>
-
-        <!-- Privacy & Security -->
-        <div class="card" style="margin-top: 2rem;">
-            <h3 style="margin-bottom: 1rem;">Privacy & Security</h3>
-            <div class="grid grid-2">
-                <div>
-                    <h4 style="margin-bottom: 1rem; font-size: 1rem;">Privacy Settings</h4>
-                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
-                        <input type="checkbox" checked style="margin-right: 0.5rem;">
-                        <span>Profile visible to workers</span>
-                    </label>
-                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
-                        <input type="checkbox" checked style="margin-right: 0.5rem;">
-                        <span>Show contact information to verified workers</span>
-                    </label>
-                    <label style="display: flex; align-items: center; margin-bottom: 1rem;">
-                        <input type="checkbox" style="margin-right: 0.5rem;">
-                        <span>Appear in worker search results</span>
-                    </label>
-                </div>
-                <div>
-                    <h4 style="margin-bottom: 1rem; font-size: 1rem;">Security</h4>
-                    <button class="btn btn-outline" style="width: 100%; margin-bottom: 0.5rem;" onclick="changePassword()">
-                        Change Password
-                    </button>
-                    <button class="btn btn-outline" style="width: 100%; margin-bottom: 0.5rem;" onclick="enableTwoFactor()">
-                        Enable Two-Factor Authentication
-                    </button>
-                    <button class="btn btn-outline" style="width: 100%;" onclick="viewLoginHistory()">
-                        View Login History
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <!-- Account Actions -->
-        <div class="card" style="margin-top: 2rem;">
-            <h3 style="margin-bottom: 1rem;">Account Actions</h3>
-            <div style="display: flex; gap: 1rem; flex-wrap: wrap;">
-                <button class="btn btn-outline" onclick="downloadData()">
-                    <span style="margin-right: 0.5rem;">📥</span> Download My Data
-                </button>
-                <button class="btn btn-outline" onclick="deactivateAccount()">
-                    <span style="margin-right: 0.5rem;">⏸️</span> Deactivate Account
-                </button>
-                <button class="btn btn-danger" onclick="deleteAccount()">
-                    <span style="margin-right: 0.5rem;">🗑️</span> Delete Account
-                </button>
             </div>
         </div>
     </main>
 </div>
 
+<style>
+.settings-tab {
+    background: none;
+    border: none;
+    padding: 1rem 0;
+    font-weight: 600;
+    color: var(--text-secondary);
+    cursor: pointer;
+    position: relative;
+    transition: all 0.3s;
+}
+
+.settings-tab.active {
+    color: var(--primary-color);
+}
+
+.settings-tab:after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background: var(--primary-color);
+    transition: width 0.3s;
+}
+
+.settings-tab.active:after {
+    width: 100%;
+}
+
+.tab-content {
+    display: none;
+    animation: fadeIn 0.4s ease;
+}
+
+.tab-content.active {
+    display: block;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+input.form-control, select.form-control, textarea.form-control {
+    border-radius: 0.75rem;
+    padding: 0.875rem 1rem;
+    border: 1px solid var(--border-color);
+    width: 100%;
+    transition: all 0.2s;
+}
+
+input.form-control:focus, select.form-control:focus, textarea.form-control:focus {
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+</style>
+
 <script>
+function switchTab(event, tabId) {
+    // Remove active class from all tabs
+    document.querySelectorAll('.settings-tab').forEach(tab => tab.classList.remove('active'));
+    // Add active class to clicked tab
+    event.currentTarget.classList.add('active');
+    
+    // Hide all tab content
+    document.querySelectorAll('.tab-content').forEach(content => content.classList.remove('active'));
+    // Show target tab content
+    document.getElementById(tabId + '-tab').classList.add('active');
+}
+
+function saveProfile() {
+    const btn = event.currentTarget;
+    const originalText = btn.innerHTML;
+    btn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Saving...';
+    btn.disabled = true;
+    
+    // Simulate API call
+    setTimeout(() => {
+        showActionModal(
+            'Settings Updated', 
+            'Your employer profile has been successfully updated.', 
+            'success', 
+            () => {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+            }
+        );
+    }, 1000);
+}
+
+function confirmDeletion() {
+    const confirmation = prompt('Type "DELETE MY ACCOUNT" to confirm permanent deletion:');
+    if (confirmation === 'DELETE MY ACCOUNT') {
+        alert('Your request has been submitted for processing.');
+    }
+}
+
 function toggleSidebar() {
     const sidebar = document.getElementById('sidebar');
     const overlay = document.querySelector('.sidebar-overlay');
@@ -230,84 +349,5 @@ function closeSidebar() {
     sidebar.classList.remove('active');
     overlay.classList.remove('active');
 }
-
-function updatePersonalInfo() {
-    alert('Personal information updated successfully!');
-}
-
-function updateCompanyInfo() {
-    alert('Company information updated successfully!');
-}
-
-function updateLocationInfo() {
-    alert('Location information updated successfully!');
-}
-
-function updateBio() {
-    alert('Company description updated successfully!');
-}
-
-function updateNotifications() {
-    alert('Notification preferences updated successfully!');
-}
-
-function changePassword() {
-    alert('Redirecting to password change page...');
-}
-
-function enableTwoFactor() {
-    alert('Two-factor authentication setup coming soon!');
-}
-
-function viewLoginHistory() {
-    alert('Login history feature coming soon!');
-}
-
-function downloadData() {
-    alert('Your data download will be prepared and sent to your email.');
-}
-
-function deactivateAccount() {
-    if (confirm('Are you sure you want to deactivate your account? You can reactivate it later.')) {
-        alert('Account deactivated. You can reactivate it by logging back in.');
-    }
-}
-
-function deleteAccount() {
-    const confirmation = prompt('This action cannot be undone. Type "DELETE" to confirm account deletion:');
-    if (confirmation === 'DELETE') {
-        alert('Account deletion request submitted. You will receive a confirmation email.');
-    } else if (confirmation !== null) {
-        alert('Account deletion cancelled.');
-    }
-}
-
-// Handle sidebar item clicks
-document.querySelectorAll('.sidebar-item').forEach(item => {
-    item.addEventListener('click', function(e) {
-        if (this.getAttribute('href') === '#') {
-            e.preventDefault();
-            // Remove active class from all items
-            document.querySelectorAll('.sidebar-item').forEach(i => i.classList.remove('active'));
-            // Add active class to clicked item
-            this.classList.add('active');
-            // Close mobile sidebar
-            closeSidebar();
-        }
-    });
-});
-
-// Close sidebar when clicking outside on mobile
-document.addEventListener('click', function(event) {
-    const sidebar = document.getElementById('sidebar');
-    const toggle = document.querySelector('.mobile-sidebar-toggle');
-    
-    if (window.innerWidth <= 768 && 
-        !sidebar.contains(event.target) && 
-        !toggle.contains(event.target) &&
-        sidebar.classList.contains('active')) {
-        closeSidebar();
-    }
-});
 </script>
 {% endblock %}
