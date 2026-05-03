@@ -64,11 +64,11 @@
                     </div>
                 </div>
 
-                <!-- Trust Badge -->
-                <div class="card" style="background: rgba(16, 185, 129, 0.05); border: 1px dashed var(--secondary-color); text-align: center; padding: 1.5rem;">
-                    <div style="font-size: 2.5rem; color: var(--secondary-color); margin-bottom: 0.5rem;"><i class='bx bxs-award'></i></div>
-                    <h4 style="margin-bottom: 0.25rem;">{{ _('trust_score') }}: {{ (employer.average_rating * 20)|int }}%</h4>
-                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">Verified employers get 40% more applications.</p>
+                <!-- Help Card -->
+                <div class="card" style="background: rgba(59, 130, 246, 0.05); border: 1px dashed var(--primary-color); text-align: center; padding: 1.5rem;">
+                    <div style="font-size: 2.5rem; color: var(--primary-color); margin-bottom: 0.5rem;"><i class='bx bx-help-circle'></i></div>
+                    <h4 style="margin-bottom: 0.25rem;">Need Help?</h4>
+                    <p style="font-size: 0.8rem; color: var(--text-secondary); margin: 0;">Contact our support team for any profile issues.</p>
                 </div>
             </div>
 
@@ -78,8 +78,8 @@
                     <!-- Tabs -->
                     <div style="display: flex; gap: 2rem; border-bottom: 1px solid var(--border-color); margin-bottom: 2rem;">
                         <button class="settings-tab active" onclick="switchTab(event, 'basic')">{{ _('employer_profile') }}</button>
-                        <button class="settings-tab" onclick="switchTab(event, 'preferences')">{{ _('hiring_preferences') }}</button>
-                        <button class="settings-tab" onclick="switchTab(event, 'account')">{{ _('account_security') }}</button>
+                        <button class="settings-tab" onclick="switchTab(event, 'preferences')">My Preferences</button>
+                        <button class="settings-tab" onclick="switchTab(event, 'account')">Security</button>
                     </div>
 
                     <!-- Basic Settings -->
@@ -205,20 +205,12 @@
                     <!-- Account & Security -->
                     <div id="account-tab" class="tab-content">
                         <h3 style="margin-bottom: 1.5rem; font-size: 1.25rem;">Security</h3>
-                        <div style="display: flex; flex-direction: column; gap: 1rem; margin-bottom: 3rem;">
                             <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--light-bg); border-radius: 0.75rem;">
                                 <div>
                                     <div style="font-weight: 600;">Account Password</div>
-                                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Last changed 3 months ago</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Protect your account with a strong password</div>
                                 </div>
                                 <button class="btn btn-outline btn-sm" onclick="alert('Coming soon: Password Reset')">Change Password</button>
-                            </div>
-                            <div style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; background: var(--light-bg); border-radius: 0.75rem;">
-                                <div>
-                                    <div style="font-weight: 600;">Two-Factor Authentication</div>
-                                    <div style="font-size: 0.8rem; color: var(--text-secondary);">Not enabled</div>
-                                </div>
-                                <button class="btn btn-outline btn-sm" onclick="alert('Coming soon: 2FA Setup')">Enable</button>
                             </div>
                         </div>
 
@@ -226,7 +218,6 @@
                         <div style="border: 1px solid rgba(239, 68, 68, 0.2); border-radius: 1rem; padding: 1.5rem;">
                             <p style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 1.5rem;">Once you delete your account, there is no going back. Please be certain.</p>
                             <div style="display: flex; gap: 1rem;">
-                                <button class="btn btn-outline" style="color: var(--danger-color); border-color: var(--danger-color);" onclick="alert('Account Deactivated')">Deactivate Account</button>
                                 <button class="btn btn-danger" onclick="confirmDeletion()">Delete Account</button>
                             </div>
                         </div>
