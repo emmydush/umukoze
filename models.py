@@ -76,8 +76,8 @@ class Worker(db.Model):
     
     # Relationships
     user = db.relationship('User', backref='worker_profile')
-    applications = db.relationship('Application', backref='worker')
-    reviews_received = db.relationship('Review', foreign_keys='Review.worker_id', backref='worker')
+    applications = db.relationship('Application', backref='worker_applications')
+    reviews_received = db.relationship('Review', foreign_keys='Review.worker_id', backref='worker_reviews')
 
 class Employer(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -110,8 +110,8 @@ class Employer(db.Model):
     
     # Relationships
     user = db.relationship('User', backref='employer_profile')
-    jobs = db.relationship('Job', backref='employer')
-    reviews_given = db.relationship('Review', foreign_keys='Review.employer_id', backref='employer')
+    jobs = db.relationship('Job', backref='employer_jobs')
+    reviews_given = db.relationship('Review', foreign_keys='Review.employer_id', backref='employer_reviews')
 
 class Job(db.Model):
     id = db.Column(db.Integer, primary_key=True)
