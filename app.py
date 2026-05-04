@@ -175,17 +175,18 @@ def calculate_profile_completion(worker):
     return round(percentage, 0)
 
 def check_profile_completion(worker):
-    """Check if worker profile is complete (100%)"""
-    return calculate_profile_completion(worker) >= 100
+    """Check if worker profile is complete enough for full access (70%+)"""
+    return calculate_profile_completion(worker) >= 70
 
 def require_complete_profile(f):
-    """Decorator to require complete worker profile"""
+    """Decorator to require worker profile with 70%+ completion"""
     @wraps(f)
     def decorated_function(*args, **kwargs):
         if current_user.user_type == 'worker':
             worker = Worker.query.filter_by(user_id=current_user.id).first()
             if not check_profile_completion(worker):
-                flash('⚠️ Please complete your profile to access this feature.', 'warning')
+                completion = calculate_profile_completion(worker)
+                flash(f'⚠️ Your profile is {completion}% complete. Please complete it to at least 70% to access this feature.', 'warning')
                 return redirect(url_for('worker_complete_profile'))
         return f(*args, **kwargs)
     return decorated_function
@@ -1675,7 +1676,7 @@ def worker_complete_profile():
                 
                 # Check if profile is now complete
                 if check_profile_completion(worker):
-                    flash('🎉 Congratulations! Your profile is now complete. You can now access all features.', 'success')
+                    flash('🎉 Congratulations! Your profile is now 70%+ complete. You can now access all features.', 'success')
                     return redirect(url_for('dashboard'))
                 else:
                     flash('✅ Profile updated! Please complete all required fields to unlock all features.', 'info')
