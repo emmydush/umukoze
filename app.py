@@ -1994,30 +1994,71 @@ def employer_find_workers():
 @app.route('/employer/applications')
 @login_required
 def employer_applications():
-    if current_user.user_type != 'employer':
+    try:
+        if current_user.user_type != 'employer':
+            return redirect(url_for('dashboard'))
+        
+        employer = Employer.query.filter_by(user_id=current_user.id).first()
+        if not employer:
+            flash('Employer profile not found. Please complete your profile.', 'error')
+            return redirect(url_for('dashboard'))
+        
+        # Get all applications for employer's jobs
+        applications = []
+        try:
+            for job in employer.jobs:
+                applications.extend(job.applications)
+        except Exception as e:
+            import logging
+            logging.error(f"Error getting employer jobs: {str(e)}")
+            # Continue with empty applications list
+        
+        # Sort by application date
+        try:
+            applications.sort(key=lambda x: x.applied_at, reverse=True)
+        except Exception as e:
+            import logging
+            logging.error(f"Error sorting applications: {str(e)}")
+            # Continue with unsorted list
+        
+        # Check payment status for each application's worker
+        applications_with_contact_status = []
+        for application in applications:
+            try:
+                if application.worker and application.worker.id:
+                    contact_info = get_worker_contact_info(employer.id, application.worker.id)
+                    applications_with_contact_status.append({
+                        'application': application,
+                        'has_access': contact_info['has_access'],
+                        'phone': contact_info['phone'],
+                        'email': contact_info['email']
+                    })
+                else:
+                    # Handle case where worker relationship is missing
+                    applications_with_contact_status.append({
+                        'application': application,
+                        'has_access': False,
+                        'phone': 'Worker info unavailable',
+                        'email': 'Worker info unavailable'
+                    })
+            except Exception as e:
+                import logging
+                logging.error(f"Error getting contact info for application {application.id}: {str(e)}")
+                # Continue with default values for this application
+                applications_with_contact_status.append({
+                    'application': application,
+                    'has_access': False,
+                    'phone': 'Contact info unavailable',
+                    'email': 'Contact info unavailable'
+                })
+        
+        return render_template('employer_applications.html', employer=employer, applications_with_contact_status=applications_with_contact_status)
+    
+    except Exception as e:
+        import logging
+        logging.error(f"Error in employer_applications: {str(e)}")
+        flash('An error occurred while loading applications. Please try again.', 'error')
         return redirect(url_for('dashboard'))
-    employer = Employer.query.filter_by(user_id=current_user.id).first()
-    
-    # Get all applications for employer's jobs
-    applications = []
-    for job in employer.jobs:
-        applications.extend(job.applications)
-    
-    # Sort by application date
-    applications.sort(key=lambda x: x.applied_at, reverse=True)
-    
-    # Check payment status for each application's worker
-    applications_with_contact_status = []
-    for application in applications:
-        contact_info = get_worker_contact_info(employer.id, application.worker.id)
-        applications_with_contact_status.append({
-            'application': application,
-            'has_access': contact_info['has_access'],
-            'phone': contact_info['phone'],
-            'email': contact_info['email']
-        })
-    
-    return render_template('employer_applications.html', employer=employer, applications_with_contact_status=applications_with_contact_status)
 
 @app.route('/employer/application/<int:application_id>/accept', methods=['POST'])
 @login_required
