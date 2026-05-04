@@ -668,7 +668,7 @@ function showContactOptions(workerId, workerName) {
     .then(data => {
         if (data.has_access) {
             // Show contact options if access is available
-            showContactModal(workerName, data.phone, data.email);
+            showContactModal(workerName, data.phone, data.email, data.user_id);
         } else {
             // Show payment modal if no access
             if (typeof showPlatformPaymentModal === 'function') {
@@ -706,17 +706,21 @@ function showContactModal(workerName, phone, email) {
                 <p style="margin-bottom: 0.5rem;"><strong>Phone:</strong> ${phone}</p>
                 <p style="margin-bottom: 1rem;"><strong>Email:</strong> ${email}</p>
             </div>
-            <div style="display: flex; gap: 1rem;">
+            <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
                 <button onclick="window.open('https://wa.me/${phone.replace(/[^0-9]/g, '')}', '_blank')" 
-                        style="flex: 1; padding: 0.75rem; background: #25D366; color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
-                    WhatsApp
+                        style="flex: 1; padding: 0.75rem; background: #25D366; color: white; border: none; border-radius: 0.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.25rem;">
+                    <i class='bx bxl-whatsapp'></i> WhatsApp
                 </button>
                 <button onclick="window.location.href='tel:${phone}'" 
-                        style="flex: 1; padding: 0.75rem; background: var(--primary-color); color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
-                    Call
+                        style="flex: 1; padding: 0.75rem; background: var(--primary-color); color: white; border: none; border-radius: 0.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.25rem;">
+                    <i class='bx bxs-phone'></i> Call
+                </button>
+                <button onclick="window.location.href='/messages/' + ${userId}" 
+                        style="flex: 1; padding: 0.75rem; background: var(--white); color: var(--primary-color); border: 1px solid var(--primary-color); border-radius: 0.5rem; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 0.25rem;">
+                    <i class='bx bx-message-rounded-dots'></i> Message
                 </button>
                 <button onclick="this.closest('div[style*=position]').remove()" 
-                        style="padding: 0.75rem; background: var(--gray-color); color: white; border: none; border-radius: 0.5rem; cursor: pointer;">
+                        style="width: 100%; padding: 0.75rem; background: var(--gray-color); color: white; border: none; border-radius: 0.5rem; cursor: pointer; margin-top: 0.5rem;">
                     Close
                 </button>
             </div>

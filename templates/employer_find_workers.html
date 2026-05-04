@@ -138,6 +138,9 @@
                                 <button onclick="makeCall('{{ worker_data.phone }}')" class="btn btn-primary btn-sm" style="flex: 1; padding: 0.4rem; border-radius: 0.5rem; border: none; cursor: pointer;" title="Call">
                                     <i class='bx bxs-phone' style="font-size: 0.95rem;"></i>
                                 </button>
+                                <a href="{{ url_for('messages', user_id=worker.user.id) }}" class="btn btn-outline btn-sm" style="flex: 1; padding: 0.4rem; border-radius: 0.5rem; border-color: var(--primary-color); display: flex; align-items: center; justify-content: center;" title="Message">
+                                    <i class='bx bx-message-rounded-dots' style="font-size: 0.95rem; color: var(--primary-color);"></i>
+                                </a>
                             </div>
                         {% else %}
                             <button onclick="showPlatformPaymentModal({{ worker.id }}, '{{ worker.user.full_name|replace('\'', '\\\'') }}')" class="btn btn-primary btn-sm" style="padding: 0.4rem; border-radius: 0.5rem; background: var(--text-primary); border: none; font-size: 0.7rem;">

@@ -374,6 +374,7 @@ def employer_worker_contact(worker_id):
     worker = Worker.query.get_or_404(worker_id)
     
     contact_info = get_worker_contact_info(employer.id, worker.id)
+    contact_info['user_id'] = worker.user.id
     return jsonify(contact_info)
 
 # Admin Index Route - Redirects to dashboard
@@ -644,6 +645,92 @@ def admin_reject_verification(user_type, profile_id):
     
     flash(f'Verification rejected. Reason: {reason}', 'warning')
     return redirect(url_for('admin_verification'))
+
+# User Messages System
+@app.route('/messages')
+@app.route('/messages/<int:user_id>')
+@login_required
+def messages(user_id=None):
+    if current_user.user_type == 'admin':
+        return redirect(url_for('admin_messages'))
+    
+    from sqlalchemy import or_, desc, and_
+    import datetime
+    
+    # Fetch all users we have messages with
+    stmt = db.session.query(Message).filter(
+        or_(Message.sender_id == current_user.id, Message.receiver_id == current_user.id)
+    ).order_by(desc(Message.created_at))
+    all_msgs = stmt.all()
+
+    # Get distinct users
+    conversations = []
+    seen_users = set()
+    
+    for msg in all_msgs:
+        other_user_id = msg.receiver_id if msg.sender_id == current_user.id else msg.sender_id
+        if other_user_id not in seen_users:
+            other_user = User.query.get(other_user_id)
+            if other_user:
+                conversations.append({
+                    'other_user': other_user,
+                    'latest_msg': msg
+                })
+            seen_users.add(other_user_id)
+            
+    active_user = None
+    active_messages = []
+    
+    if user_id:
+        active_user = User.query.get_or_404(user_id)
+        # Mark read
+        unread_msgs = Message.query.filter_by(sender_id=user_id, receiver_id=current_user.id, is_read=False).all()
+        for u_msg in unread_msgs:
+            u_msg.is_read = True
+            u_msg.read_at = datetime.datetime.utcnow()
+        if unread_msgs:
+            db.session.commit()
+            
+        active_messages = Message.query.filter(
+            or_(
+                and_(Message.sender_id == current_user.id, Message.receiver_id == user_id),
+                and_(Message.sender_id == user_id, Message.receiver_id == current_user.id)
+            )
+        ).order_by(Message.created_at.asc()).all()
+    
+    # Pass worker / employer side info if needed for sidebars
+    employer = None
+    worker = None
+    if current_user.user_type == 'employer':
+        employer = Employer.query.filter_by(user_id=current_user.id).first()
+    elif current_user.user_type == 'worker':
+        worker = Worker.query.filter_by(user_id=current_user.id).first()
+        
+    return render_template('user_messages.html', 
+                            conversations=conversations, 
+                            active_user=active_user, 
+                            active_messages=active_messages,
+                            current_time=datetime.datetime.utcnow(),
+                            employer=employer, worker=worker)
+
+@app.route('/messages/send', methods=['POST'])
+@login_required
+def send_message():
+    receiver_id = request.form.get('receiver_id', type=int)
+    content = request.form.get('content')
+    
+    if not receiver_id or not content:
+        flash('Message cannot be empty.', 'error')
+        return redirect(request.referrer or url_for('messages'))
+        
+    msg = Message(sender_id=current_user.id, receiver_id=receiver_id, content=content)
+    db.session.add(msg)
+    
+    notif = Notification(user_id=receiver_id, message=f'New message from {current_user.full_name}')
+    db.session.add(notif)
+    
+    db.session.commit()
+    return redirect(url_for('messages', user_id=receiver_id))
 
 # Admin Messages
 @app.route('/admin/messages')

@@ -42,12 +42,12 @@
                 </a>
             </li>
             <li>
-                <a href="#" onclick="showMessages()" class="sidebar-item">
+                <a href="{{ url_for('admin_messages') }}" class="sidebar-item {% if request.endpoint == 'admin_messages' %}active{% endif %}">
                     <i class='bx bx-message-dots'></i> <span>Messages</span>
                 </a>
             </li>
             <li>
-                <a href="#" class="sidebar-item">
+                <a href="{{ url_for('admin_notifications') }}" class="sidebar-item {% if request.endpoint == 'admin_notifications' %}active{% endif %}">
                     <i class='bx bx-bell'></i> <span>Notifications</span>
                 </a>
             </li>
