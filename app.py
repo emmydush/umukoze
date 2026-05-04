@@ -444,15 +444,29 @@ def worker_profile(worker_id):
 @app.route('/employer/worker-contact/<int:worker_id>')
 @login_required
 def employer_worker_contact(worker_id):
-    if current_user.user_type != 'employer':
-        return jsonify({'error': 'Access denied'}), 403
+    try:
+        if current_user.user_type != 'employer':
+            return jsonify({'error': 'Access denied'}), 403
+        
+        employer = Employer.query.filter_by(user_id=current_user.id).first()
+        if not employer:
+            return jsonify({'error': 'Employer profile not found'}), 404
+        
+        worker = Worker.query.get(worker_id)
+        if not worker:
+            return jsonify({'error': 'Worker not found'}), 404
+        
+        if not worker.user:
+            return jsonify({'error': 'Worker user account not found'}), 404
+        
+        contact_info = get_worker_contact_info(employer.id, worker.id)
+        contact_info['user_id'] = worker.user.id
+        return jsonify(contact_info)
     
-    employer = Employer.query.filter_by(user_id=current_user.id).first()
-    worker = Worker.query.get_or_404(worker_id)
-    
-    contact_info = get_worker_contact_info(employer.id, worker.id)
-    contact_info['user_id'] = worker.user.id
-    return jsonify(contact_info)
+    except Exception as e:
+        import logging
+        logging.error(f"Error in employer_worker_contact: {str(e)}")
+        return jsonify({'error': 'Unable to check contact access. Please try again.'}), 500
 
 @app.route('/employer/payment/<int:worker_id>/pricing')
 @login_required
