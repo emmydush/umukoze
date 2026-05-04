@@ -7,8 +7,10 @@ from datetime import datetime
 import os
 import logging
 import traceback
+import time
 from functools import wraps
 from dotenv import load_dotenv
+from werkzeug.utils import secure_filename
 
 load_dotenv()
 
@@ -218,6 +220,26 @@ def get_worker_contact_info(employer_id, worker_id):
         'has_access': False
     }
 
+def allowed_file(filename, allowed_extensions):
+    """Check if file has allowed extension"""
+    return '.' in filename and \
+           filename.rsplit('.', 1)[1].lower() in allowed_extensions
+
+def get_connection_price(employer_id):
+    """Determine connection price based on employer's payment history"""
+    # Check if employer has any verified payments before
+    previous_payments = Payment.query.filter_by(
+        employer_id=employer_id,
+        status='verified'
+    ).count()
+    
+    if previous_payments == 0:
+        # First time connection
+        return 10000.00, "first_time"
+    else:
+        # Subsequent connection
+        return 5000.00, "subsequent"
+
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -376,6 +398,117 @@ def employer_worker_contact(worker_id):
     contact_info = get_worker_contact_info(employer.id, worker.id)
     contact_info['user_id'] = worker.user.id
     return jsonify(contact_info)
+
+@app.route('/employer/payment/<int:worker_id>/pricing')
+@login_required
+def get_payment_pricing(worker_id):
+    """Get pricing information for worker connection"""
+    if current_user.user_type != 'employer':
+        return jsonify({'error': 'Access denied'}), 403
+    
+    employer = Employer.query.filter_by(user_id=current_user.id).first()
+    if not employer:
+        return jsonify({'error': 'Employer profile not found'}), 404
+    
+    amount, pricing_tier = get_connection_price(employer.id)
+    
+    return jsonify({
+        'amount': amount,
+        'pricing_tier': pricing_tier,
+        'currency': 'FRW',
+        'formatted_amount': f"RWF {int(amount):,}".replace(',', ' ')
+    })
+
+@app.route('/employer/payment/<int:worker_id>/submit', methods=['POST'])
+@login_required
+def submit_payment(worker_id):
+    try:
+        if current_user.user_type != 'employer':
+            return jsonify({'success': False, 'error': 'Access denied'}), 403
+        
+        employer = Employer.query.filter_by(user_id=current_user.id).first()
+        if not employer:
+            return jsonify({'success': False, 'error': 'Employer profile not found'}), 404
+            
+        worker = Worker.query.get_or_404(worker_id)
+        
+        # Check if payment already exists
+        existing_payment = Payment.query.filter_by(
+            employer_id=employer.id,
+            worker_id=worker.id
+        ).first()
+        
+        if existing_payment and existing_payment.status != 'rejected':
+            return jsonify({'success': False, 'error': 'Payment already exists'}), 400
+        
+        # Ensure upload folder exists
+        upload_folder = app.config.get('UPLOAD_FOLDER', 'static/uploads')
+        if not os.path.exists(upload_folder):
+            os.makedirs(upload_folder, exist_ok=True)
+        
+        # Determine pricing based on employer's payment history
+        amount, pricing_tier = get_connection_price(employer.id)
+        
+        # Create new payment record
+        payment_method = request.form.get('payment_method', 'momo')
+        transaction_id = request.form.get('transaction_id', '')
+        phone_number = request.form.get('phone_number', '')
+        
+        payment = Payment(
+            employer_id=employer.id,
+            worker_id=worker.id,
+            amount=amount,
+            payment_method=payment_method,
+            transaction_id=transaction_id,
+            phone_number=phone_number,
+            status='pending',
+            paid_at=datetime.utcnow()
+        )
+        
+        db.session.add(payment)
+        db.session.commit()
+        
+        # Handle screenshot upload
+        if 'screenshot' in request.files:
+            file = request.files['screenshot']
+            if file and file.filename and allowed_file(file.filename, {'png', 'jpg', 'jpeg', 'gif'}):
+                try:
+                    filename = secure_filename(f"payment_{payment.id}_{int(time.time())}.{file.filename.split('.')[-1]}")
+                    filepath = os.path.join(upload_folder, filename)
+                    file.save(filepath)
+                    
+                    payment.screenshot_path = filename
+                    db.session.commit()
+                except Exception as e:
+                    print(f"Error saving screenshot: {e}")
+                    # Continue without screenshot - payment is still valid
+        
+        # Send notification to admin
+        try:
+            admin_users = User.query.filter_by(user_type='admin', is_active=True).all()
+            for admin in admin_users:
+                notif = Notification(
+                    user_id=admin.id,
+                    message=f"New payment submitted: {employer.user.full_name} for {worker.user.full_name}",
+                    notification_type='new_payment'
+                )
+                db.session.add(notif)
+            
+            db.session.commit()
+        except Exception as e:
+            print(f"Error sending notifications: {e}")
+            # Continue - payment is still saved
+        
+        return jsonify({
+            'success': True,
+            'message': 'Payment submitted successfully. Please wait for admin verification.',
+            'payment_id': payment.id
+        })
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Payment submission error: {e}")
+        return jsonify({'success': False, 'error': f'Server error: {str(e)}'}), 500
 
 # Admin Index Route - Redirects to dashboard
 @app.route('/admin')
@@ -1167,6 +1300,158 @@ def admin_delete_user(user_id):
             print(f"Error deleting user {user_id}: {e}")
     
     return redirect(url_for('admin_users'))
+
+# Admin Payment Management Routes
+@app.route('/admin/payments')
+@login_required
+def admin_payments():
+    if current_user.user_type != 'admin':
+        return redirect(url_for('dashboard'))
+    
+    page = request.args.get('page', 1, type=int)
+    status_filter = request.args.get('status', '')
+    search = request.args.get('search', '')
+    
+    query = Payment.query
+    
+    if status_filter:
+        query = query.filter_by(status=status_filter)
+    
+    if search:
+        query = query.join(Employer).join(Worker).join(User, Employer.user).join(User, Worker.user, aliased=True).filter(
+            User.full_name.contains(search) | User.email.contains(search)
+        )
+    
+    payments = query.order_by(Payment.created_at.desc()).paginate(
+        page=page, per_page=20, error_out=False
+    )
+    
+    return render_template('admin_payments.html', payments=payments, 
+                         status_filter=status_filter, search=search)
+
+@app.route('/admin/payment/<int:payment_id>/verify', methods=['POST'])
+@login_required
+def admin_verify_payment(payment_id):
+    try:
+        if current_user.user_type != 'admin':
+            return redirect(url_for('dashboard'))
+        
+        payment = Payment.query.get_or_404(payment_id)
+        
+        if payment.status != 'pending':
+            flash('Payment has already been processed.', 'warning')
+            return redirect(url_for('admin_payments'))
+        
+        payment.status = 'verified'
+        payment.verified_at = datetime.utcnow()
+        payment.verified_by = current_user.id
+        
+        # Grant contact access
+        existing_access = WorkerContactAccess.query.filter_by(
+            employer_id=payment.employer_id,
+            worker_id=payment.worker_id,
+            payment_id=payment.id
+        ).first()
+        
+        if not existing_access:
+            access = WorkerContactAccess(
+                employer_id=payment.employer_id,
+                worker_id=payment.worker_id,
+                payment_id=payment.id,
+                access_granted=True,
+                granted_at=datetime.utcnow()
+            )
+            db.session.add(access)
+        
+        db.session.commit()
+        
+        # Send notification to employer
+        try:
+            employer = Employer.query.get(payment.employer_id)
+            if employer and employer.user:
+                notif = Notification(
+                    user_id=employer.user.id,
+                    message=f"Your payment for worker contact has been verified. You can now view their contact information.",
+                    notification_type='payment_verified'
+                )
+                db.session.add(notif)
+                db.session.commit()
+        except Exception as e:
+            print(f"Error sending notification: {e}")
+            # Continue - payment is still verified
+        
+        flash('Payment verified successfully. Contact access granted.', 'success')
+        return redirect(url_for('admin_payments'))
+        
+    except Exception as e:
+        db.session.rollback()
+        print(f"Payment verification error: {e}")
+        flash(f'Error verifying payment: {str(e)}', 'error')
+        return redirect(url_for('admin_payments'))
+
+@app.route('/admin/payment/<int:payment_id>/reject', methods=['POST'])
+@login_required
+def admin_reject_payment(payment_id):
+    if current_user.user_type != 'admin':
+        return redirect(url_for('dashboard'))
+    
+    payment = Payment.query.get_or_404(payment_id)
+    reason = request.form.get('reason', 'Payment could not be verified')
+    
+    if payment.status != 'pending':
+        flash('Payment has already been processed.', 'warning')
+        return redirect(url_for('admin_payments'))
+    
+    payment.status = 'rejected'
+    payment.verified_at = datetime.utcnow()
+    payment.verified_by = current_user.id
+    
+    db.session.commit()
+    
+    # Send notification to employer
+    employer = Employer.query.get(payment.employer_id)
+    if employer and employer.user:
+        notif = Notification(
+            user_id=employer.user.id,
+            message=f"Your payment was rejected: {reason}",
+            notification_type='payment_rejected'
+        )
+        db.session.add(notif)
+        db.session.commit()
+    
+    flash('Payment rejected.', 'warning')
+    return redirect(url_for('admin_payments'))
+
+@app.route('/admin/payment/<int:payment_id>/upload-screenshot', methods=['POST'])
+@login_required
+def admin_upload_payment_screenshot(payment_id):
+    if current_user.user_type != 'admin':
+        return redirect(url_for('dashboard'))
+    
+    payment = Payment.query.get_or_404(payment_id)
+    
+    if 'screenshot' not in request.files:
+        flash('No file selected.', 'error')
+        return redirect(url_for('admin_payments'))
+    
+    file = request.files['screenshot']
+    if file.filename == '':
+        flash('No file selected.', 'error')
+        return redirect(url_for('admin_payments'))
+    
+    if file and allowed_file(file.filename, {'png', 'jpg', 'jpeg', 'gif'}):
+        filename = secure_filename(f"payment_{payment.id}_{int(time.time())}.{file.filename.split('.')[-1]}")
+        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        file.save(filepath)
+        
+        payment.screenshot_path = filename
+        db.session.commit()
+        
+        flash('Screenshot uploaded successfully.', 'success')
+    else:
+        flash('Invalid file type. Please upload PNG, JPG, or GIF.', 'error')
+    
+    return redirect(url_for('admin_payments'))
 
 # Worker Profile Completion Route
 @app.route('/worker/complete-profile', methods=['GET', 'POST'])

@@ -23,7 +23,7 @@
     <link rel="stylesheet" href="{{ url_for('static', filename='css/modern_sidebar.css') }}">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@500;700;900&display=swap" rel="stylesheet">
     <link href='https://unpkg.com/boxicons@2.1.4/css/boxicons.min.css' rel='stylesheet'>
 </head>
 <body>
@@ -33,7 +33,7 @@
             <div class="nav">
                 {% if not current_user.is_authenticated %}
                 <a href="{{ url_for('index') }}" class="logo logo-animated">
-                    <span style="--i:1; --c:#3b82f6;">U</span><span style="--i:2; --c:#3b82f6;">M</span><span style="--i:3; --c:#eab308;">U</span><span style="--i:4; --c:#eab308;">K</span><span style="--i:5; --c:#22c55e;">O</span><span style="--i:6; --c:#22c55e;">Z</span><span style="--i:7; --c:#22c55e;">I</span>
+                    <span class="letter-u" style="--i:1; --c:#2163E8;">U</span><span style="--i:2; --c:#2163E8;">M</span><span class="letter-u" style="--i:3; --c:#F59E0B;">U</span><span style="--i:4; --c:#F59E0B;">K</span><span class="letter-o" style="--i:5; --c:#0FB981;">O</span><span style="--i:6; --c:#0FB981;">Z</span><span style="--i:7; --c:#0FB981;">I</span>
                 </a>
                 <button class="mobile-menu-toggle" onclick="toggleMobileMenu()">
                     <i class='bx bx-menu'></i>
@@ -200,7 +200,7 @@
         <div class="container">
             <div class="grid grid-4">
                 <div>
-                    <h3 style="margin-bottom: 1rem; color: var(--white);">Umukozi</h3>
+                    <h3 style="margin-bottom: 1rem; color: var(--white); font-family: 'Outfit', sans-serif; font-weight: 700; letter-spacing: 1px; text-transform: uppercase;">Umukozi</h3>
                     <p style="color: #9ca3af; margin-bottom: 1.5rem;">Connecting trusted household workers with employers across Rwanda.</p>
                     <div style="margin-bottom: 1.5rem; color: #9ca3af;">
                         <div style="margin-bottom: 0.5rem;"><i class='bx bx-phone' style="margin-right: 0.5rem; color: var(--primary-color);"></i> <a href="tel:+250795555112" style="color: #9ca3af; text-decoration: none;">079 555 5112</a></div>
@@ -383,37 +383,160 @@
 
         // Global Platform Payment Modal
         function showPlatformPaymentModal(workerId = '', workerName = '') {
-            let modal = document.getElementById('globalPaymentModal');
-            if (modal) {
-                modal.remove(); // Remove existing modal to reset dynamic content
+            const existingModal = document.getElementById('globalPaymentModal');
+            if (existingModal) {
+                existingModal.remove(); // Remove existing modal to reset dynamic content
             }
             
             const workerContext = workerName ? ` to connect with <strong>${workerName}</strong>` : ' to connect with this worker';
-            const whatsappText = encodeURIComponent(`Hello, I have paid 10,000 FRW to connect with worker ${workerName ? workerName + ' ' : ''}${workerId ? '(ID: ' + workerId + ')' : ''}. Here is my screenshot proof of payment:`);
             
-            const modalHtml = `
+            // Show loading modal first
+            const loadingModalHtml = `
             <div id="globalPaymentModal" class="modal-overlay">
-                <div class="modal" style="max-width: 400px; text-align: center; padding: 2rem;">
+                <div class="modal" style="max-width: 500px;">
                     <button onclick="closePaymentModal()" style="position: absolute; right: 1rem; top: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); transition: color 0.2s;" onmouseover="this.style.color='var(--danger-color)'" onmouseout="this.style.color='var(--text-secondary)'">✕</button>
                     <div style="margin: 0 auto 1rem; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
                         <img src="/static/images/momo%20icon.png" alt="MTN MoMo" style="max-width: 100%; max-height: 100%; border-radius: 50%; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); object-fit: contain;">
                     </div>
-                    <h3 class="modal-title" style="margin-bottom: 0.5rem; font-size: 1.25rem;">10,000 FRW Connection Fee</h3>
-                    <p class="modal-text" style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem;">
-                        Pay via MoMo or Airtel Money to <strong style="color: var(--primary-color); font-size: 1.1rem;">079 555 5112</strong> and send us the screenshot on WhatsApp${workerContext}.
-                    </p>
-                    <div class="modal-actions" style="justify-content: center; margin: 0;">
-                        <a href="https://wa.me/250795555112?text=${whatsappText}" target="_blank" class="btn" style="width: 100%; display: flex; align-items: center; justify-content: center; gap: 0.5rem; background: #25D366; color: white;">
-                            <i class='bx bxl-whatsapp' style="font-size: 1.3rem;"></i> Send Screenshot
-                        </a>
+                    <h3 class="modal-title" style="margin-bottom: 0.5rem; font-size: 1.25rem; text-align: center;">Loading pricing...</h3>
+                    <div style="text-align: center; padding: 2rem;">
+                        <i class="bx bx-loader-alt bx-spin" style="font-size: 2rem; color: var(--primary-color);"></i>
                     </div>
                 </div>
             </div>`;
+            
+            document.body.insertAdjacentHTML('beforeend', loadingModalHtml);
+            const modal = document.getElementById('globalPaymentModal');
+            modal.style.display = 'flex';
+            setTimeout(() => { modal.classList.add('active'); }, 10);
+            
+            // Fetch pricing information
+            fetch(`/employer/payment/${workerId}/pricing`)
+                .then(response => response.json())
+                .then(pricingData => {
+                    if (pricingData.error) {
+                        throw new Error(pricingData.error);
+                    }
+                    
+                    // Update modal with pricing information
+                    updatePaymentModalWithPricing(workerId, workerName, pricingData);
+                })
+                .catch(error => {
+                    console.error('Error fetching pricing:', error);
+                    // Show default pricing on error
+                    updatePaymentModalWithPricing(workerId, workerName, {
+                        amount: 10000,
+                        pricing_tier: 'first_time',
+                        formatted_amount: 'RWF 10 000'
+                    });
+                });
+        }
+        
+        function updatePaymentModalWithPricing(workerId, workerName, pricingData) {
+            const existingModal = document.getElementById('globalPaymentModal');
+            if (existingModal) {
+                existingModal.remove(); // Remove existing modal completely
+            }
+            
+            const workerContext = workerName ? ` to connect with <strong>${workerName}</strong>` : ' to connect with this worker';
+            const pricingMessage = pricingData.pricing_tier === 'first_time' 
+                ? 'First-time connection fee' 
+                : 'Returning employer discount';
+            
+            const modalHtml = `
+            <div id="globalPaymentModal" class="modal-overlay">
+                <div class="modal" style="max-width: 500px;">
+                    <button onclick="closePaymentModal()" style="position: absolute; right: 1rem; top: 1rem; background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); transition: color 0.2s;" onmouseover="this.style.color='var(--danger-color)'" onmouseout="this.style.color='var(--text-secondary)'">✕</button>
+                    <div style="margin: 0 auto 1rem; width: 80px; height: 80px; display: flex; align-items: center; justify-content: center;">
+                        <img src="/static/images/momo%20icon.png" alt="MTN MoMo" style="max-width: 100%; max-height: 100%; border-radius: 50%; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1); object-fit: contain;">
+                    </div>
+                    <h3 class="modal-title" style="margin-bottom: 0.5rem; font-size: 1.25rem; text-align: center;">${pricingData.formatted_amount} Connection Fee</h3>
+                    <p style="color: var(--success-color); font-size: 0.875rem; text-align: center; margin-bottom: 0.5rem;">
+                        <i class='bx bx-tag'></i> ${pricingMessage}
+                    </p>
+                    <p class="modal-text" style="color: var(--text-secondary); margin-bottom: 1.5rem; font-size: 0.95rem; text-align: center;">
+                        Pay via <strong style="color: var(--primary-color); font-size: 1.1rem;">*182*1*1*0795555112#</strong> and submit your payment details${workerContext}.
+                    </p>
+                    
+                    <form id="paymentForm" method="POST" action="/employer/payment/${workerId}/submit" enctype="multipart/form-data" style="margin-bottom: 1rem;">
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Payment Method:</label>
+                            <select name="payment_method" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem;">
+                                <option value="momo">MTN MoMo</option>
+                                <option value="airtel">Airtel Money</option>
+                            </select>
+                        </div>
+                        
+                        <div style="margin-bottom: 1rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Your Phone Number:</label>
+                            <input type="tel" name="phone_number" placeholder="Enter your payment phone number" required style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem;">
+                        </div>
+                        
+                        <div style="margin-bottom: 1.5rem;">
+                            <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Payment Screenshot:</label>
+                            <input type="file" name="screenshot" accept="image/*" required style="width: 100%; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 0.5rem;">
+                            <small style="color: var(--text-secondary);">Upload screenshot of your payment confirmation</small>
+                        </div>
+                        
+                        <div style="display: flex; gap: 0.5rem;">
+                            <button type="submit" class="btn" style="flex: 1; background: var(--primary-color); color: white;">
+                                <i class='bx bx-check'></i> Submit Payment
+                            </button>
+                            <a href="https://wa.me/250795555112?text=Hello, I need help with payment for worker ${workerName ? workerName + ' ' : ''}${workerId ? '(ID: ' + workerId + ')' : ''}." target="_blank" class="btn" style="flex: 1; background: #25D366; color: white; text-align: center; text-decoration: none; display: flex; align-items: center; justify-content: center; gap: 0.5rem;">
+                                <i class='bx bxl-whatsapp'></i> WhatsApp Help
+                            </a>
+                        </div>
+                    </form>
+                </div>
+            </div>`;
+            
             document.body.insertAdjacentHTML('beforeend', modalHtml);
-            modal = document.getElementById('globalPaymentModal');
+            const modal = document.getElementById('globalPaymentModal');
             
             modal.style.display = 'flex';
             setTimeout(() => { modal.classList.add('active'); }, 10);
+            
+            // Handle form submission
+            document.getElementById('paymentForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const formData = new FormData(this);
+                const submitBtn = this.querySelector('button[type="submit"]');
+                const originalText = submitBtn.innerHTML;
+                
+                submitBtn.innerHTML = '<i class="bx bx-loader-alt bx-spin"></i> Processing...';
+                submitBtn.disabled = true;
+                
+                fetch(this.action, {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.json().then(err => {
+                            throw new Error(err.error || `HTTP ${response.status}`);
+                        });
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    if (data.success) {
+                        alert('Payment submitted successfully! Please wait for admin verification.');
+                        closePaymentModal();
+                        location.reload();
+                    } else {
+                        alert('Error: ' + data.error);
+                    }
+                })
+                .catch(error => {
+                    alert('Error submitting payment: ' + error.message);
+                    console.error('Payment submission error:', error);
+                })
+                .finally(() => {
+                    submitBtn.innerHTML = originalText;
+                    submitBtn.disabled = false;
+                });
+            });
         }
 
         function closePaymentModal() {

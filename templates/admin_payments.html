@@ -1,0 +1,314 @@
+{% extends "base.html" %}
+
+{% block title %}Payment Management - Admin Dashboard{% endblock %}
+
+{% block content %}
+<!-- Mobile Menu Button -->
+<button class="mobile-menu-btn" onclick="toggleSidebar()">
+    <i class='bx bx-menu'></i>
+</button>
+
+<div class="sidebar-overlay" onclick="closeSidebar()"></div>
+
+<div class="dashboard-layout">
+    <!-- Sidebar -->
+    {% include 'includes/admin_sidebar.html' %}
+    
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header style="margin-bottom: 2rem; padding-top: 1rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;">
+                <div>
+                    <h1 style="font-size: 2rem; font-weight: 800; margin-bottom: 0.5rem;">Payment Management</h1>
+                    <p style="color: var(--text-secondary);">Verify and manage worker contact access payments</p>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <span style="padding: 0.5rem 1rem; background: rgba(245, 158, 11, 0.1); color: var(--warning-color); border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600;">
+                        Pending: {{ payments.items | selectattr('status', 'equalto', 'pending') | list | length }}
+                    </span>
+                    <span style="padding: 0.5rem 1rem; background: rgba(16, 185, 129, 0.1); color: var(--secondary-color); border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600;">
+                        Verified: {{ payments.items | selectattr('status', 'equalto', 'verified') | list | length }}
+                    </span>
+                    <span style="padding: 0.5rem 1rem; background: rgba(239, 68, 68, 0.1); color: var(--danger-color); border-radius: 0.5rem; font-size: 0.875rem; font-weight: 600;">
+                        Rejected: {{ payments.items | selectattr('status', 'equalto', 'rejected') | list | length }}
+                    </span>
+                </div>
+            </div>
+
+            <!-- Filters and Search -->
+            <div style="background: var(--white); padding: 1.5rem; border-radius: 1rem; border: 1px solid var(--border-color); margin-bottom: 2rem;">
+                <form method="GET" style="display: flex; gap: 1rem; align-items: end; flex-wrap: wrap;">
+                    <div style="flex: 1; min-width: 200px;">
+                        <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">Search Payments</label>
+                        <input type="text" name="search" value="{{ search }}" placeholder="Search by employer or worker name..." style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; font-size: 0.875rem;">
+                    </div>
+                    <div style="min-width: 150px;">
+                        <label style="display: block; font-size: 0.875rem; font-weight: 600; margin-bottom: 0.5rem; color: var(--text-primary);">Status</label>
+                        <select name="status" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; font-size: 0.875rem;">
+                            <option value="">All Status</option>
+                            <option value="pending" {% if status_filter == 'pending' %}selected{% endif %}>Pending</option>
+                            <option value="verified" {% if status_filter == 'verified' %}selected{% endif %}>Verified</option>
+                            <option value="rejected" {% if status_filter == 'rejected' %}selected{% endif %}>Rejected</option>
+                        </select>
+                    </div>
+                    <button type="submit" style="padding: 0.75rem 1.5rem; background: var(--primary-color); color: white; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer;">
+                        <i class='bx bx-search' style="margin-right: 0.5rem;"></i>Search
+                    </button>
+                    <a href="{{ url_for('admin_payments') }}" style="padding: 0.75rem 1.5rem; background: var(--text-secondary); color: white; border: none; border-radius: 0.5rem; font-weight: 600; text-decoration: none; display: inline-block;">
+                        <i class='bx bx-refresh' style="margin-right: 0.5rem;"></i>Reset
+                    </a>
+                </form>
+            </div>
+        </header>
+
+        <!-- Payments Table -->
+        <div style="background: var(--white); border-radius: 1rem; border: 1px solid var(--border-color); overflow: hidden;">
+            <div class="table-container" style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse;">
+                    <thead style="background: var(--gray-50); border-bottom: 1px solid var(--border-color);">
+                        <tr>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Payment Details</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Employer</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Worker</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Amount</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Status</th>
+                            <th style="padding: 1rem; text-align: left; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Date</th>
+                            <th style="padding: 1rem; text-align: center; font-weight: 600; font-size: 0.875rem; color: var(--text-primary);">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for payment in payments.items %}
+                        <tr style="border-bottom: 1px solid var(--border-color);">
+                            <td style="padding: 1rem;">
+                                <div style="font-size: 0.875rem; font-weight: 600; margin-bottom: 0.25rem;">Payment #{{ payment.id }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                    Method: {{ payment.payment_method or 'Not specified' }}
+                                </div>
+                                {% if payment.transaction_id %}
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                    Transaction: {{ payment.transaction_id }}
+                                </div>
+                                {% endif %}
+                                {% if payment.phone_number %}
+                                <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 0.25rem;">
+                                    Phone: {{ payment.phone_number }}
+                                </div>
+                                {% endif %}
+                                {% if payment.screenshot_path %}
+                                <div style="font-size: 0.75rem; color: var(--success-color); margin-bottom: 0.25rem;">
+                                    <i class='bx bx-image'></i> Screenshot uploaded
+                                </div>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 1rem;">
+                                {% if payment.employer and payment.employer.user %}
+                                <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">{{ payment.employer.user.full_name }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ payment.employer.user.email }}</div>
+                                {% else %}
+                                <span style="color: var(--text-secondary); font-size: 0.875rem;">Employer not found</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 1rem;">
+                                {% if payment.worker and payment.worker.user %}
+                                <div style="font-weight: 600; font-size: 0.875rem; margin-bottom: 0.25rem;">{{ payment.worker.user.full_name }}</div>
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">{{ payment.worker.user.email }}</div>
+                                {% else %}
+                                <span style="color: var(--text-secondary); font-size: 0.875rem;">Worker not found</span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 1rem;">
+                                <div style="font-weight: 600; font-size: 0.875rem;">RWF {{ "%.0f"|format(payment.amount) }}</div>
+                                {% if payment.amount == 10000.0 %}
+                                <div style="font-size: 0.75rem; color: var(--text-secondary);">First-time</div>
+                                {% elif payment.amount == 5000.0 %}
+                                <div style="font-size: 0.75rem; color: var(--success-color);">Returning</div>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 1rem;">
+                                {% if payment.status == 'pending' %}
+                                <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: rgba(245, 158, 11, 0.1); color: var(--warning-color);">
+                                    <i class='bx bx-time-five'></i> Pending
+                                </span>
+                                {% elif payment.status == 'verified' %}
+                                <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: rgba(16, 185, 129, 0.1); color: var(--secondary-color);">
+                                    <i class='bx bx-check-circle'></i> Verified
+                                </span>
+                                {% elif payment.status == 'rejected' %}
+                                <span style="padding: 0.25rem 0.75rem; border-radius: 9999px; font-size: 0.75rem; font-weight: 600; background: rgba(239, 68, 68, 0.1); color: var(--danger-color);">
+                                    <i class='bx bx-x-circle'></i> Rejected
+                                </span>
+                                {% endif %}
+                            </td>
+                            <td style="padding: 1rem; font-size: 0.875rem; color: var(--text-secondary);">
+                                <div>{{ payment.created_at.strftime('%b %d, %Y') }}</div>
+                                <div style="font-size: 0.75rem;">{{ payment.created_at.strftime('%H:%M') }}</div>
+                            </td>
+                            <td style="padding: 1rem;">
+                                <div style="display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap;">
+                                    {% if payment.status == 'pending' %}
+                                    <!-- Upload Screenshot -->
+                                    <form method="POST" action="{{ url_for('admin_upload_payment_screenshot', payment_id=payment.id) }}" enctype="multipart/form-data" style="display: inline;">
+                                        <input type="file" name="screenshot" accept="image/*" id="screenshot_{{ payment.id }}" style="display: none;" onchange="this.form.submit()">
+                                        <button type="button" onclick="document.getElementById('screenshot_{{ payment.id }}').click()" style="padding: 0.5rem 0.75rem; background: var(--primary-color); color: white; border: none; border-radius: 0.375rem; font-size: 0.75rem; cursor: pointer; font-weight: 600;">
+                                            <i class='bx bx-upload'></i> Upload
+                                        </button>
+                                    </form>
+                                    
+                                    <!-- Verify Button -->
+                                    <form method="POST" action="{{ url_for('admin_verify_payment', payment_id=payment.id) }}" style="display: inline;">
+                                        <button type="submit" onclick="return confirm('Verify payment #{{ payment.id }}? This will grant contact access.')" style="padding: 0.5rem 0.75rem; background: var(--secondary-color); color: white; border: none; border-radius: 0.375rem; font-size: 0.75rem; cursor: pointer; font-weight: 600;">
+                                            <i class='bx bx-check'></i> Verify
+                                        </button>
+                                    </form>
+                                    
+                                    <!-- Reject Button -->
+                                    <button class="reject-payment-btn" data-payment-id="{{ payment.id }}" style="padding: 0.5rem 0.75rem; background: var(--danger-color); color: white; border: none; border-radius: 0.375rem; font-size: 0.75rem; cursor: pointer; font-weight: 600;">
+                                        <i class='bx bx-x'></i> Reject
+                                    </button>
+                                    {% endif %}
+                                    
+                                    {% if payment.screenshot_path %}
+                                    <!-- View Screenshot -->
+                                    <button class="view-screenshot-btn" data-screenshot-url="{{ url_for('static', filename='uploads/' + payment.screenshot_path) }}" style="padding: 0.5rem 0.75rem; background: var(--text-secondary); color: white; border: none; border-radius: 0.375rem; font-size: 0.75rem; cursor: pointer; font-weight: 600;">
+                                        <i class='bx bx-image'></i> View
+                                    </button>
+                                    {% endif %}
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            {% if payments.pages > 1 %}
+            <div style="padding: 1rem; border-top: 1px solid var(--border-color); display: flex; justify-content: center; gap: 0.5rem;">
+                {% if payments.has_prev %}
+                <a href="{{ url_for('admin_payments', page=payments.prev_num, search=search, status=status_filter) }}" style="padding: 0.5rem 0.75rem; background: var(--white); border: 1px solid var(--border-color); border-radius: 0.375rem; text-decoration: none; color: var(--text-primary);">
+                    <i class='bx bx-chevron-left'></i>
+                </a>
+                {% endif %}
+                
+                {% for page_num in payments.iter_pages() %}
+                    {% if page_num %}
+                        {% if page_num != payments.page %}
+                        <a href="{{ url_for('admin_payments', page=page_num, search=search, status=status_filter) }}" style="padding: 0.5rem 0.75rem; background: var(--white); border: 1px solid var(--border-color); border-radius: 0.375rem; text-decoration: none; color: var(--text-primary);">
+                            {{ page_num }}
+                        </a>
+                        {% else %}
+                        <span style="padding: 0.5rem 0.75rem; background: var(--primary-color); color: white; border-radius: 0.375rem;">
+                            {{ page_num }}
+                        </span>
+                        {% endif %}
+                    {% else %}
+                    <span style="padding: 0.5rem 0.75rem;">...</span>
+                    {% endif %}
+                {% endfor %}
+                
+                {% if payments.has_next %}
+                <a href="{{ url_for('admin_payments', page=payments.next_num, search=search, status=status_filter) }}" style="padding: 0.5rem 0.75rem; background: var(--white); border: 1px solid var(--border-color); border-radius: 0.375rem; text-decoration: none; color: var(--text-primary);">
+                    <i class='bx bx-chevron-right'></i>
+                </a>
+                {% endif %}
+            </div>
+            {% endif %}
+        </div>
+    </main>
+</div>
+
+<!-- Reject Payment Modal -->
+<div id="rejectModal" class="modal-overlay" style="display: none;">
+    <div class="modal" style="max-width: 400px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Reject Payment</h3>
+            <button onclick="closeRejectModal()" class="modal-close">&times;</button>
+        </div>
+        <form method="POST" id="rejectForm">
+            <div class="modal-body">
+                <label style="display: block; margin-bottom: 0.5rem; font-weight: 600;">Reason for rejection:</label>
+                <textarea name="reason" rows="3" style="width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; resize: vertical;" placeholder="Please provide a reason for rejecting this payment..." required></textarea>
+            </div>
+            <div class="modal-actions">
+                <button type="button" onclick="closeRejectModal()" class="btn btn-secondary">Cancel</button>
+                <button type="submit" class="btn btn-danger">Reject Payment</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Screenshot Modal -->
+<div id="screenshotModal" class="modal-overlay" style="display: none;">
+    <div class="modal" style="max-width: 600px;">
+        <div class="modal-header">
+            <h3 class="modal-title">Payment Screenshot</h3>
+            <button onclick="closeScreenshotModal()" class="modal-close">&times;</button>
+        </div>
+        <div class="modal-body" style="text-align: center;">
+            <img id="screenshotImage" src="" alt="Payment Screenshot" style="max-width: 100%; max-height: 400px; border-radius: 0.5rem; border: 1px solid var(--border-color);">
+        </div>
+        <div class="modal-actions">
+            <button onclick="closeScreenshotModal()" class="btn btn-secondary">Close</button>
+        </div>
+    </div>
+</div>
+
+<script>
+// Initialize event listeners when DOM is loaded
+document.addEventListener('DOMContentLoaded', function() {
+    // Reject payment buttons
+    document.querySelectorAll('.reject-payment-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const paymentId = this.getAttribute('data-payment-id');
+            showRejectModal(paymentId);
+        });
+    });
+    
+    // View screenshot buttons
+    document.querySelectorAll('.view-screenshot-btn').forEach(button => {
+        button.addEventListener('click', function() {
+            const screenshotUrl = this.getAttribute('data-screenshot-url');
+            showScreenshotModal(screenshotUrl);
+        });
+    });
+});
+
+function showRejectModal(paymentId) {
+    document.getElementById('rejectForm').action = '/admin/payment/' + paymentId + '/reject';
+    document.getElementById('rejectModal').style.display = 'flex';
+    setTimeout(() => { document.getElementById('rejectModal').classList.add('active'); }, 10);
+}
+
+function closeRejectModal() {
+    const modal = document.getElementById('rejectModal');
+    modal.classList.remove('active');
+    setTimeout(() => { modal.style.display = 'none'; }, 300);
+}
+
+function showScreenshotModal(imageSrc) {
+    document.getElementById('screenshotImage').src = imageSrc;
+    document.getElementById('screenshotModal').style.display = 'flex';
+    setTimeout(() => { document.getElementById('screenshotModal').classList.add('active'); }, 10);
+}
+
+function closeScreenshotModal() {
+    const modal = document.getElementById('screenshotModal');
+    modal.classList.remove('active');
+    setTimeout(() => { modal.style.display = 'none'; }, 300);
+}
+
+// Close modals when clicking outside
+window.addEventListener('click', function(event) {
+    const rejectModal = document.getElementById('rejectModal');
+    const screenshotModal = document.getElementById('screenshotModal');
+    
+    if (event.target === rejectModal) {
+        closeRejectModal();
+    }
+    if (event.target === screenshotModal) {
+        closeScreenshotModal();
+    }
+});
+</script>
+{% endblock %}

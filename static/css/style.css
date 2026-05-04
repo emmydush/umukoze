@@ -53,29 +53,62 @@ body {
 
 /* Logo Animation */
 .logo-animated {
-    font-size: 28px;
+    font-family: 'Outfit', sans-serif;
+    font-size: 32px;
     font-weight: 900;
     text-decoration: none;
     display: flex;
-    letter-spacing: 2px;
+    align-items: center;
+    letter-spacing: 1px;
     text-transform: uppercase;
 }
+
 .logo-animated span {
     display: inline-block;
     color: var(--c);
-    animation: waveLogo 2.5s infinite ease-in-out;
-    animation-delay: calc(0.15s * var(--i));
+    transition: all 0.3s ease;
 }
+
+.logo-animated span.letter-u {
+    animation: bounceLogo 2s infinite ease-in-out;
+}
+
+.logo-animated span.letter-o {
+    animation: wheelRotate 4s infinite linear;
+    transform-origin: center;
+    margin: 0 2px;
+}
+
+/* Other letters subtle wave */
+.logo-animated span:not(.letter-u):not(.letter-o) {
+    animation: waveLogo 3s infinite ease-in-out;
+    animation-delay: calc(0.1s * var(--i));
+}
+
+@keyframes bounceLogo {
+    0%, 100% { 
+        transform: translateY(0); 
+        text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    }
+    50% { 
+        transform: translateY(-15px);
+        text-shadow: 0 10px 15px var(--c);
+    }
+}
+
+@keyframes wheelRotate {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
 @keyframes waveLogo {
     0%, 40%, 100% {
         transform: translateY(0);
-        text-shadow: 0 0 0 rgba(0,0,0,0);
         filter: brightness(1);
     }
     20% {
-        transform: translateY(-8px);
-        text-shadow: 0 4px 12px var(--c);
-        filter: brightness(1.25);
+        transform: translateY(-5px);
+        filter: brightness(1.2);
     }
 }
 

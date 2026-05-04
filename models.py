@@ -306,6 +306,9 @@ class Payment(db.Model):
     verification_code = db.Column(db.String(10))  # Code for admin verification
     screenshot_path = db.Column(db.String(200))  # Path to payment screenshot
     
+    # Verification
+    verified_by = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)  # Admin who verified
+    
     # Timestamps
     paid_at = db.Column(db.DateTime)
     verified_at = db.Column(db.DateTime)
@@ -325,6 +328,7 @@ class WorkerContactAccess(db.Model):
     worker_id = db.Column(db.Integer, db.ForeignKey('worker.id'), nullable=False)
     
     # Access Details
+    payment_id = db.Column(db.Integer, db.ForeignKey('payment.id'), nullable=True)
     access_granted = db.Column(db.Boolean, default=False)
     phone_visible = db.Column(db.Boolean, default=False)
     email_visible = db.Column(db.Boolean, default=False)
@@ -332,6 +336,7 @@ class WorkerContactAccess(db.Model):
     
     # Timestamps
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
+    granted_at = db.Column(db.DateTime)
     expires_at = db.Column(db.DateTime, nullable=True)
 
 class EmailConfig(db.Model):
