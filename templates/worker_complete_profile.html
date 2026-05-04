@@ -91,7 +91,7 @@
                         </div>
                         <div class="form-group">
                             <label class="form-label">Date of Birth</label>
-                            <input type="date" name="date_of_birth" class="form-control" style="border-radius: 0.75rem;" value="{{ worker.date_of_birth.strftime('%Y-%m-%d') if worker.date_of_birth else '' }}" max="{{ 'now'|date('Y-m-d') }}">
+                            <input type="date" name="date_of_birth" class="form-control" style="border-radius: 0.75rem;" value="{{ worker.date_of_birth.strftime('%Y-%m-%d') if worker.date_of_birth else '' }}" max="">
                         </div>
                     </div>
 

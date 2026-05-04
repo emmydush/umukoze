@@ -49,18 +49,18 @@ def test_critical_components():
     try:
         # Test imports
         from app import app, db
-        logger.info("✅ App imports successful")
+        logger.info(" App imports successful")
         
         # Test database
         with app.app_context():
             from models import User
             from sqlalchemy import text
             db.session.execute(text('SELECT 1'))
-            logger.info("✅ Database connection successful")
+            logger.info(" Database connection successful")
         
         # Test routes
         routes = list(app.url_map.iter_rules())
-        logger.info(f"✅ {len(routes)} routes loaded")
+        logger.info(f" {len(routes)} routes loaded")
         
         return True
         

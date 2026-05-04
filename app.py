@@ -66,9 +66,15 @@ def inject_globals():
     notifs = []
     unread_count = 0
     if current_user.is_authenticated:
-        # Get last 5 notifications for the current user
-        notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).limit(5).all()
-        unread_count = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+        try:
+            # Get last 5 notifications for the current user
+            notifs = Notification.query.filter_by(user_id=current_user.id).order_by(Notification.created_at.desc()).limit(5).all()
+            unread_count = Notification.query.filter_by(user_id=current_user.id, is_read=False).count()
+        except Exception as e:
+            logging.error(f"Error in notification context processor: {str(e)}")
+            # Return empty notifications on error to prevent 500 errors
+            notifs = []
+            unread_count = 0
         
     return dict(_=translate, notifs=notifs, unread_count=unread_count)
 
@@ -396,16 +402,22 @@ def register():
 @login_required
 def dashboard():
     if current_user.user_type == 'worker':
-        worker = Worker.query.filter_by(user_id=current_user.id).first()
-        if not worker:
-            worker = Worker(user_id=current_user.id)
-            db.session.add(worker)
-            db.session.commit()
-            
-        # Check if profile is complete
-        if not check_profile_completion(worker):
-            return redirect(url_for('worker_complete_profile'))
-        return render_template('worker_dashboard.html', worker=worker)
+        try:
+            worker = Worker.query.filter_by(user_id=current_user.id).first()
+            if not worker:
+                worker = Worker(user_id=current_user.id)
+                db.session.add(worker)
+                db.session.commit()
+                
+            # Check if profile is complete
+            if not check_profile_completion(worker):
+                return redirect(url_for('worker_complete_profile'))
+            return render_template('worker_dashboard.html', worker=worker)
+        except Exception as e:
+            logging.error(f"Error in worker dashboard: {str(e)}")
+            logging.error(f"Traceback: {traceback.format_exc()}")
+            flash('An error occurred while loading your dashboard. Please try again.', 'error')
+            return redirect(url_for('index'))
     elif current_user.user_type == 'employer':
         employer = Employer.query.filter_by(user_id=current_user.id).first()
         if not employer:
@@ -1585,91 +1597,111 @@ def admin_upload_payment_screenshot(payment_id):
 def worker_complete_profile():
     if current_user.user_type != 'worker':
         return redirect(url_for('dashboard'))
-    worker = Worker.query.filter_by(user_id=current_user.id).first()
-    if not worker:
-        worker = Worker(user_id=current_user.id)
-        db.session.add(worker)
-        db.session.commit()
     
-    if request.method == 'POST':
-        # Validate required fields
-        age = request.form.get('age')
-        province = request.form.get('province')
-        district = request.form.get('district')
-        sector = request.form.get('sector')
-        cell = request.form.get('cell')
-        village = request.form.get('village')
+    try:
+        worker = Worker.query.filter_by(user_id=current_user.id).first()
+        if not worker:
+            worker = Worker(user_id=current_user.id)
+            db.session.add(worker)
+            db.session.commit()
         
-        # Validate age
-        if not age or not age.isdigit():
-            flash('❌ Please provide a valid age.', 'error')
-            return redirect(url_for('worker_complete_profile'))
+        if request.method == 'POST':
+            try:
+                # Validate required fields
+                age = request.form.get('age')
+                province = request.form.get('province')
+                district = request.form.get('district')
+                sector = request.form.get('sector')
+                cell = request.form.get('cell')
+                village = request.form.get('village')
+                
+                # Validate age
+                if not age or not age.isdigit():
+                    flash('❌ Please provide a valid age.', 'error')
+                    return redirect(url_for('worker_complete_profile'))
+                
+                age_int = int(age)
+                if age_int < 18:
+                    flash('❌ You must be at least 18 years old to register as a worker.', 'error')
+                    return redirect(url_for('worker_complete_profile'))
+                
+                if age_int > 100:
+                    flash('❌ Please provide a valid age.', 'error')
+                    return redirect(url_for('worker_complete_profile'))
+                
+                # Validate location fields
+                if not all([province, district, sector, cell, village]):
+                    flash('❌ Please provide your complete location (province, district, sector, cell, and village).', 'error')
+                    return redirect(url_for('worker_complete_profile'))
+                
+                # Handle file uploads
+                profile_picture = request.files.get('profile_picture')
+                id_photo = request.files.get('id_photo')
+                
+                # Create uploads directory if it doesn't exist
+                upload_dir = os.path.join('static', 'uploads')
+                if not os.path.exists(upload_dir):
+                    os.makedirs(upload_dir)
+                
+                # Save profile picture
+                if profile_picture and profile_picture.filename:
+                    profile_filename = f"profile_{worker.id}_{profile_picture.filename}"
+                    profile_picture.save(os.path.join(upload_dir, profile_filename))
+                    worker.profile_picture = profile_filename
+                
+                # Save ID photo
+                if id_photo and id_photo.filename:
+                    id_filename = f"id_{worker.id}_{id_photo.filename}"
+                    id_photo.save(os.path.join(upload_dir, id_filename))
+                    worker.id_photo = id_filename
+                
+                # Update text fields
+                worker.age = int(request.form.get('age')) if request.form.get('age') else None
+                worker.date_of_birth = datetime.strptime(request.form.get('date_of_birth'), '%Y-%m-%d').date() if request.form.get('date_of_birth') else None
+                worker.province = request.form.get('province')
+                worker.district = request.form.get('district')
+                worker.sector = request.form.get('sector')
+                worker.cell = request.form.get('cell')
+                worker.village = request.form.get('village')
+                worker.national_id_number = request.form.get('national_id_number')
+                worker.experience_years = int(request.form.get('experience_years')) if request.form.get('experience_years') else None
+                worker.experience_details = request.form.get('experience_details')
+                worker.skills = request.form.get('skills')
+                worker.reference_name = request.form.get('reference_name')
+                worker.reference_phone = request.form.get('reference_phone')
+                worker.reference_relationship = request.form.get('reference_relationship')
+                
+                db.session.commit()
+                
+                # Check if profile is now complete
+                if check_profile_completion(worker):
+                    flash('🎉 Congratulations! Your profile is now complete. You can now access all features.', 'success')
+                    return redirect(url_for('dashboard'))
+                else:
+                    flash('✅ Profile updated! Please complete all required fields to unlock all features.', 'info')
+                    return redirect(url_for('worker_complete_profile'))
+                    
+            except Exception as e:
+                db.session.rollback()
+                logging.error(f"Error in POST worker_complete_profile: {str(e)}")
+                logging.error(f"Traceback: {traceback.format_exc()}")
+                flash('An error occurred while updating your profile. Please try again.', 'error')
+                return redirect(url_for('worker_complete_profile'))
         
-        age_int = int(age)
-        if age_int < 18:
-            flash('❌ You must be at least 18 years old to register as a worker.', 'error')
-            return redirect(url_for('worker_complete_profile'))
+        # Calculate completion percentage
+        try:
+            completion = calculate_profile_completion(worker)
+        except Exception as e:
+            logging.error(f"Error calculating profile completion: {str(e)}")
+            completion = 0
         
-        if age_int > 100:
-            flash('❌ Please provide a valid age.', 'error')
-            return redirect(url_for('worker_complete_profile'))
+        return render_template('worker_complete_profile.html', worker=worker, completion=completion)
         
-        # Validate location fields
-        if not all([province, district, sector, cell, village]):
-            flash('❌ Please provide your complete location (province, district, sector, cell, and village).', 'error')
-            return redirect(url_for('worker_complete_profile'))
-        
-        # Handle file uploads
-        profile_picture = request.files.get('profile_picture')
-        id_photo = request.files.get('id_photo')
-        
-        # Create uploads directory if it doesn't exist
-        upload_dir = os.path.join('static', 'uploads')
-        if not os.path.exists(upload_dir):
-            os.makedirs(upload_dir)
-        
-        # Save profile picture
-        if profile_picture and profile_picture.filename:
-            profile_filename = f"profile_{worker.id}_{profile_picture.filename}"
-            profile_picture.save(os.path.join(upload_dir, profile_filename))
-            worker.profile_picture = profile_filename
-        
-        # Save ID photo
-        if id_photo and id_photo.filename:
-            id_filename = f"id_{worker.id}_{id_photo.filename}"
-            id_photo.save(os.path.join(upload_dir, id_filename))
-            worker.id_photo = id_filename
-        
-        # Update text fields
-        worker.age = int(request.form.get('age')) if request.form.get('age') else None
-        worker.date_of_birth = datetime.strptime(request.form.get('date_of_birth'), '%Y-%m-%d').date() if request.form.get('date_of_birth') else None
-        worker.province = request.form.get('province')
-        worker.district = request.form.get('district')
-        worker.sector = request.form.get('sector')
-        worker.cell = request.form.get('cell')
-        worker.village = request.form.get('village')
-        worker.national_id_number = request.form.get('national_id_number')
-        worker.experience_years = int(request.form.get('experience_years')) if request.form.get('experience_years') else None
-        worker.experience_details = request.form.get('experience_details')
-        worker.skills = request.form.get('skills')
-        worker.reference_name = request.form.get('reference_name')
-        worker.reference_phone = request.form.get('reference_phone')
-        worker.reference_relationship = request.form.get('reference_relationship')
-        
-        db.session.commit()
-        
-        # Check if profile is now complete
-        if check_profile_completion(worker):
-            flash('🎉 Congratulations! Your profile is now complete. You can now access all features.', 'success')
-            return redirect(url_for('dashboard'))
-        else:
-            flash('✅ Profile updated! Please complete all required fields to unlock all features.', 'info')
-            return redirect(url_for('worker_complete_profile'))
-    
-    # Calculate completion percentage
-    completion = calculate_profile_completion(worker)
-    
-    return render_template('worker_complete_profile.html', worker=worker, completion=completion)
+    except Exception as e:
+        logging.error(f"Error in worker_complete_profile: {str(e)}")
+        logging.error(f"Traceback: {traceback.format_exc()}")
+        flash('An error occurred while loading your profile. Please try again.', 'error')
+        return redirect(url_for('dashboard'))
 
 # Worker Dashboard Routes
 @app.route('/worker/find-jobs')
