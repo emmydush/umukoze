@@ -41,7 +41,33 @@ body {
     box-shadow: var(--shadow-sm);
     position: sticky;
     top: 0;
-    z-index: 100;
+    z-index: 1000;
+    transition: all 0.3s ease;
+}
+
+.header-transparent {
+    background: transparent !important;
+    box-shadow: none !important;
+    position: absolute !important;
+    width: 100%;
+}
+
+.header-transparent.scrolled {
+    position: fixed !important;
+    background: rgba(255, 255, 255, 0.9) !important;
+    backdrop-filter: blur(12px);
+    box-shadow: var(--shadow-md) !important;
+    animation: slideDown 0.3s ease;
+}
+
+.header-transparent:not(.scrolled) .nav-links a,
+.header-transparent:not(.scrolled) .mobile-menu-toggle {
+    color: white !important;
+}
+
+.header-transparent.scrolled .nav-links a,
+.header-transparent.scrolled .mobile-menu-toggle {
+    color: var(--text-primary) !important;
 }
 
 .nav {

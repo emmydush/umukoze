@@ -28,7 +28,7 @@
 </head>
 <body>
     <!-- Header -->
-    <header class="header">
+    <header class="header {% if request.endpoint == 'index' %}header-transparent{% endif %}">
         <nav class="container">
             <div class="nav">
                 {% if not current_user.is_authenticated %}
@@ -756,6 +756,18 @@
                     }, 600);
                 }, 4000); // 4 seconds
             });
+            
+            // Header scroll effect for transparent header
+            const header = document.querySelector('.header-transparent');
+            if (header) {
+                window.addEventListener('scroll', () => {
+                    if (window.scrollY > 50) {
+                        header.classList.add('scrolled');
+                    } else {
+                        header.classList.remove('scrolled');
+                    }
+                });
+            }
 
             // Check for auto-refresh triggers
             const urlParams = new URLSearchParams(window.location.search);
