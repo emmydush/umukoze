@@ -377,12 +377,22 @@ def register():
 def dashboard():
     if current_user.user_type == 'worker':
         worker = Worker.query.filter_by(user_id=current_user.id).first()
+        if not worker:
+            worker = Worker(user_id=current_user.id)
+            db.session.add(worker)
+            db.session.commit()
+            
         # Check if profile is complete
         if not check_profile_completion(worker):
             return redirect(url_for('worker_complete_profile'))
         return render_template('worker_dashboard.html', worker=worker)
     elif current_user.user_type == 'employer':
         employer = Employer.query.filter_by(user_id=current_user.id).first()
+        if not employer:
+            employer = Employer(user_id=current_user.id)
+            db.session.add(employer)
+            db.session.commit()
+            
         # Show verified and available workers first, then others
         workers = Worker.query.filter(
             Worker.is_verified == True,
@@ -1533,6 +1543,10 @@ def worker_complete_profile():
     if current_user.user_type != 'worker':
         return redirect(url_for('dashboard'))
     worker = Worker.query.filter_by(user_id=current_user.id).first()
+    if not worker:
+        worker = Worker(user_id=current_user.id)
+        db.session.add(worker)
+        db.session.commit()
     
     if request.method == 'POST':
         # Handle file uploads
@@ -2684,6 +2698,18 @@ def employer_post_job():
         return redirect(url_for('employer_my_jobs'))
     
     return render_template('employer_post_job.html', employer=employer)
+
+@app.route('/employer/my-jobs')
+@login_required
+def employer_my_jobs():
+    if current_user.user_type != 'employer':
+        return redirect(url_for('dashboard'))
+    employer = Employer.query.filter_by(user_id=current_user.id).first()
+    
+    # Get all jobs for this employer
+    jobs = Job.query.filter_by(employer_id=employer.id).order_by(Job.created_at.desc()).all()
+    
+    return render_template('employer_my_jobs.html', employer=employer, jobs=jobs)
 
 @app.route('/employer/job/<int:job_id>/edit', methods=['GET', 'POST'])
 @login_required
