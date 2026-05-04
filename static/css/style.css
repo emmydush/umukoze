@@ -65,19 +65,29 @@ body {
 
 .header-transparent:not(.scrolled) .nav-links a {
     color: white !important;
-    background: rgba(0, 0, 0, 0.3) !important;
-    border-radius: 8px;
-    padding: 8px 16px;
-    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.4), rgba(37, 99, 235, 0.2)) !important;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 10px;
+    padding: 10px 20px;
+    text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header-transparent:not(.scrolled) .nav-links a:hover {
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.6), rgba(37, 99, 235, 0.3)) !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 15px rgba(37, 99, 235, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
 }
 
 .header-transparent:not(.scrolled) .mobile-menu-toggle {
     color: white !important;
-    background: rgba(0, 0, 0, 0.3) !important;
-    border-radius: 8px;
-    padding: 8px;
-    border: 1px solid rgba(255, 255, 255, 0.2);
+    background: rgba(37, 99, 235, 0.3) !important;
+    border-radius: 10px;
+    padding: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .header-transparent.scrolled .nav-links a,
