@@ -39,7 +39,7 @@ if os.getenv('FLASK_ENV') == 'production':
     app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 
 # Import models and db
-from models import db, User, Worker, Employer, Job, Application, Review, Message, Notification, Payment, WorkerContactAccess, EmailConfig
+from models import db, User, Worker, Employer, Job, Application, Review, Message, Notification, Payment, WorkerContactAccess, EmailConfig, Employment
 from translations import TRANSLATIONS
 
 # Initialize extensions
@@ -1731,18 +1731,7 @@ def worker_settings():
     return render_template('worker_settings.html', worker=worker)
 
 # Employer Dashboard Routes
-@app.route('/employer/activity')
-@login_required
-def employer_activity():
-    if current_user.user_type != 'employer':
-        return redirect(url_for('dashboard'))
-    
-    employer = Employer.query.filter_by(user_id=current_user.id).first()
-    
-    # Get employer's activities (this would be implemented with a proper activity log)
-    activities = []  # Placeholder for activities
-    
-    return render_template('employer_activity.html', employer=employer, activities=activities)
+
 
 @app.route('/employer/hired-workers')
 @login_required
